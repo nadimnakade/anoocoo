@@ -1,0 +1,53 @@
+<ion-content class="signup-content">
+  <div class="uber-signup-container">
+    <div class="header-section">
+      <h1>Anooco</h1>
+      <p>Road intelligence, simplified.</p>
+    </div>
+
+    <div class="form-section">
+      <div class="input-group">
+        <ion-input
+          placeholder="Username"
+          [(ngModel)]="user.username"
+          class="uber-input">
+        </ion-input>
+      </div>
+
+      <div class="input-group">
+        <ion-input
+          placeholder="Email"
+          type="email"
+          [(ngModel)]="user.email"
+          class="uber-input">
+        </ion-input>
+      </div>
+
+      <div class="input-group">
+        <ion-input
+          placeholder="Password"
+          type="password"
+          [(ngModel)]="user.password"
+          class="uber-input">
+        </ion-input>
+      </div>
+
+      <div class="action-section">
+        <ion-button expand="block" class="uber-button-black" (click)="onSignup()">
+          Sign Up
+          <ion-icon slot="end" name="arrow-forward"></ion-icon>
+        </ion-button>
+
+        <div class="divider">or</div>
+
+        <ion-button fill="clear" expand="block" class="uber-button-clear" routerLink="/login">
+          Already have an account? Log in
+        </ion-button>
+
+        <ion-button fill="clear" expand="block" class="uber-button-clear" routerLink="/dashboard">
+          Continue as Guest
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

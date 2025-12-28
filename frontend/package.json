@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor/geolocation": "^8.0.0"
+  }
+}

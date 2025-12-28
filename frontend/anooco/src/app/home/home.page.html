@@ -1,0 +1,21 @@
+<ion-content>
+  <div class="voice-container" [class.listening]="isListening">
+
+    <div class="status-indicator">
+      <div class="pulse-ring" *ngIf="isListening"></div>
+      <div class="main-icon" (click)="onTap()">
+        <ion-icon [name]="isListening ? 'mic' : 'mic-outline'"></ion-icon>
+      </div>
+    </div>
+
+    <div class="text-feedback">
+      <h2>{{ isListening ? 'Listening...' : 'Tap to Report' }}</h2>
+      <p>{{ lastReport }}</p>
+    </div>
+
+    <div class="cancel-button" routerLink="/dashboard">
+      <ion-icon name="close"></ion-icon>
+    </div>
+
+  </div>
+</ion-content>

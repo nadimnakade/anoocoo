@@ -1,0 +1,265 @@
+#map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.top-overlay {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  z-index: 10;
+}
+
+.menu-button {
+  background: #ffffff;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+  ion-icon {
+    font-size: 24px;
+    color: #000;
+  }
+}
+
+/* Pulse Animation for Voice Button */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(0, 0, 0, 0); }
+  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+.listening-mode {
+  .icon-circle {
+    animation: pulse-ring 2s infinite;
+    background: #ff3b30 !important; /* Red for recording */
+
+    ion-icon {
+      color: white !important;
+    }
+  }
+}
+
+.bottom-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 12px 20px 0 20px; /* Reduced bottom padding */
+  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  max-height: 40vh; /* Limit height to 40% of viewport */
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+  margin: 0 auto 20px auto;
+  flex-shrink: 0;
+}
+
+.greeting h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  color: #000000;
+  flex-shrink: 0;
+}
+
+.action-grid {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.action-card {
+  flex: 1;
+  background: #f6f6f6;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:active {
+    background: #e8e8e8;
+  }
+
+  span {
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000000;
+  }
+}
+
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 24px;
+  }
+
+  &.black {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  &.gray {
+    background: #e0e0e0;
+    color: #000000;
+  }
+}
+
+.recent-list {
+  flex: 1;
+  overflow-y: auto; /* Allow scrolling within the list part */
+  padding-bottom: 20px;
+
+  .list-header {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #000000;
+    position: sticky;
+    top: 0;
+    background: white;
+    padding-bottom: 8px;
+  }
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:active {
+    background-color: #f5f5f5;
+  }
+
+  .item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    color: white;
+
+    ion-icon {
+      font-size: 20px;
+    }
+  }
+
+  .item-details {
+    h3 {
+      font-size: 16px;
+      font-weight: 500;
+      margin: 0;
+      color: #000000;
+    }
+    p {
+      font-size: 14px;
+      color: #757575;
+      margin: 4px 0 0 0;
+    }
+  }
+}
+
+::ng-deep .custom-event-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  color: white;
+  font-size: 18px;
+
+  ion-icon {
+    pointer-events: none;
+  }
+}
+
+/* Report Modal Styles */
+.report-modal-content {
+  padding: 20px;
+  background: white;
+  height: 100%;
+}
+
+.modal-header {
+  margin-bottom: 24px;
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    text-align: center;
+  }
+}
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  justify-items: center;
+}
+
+.report-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+
+  span {
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.report-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  color: white;
+  border: 3px solid white;
+}

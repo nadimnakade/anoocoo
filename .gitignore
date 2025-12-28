@@ -1,0 +1,23 @@
+# Visual Studio & .NET
+.vs/
+bin/
+obj/
+*.suo
+*.user
+*.pdb
+*.dll
+*.exe
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/Properties/launchSettings.json
+
+# Node.js & Frontend
+node_modules/
+dist/
+www/
+.angular/
+.ionic/
+coverage/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,79 @@
+.signup-content {
+  --background: #ffffff;
+}
+
+.uber-signup-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.header-section {
+  margin-bottom: 40px;
+  
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+    color: #000000;
+  }
+
+  p {
+    font-size: 18px;
+    color: #545454;
+    margin: 0;
+  }
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-group {
+  background: #f6f6f6;
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+
+.uber-input {
+  --padding-start: 0;
+  --placeholder-color: #757575;
+  --placeholder-opacity: 1;
+  font-size: 16px;
+  --background: transparent;
+}
+
+.action-section {
+  margin-top: 24px;
+}
+
+.uber-button-black {
+  --background: #000000;
+  --color: #ffffff;
+  --border-radius: 8px;
+  font-weight: 600;
+  height: 50px;
+  font-size: 16px;
+  text-transform: none;
+  --box-shadow: none;
+}
+
+.divider {
+  text-align: center;
+  margin: 16px 0;
+  color: #757575;
+  font-size: 14px;
+}
+
+.uber-button-clear {
+  --color: #000000;
+  text-transform: none;
+  font-weight: 500;
+}

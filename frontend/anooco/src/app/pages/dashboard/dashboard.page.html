@@ -1,0 +1,122 @@
+<ion-content [fullscreen]="true">
+  <!-- Map Background -->
+  <div id="map" class="full-screen-map"></div>
+
+  <!-- Top Left Menu Button -->
+  <div class="top-overlay">
+    <div class="menu-button" (click)="openMenu()">
+      <ion-icon name="menu-outline"></ion-icon>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet / Card -->
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+
+    <div class="greeting">
+      <h2>Report Incident</h2>
+    </div>
+
+    <!-- Main Action Actions -->
+    <div class="action-grid">
+      <div class="action-card" routerLink="/home">
+        <div class="icon-circle black">
+          <ion-icon name="mic"></ion-icon>
+        </div>
+        <span>Voice Report</span>
+      </div>
+
+      <div class="action-card" (click)="onManualReport()">
+        <div class="icon-circle gray">
+          <ion-icon name="warning"></ion-icon>
+        </div>
+        <span>Manual</span>
+      </div>
+    </div>
+
+    <!-- Recent Activity / List -->
+    <div class="recent-list">
+      <div class="list-header">Nearby Alerts ({{ events.length }})</div>
+
+      <div class="list-item" *ngFor="let evt of events" (click)="focusOnEvent(evt)">
+        <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
+          <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
+        </div>
+        <div class="item-details">
+          <h3>{{ evt.eventType }}</h3>
+          <p>Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}</p>
+        </div>
+      </div>
+
+      <div class="list-item" *ngFor="let item of [1,2,3]" [hidden]="events.length > 0">
+        <ion-skeleton-text animated style="width: 40px; height: 40px; border-radius: 50%;"></ion-skeleton-text>
+        <div class="item-details" style="width: 100%;">
+          <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+          <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ion-modal [isOpen]="isReportModalOpen" (didDismiss)="setOpen(false)" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
+    <ng-template>
+      <div class="report-modal-content">
+        <div class="modal-header">
+          <h2>What's happening?</h2>
+        </div>
+        
+        <div class="report-grid">
+          <div class="report-item" (click)="submitReport('ACCIDENT')">
+            <div class="report-icon" style="background-color: #D32F2F;">
+               <!-- Inline SVG for Accident -->
+               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M256 32L32 464h448L256 32zm0 80l160 320H96L256 112zm0 88c-13.3 0-24 10.7-24 24v80c0 13.3 10.7 24 24 24s24-10.7 24-24v-80c0-13.3-10.7-24-24-24zm0 160c-13.3 0-24 10.7-24 24s10.7 24 24 24 24-10.7 24-24-10.7-24-24-24z"/></svg>
+            </div>
+            <span>Accident</span>
+          </div>
+
+          <div class="report-item" (click)="submitReport('POTHOLE')">
+            <div class="report-icon" style="background-color: #D32F2F;">
+              <!-- Inline SVG for Pothole -->
+              <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M469.6 153.9c-15.8-3.4-36.2-7-59.6-10.6l-19.2-85.3c-4.9-21.7-26.6-35.1-48.3-30.2L91.6 83.9C69.9 88.8 56.5 110.5 61.4 132.2l19.2 85.3c-27.1 26.6-43.9 63.8-43.9 104.9 0 81.1 66.2 146.9 148.2 146.9h142.3c81.9 0 148.2-65.8 148.2-146.9 0-59.5-35-110.4-85.8-135.5zM294.5 98.4l19.2 85.3c-48.4-6.4-98.8-6.4-147.2 0l-19.2-85.3 147.2-33.1z"/></svg>
+            </div>
+            <span>Pothole</span>
+          </div>
+
+          <div class="report-item" (click)="submitReport('POLICE')">
+            <div class="report-icon" style="background-color: #1976D2;">
+               <!-- Inline SVG for Police -->
+               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M256 32C174 69.1 96 85.2 32 96c0 128 16 256 224 384 208-128 224-256 224-384-64-10.8-142-26.9-224-64z"/></svg>
+            </div>
+            <span>Police</span>
+          </div>
+
+          <div class="report-item" (click)="submitReport('TRAFFIC')">
+            <div class="report-icon" style="background-color: #FBC02D;">
+               <!-- Inline SVG for Traffic -->
+               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M112 48h288L448 464H64L112 48zm64 48H128l-16 128h64V96zm128 0h-48v128h64l-16-128zM128 352l-16 64h288l-16-64H128z"/></svg>
+            </div>
+            <span>Traffic</span>
+          </div>
+          
+          <div class="report-item" (click)="submitReport('PARK')">
+            <div class="report-icon" style="background-color: #388E3C;">
+               <!-- Inline SVG for Park -->
+               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M416 160c0-70.7-57.3-128-128-128H208C120 32 32 104 32 208c0 78.4 49.3 146.1 118.8 168.4L128 480h48l24-96h88c70.7 0 128-57.3 128-128zM208 288h-48v-96h48c26.5 0 48 21.5 48 48s-21.5 48-48 48z"/></svg>
+            </div>
+            <span>Park</span>
+          </div>
+
+          <div class="report-item" (click)="submitReport('LIFT')">
+            <div class="report-icon" style="background-color: #212121;">
+               <!-- Inline SVG for Lift -->
+               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M128 416H64V128h64v288zm32-288v288h224c17.7 0 32-14.3 32-32 0-3.6-.6-7.1-1.7-10.4l-32-96c-5-15.1-19.2-25.6-35.1-25.6H208c-17.7 0-32 14.3-32 32zm0-64h128c17.7 0 32 14.3 32 32v32h-32V96H160v32zm256 96h32c17.7 0 32 14.3 32 32v160c0 17.7-14.3 32-32 32h-32V160z"/></svg>
+            </div>
+            <span>Lift</span>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

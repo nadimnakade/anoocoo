@@ -1,0 +1,48 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button color="dark"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Profile</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="profile-header">
+    <div class="avatar-large">
+      <img [src]="profile?.AvatarUrl || 'assets/placeholder-user.png'" onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'">
+    </div>
+    <h1>{{ profile?.Username || 'Guest' }}</h1>
+    <div class="trust-badge">
+      <ion-icon name="shield-checkmark"></ion-icon>
+      <span>Trust Score: {{ profile?.TrustScore || 50 }}</span>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>{{ activity?.length || 0 }}</h3>
+      <p>Reports</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ profile?.MemberSince | date:'yyyy' }}</h3>
+      <p>Member Since</p>
+    </div>
+  </div>
+
+  <ion-list class="settings-list">
+    <ion-list-header>Settings</ion-list-header>
+    <ion-item lines="full">
+      <ion-label>Edit Profile</ion-label>
+      <ion-icon slot="end" name="chevron-forward"></ion-icon>
+    </ion-item>
+    <ion-item lines="full">
+      <ion-label>Home Address</ion-label>
+      <ion-icon slot="end" name="chevron-forward"></ion-icon>
+    </ion-item>
+    <ion-item lines="full">
+      <ion-label>Work Address</ion-label>
+      <ion-icon slot="end" name="chevron-forward"></ion-icon>
+    </ion-item>
+  </ion-list>
+</ion-content>

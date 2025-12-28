@@ -1,0 +1,34 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button color="dark"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Your Activity</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div *ngIf="activities.length === 0" class="empty-state">
+    <ion-icon name="receipt-outline"></ion-icon>
+    <h3>No reports yet</h3>
+    <p>Your submitted reports will appear here.</p>
+  </div>
+
+  <ion-list lines="none">
+    <div *ngFor="let item of activities" class="activity-card">
+      <div class="icon-column">
+        <div class="icon-circle">
+          <ion-icon name="alert-circle" *ngIf="item.reportType !== 'voice'"></ion-icon>
+          <ion-icon name="mic" *ngIf="item.reportType === 'voice'"></ion-icon>
+        </div>
+      </div>
+      <div class="info-column">
+        <h3>{{ item.description || 'Incident Report' }}</h3>
+        <p>{{ item.timestamp | date:'MMM d, h:mm a' }}</p>
+        <span class="status-badge" [class.verified]="item.status === 'verified'">
+          {{ item.status }}
+        </span>
+      </div>
+    </div>
+  </ion-list>
+</ion-content>

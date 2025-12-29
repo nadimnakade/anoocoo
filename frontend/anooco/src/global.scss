@@ -33,5 +33,16 @@
  */
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import "@ionic/angular/css/palettes/dark.system.css";
+@import "@ionic/angular/css/palettes/dark.class.css";
+/* @import "@ionic/angular/css/palettes/dark.system.css"; */
+
+/* Manual Dark Mode Text Color Enforcement */
+body.dark {
+  color: var(--ion-text-color) !important;
+  background-color: var(--ion-background-color) !important;
+}
+
+body.dark ion-content {
+  --background: var(--ion-background-color);
+  --color: var(--ion-text-color);
+}

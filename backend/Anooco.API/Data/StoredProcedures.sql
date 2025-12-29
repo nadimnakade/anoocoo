@@ -65,6 +65,27 @@ BEGIN
 END;
 $$;
 
+-- 3b. Update User Profile
+CREATE OR REPLACE FUNCTION sp_update_user_profile(
+    p_user_id uuid,
+    p_username text,
+    p_phone_number text,
+    p_avatar_url text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE users
+    SET "Username" = COALESCE(p_username, "Username"),
+        "PhoneNumber" = COALESCE(p_phone_number, "PhoneNumber"),
+        "AvatarUrl" = COALESCE(p_avatar_url, "AvatarUrl")
+    WHERE "Id" = p_user_id;
+    
+    RETURN FOUND;
+END;
+$$;
+
 -- 4. Create Report
 CREATE OR REPLACE FUNCTION sp_create_report(
     p_user_id uuid,
@@ -96,19 +117,21 @@ END;
 $$;
 
 -- 5. Get Active Events
+DROP FUNCTION IF EXISTS sp_get_active_events();
 CREATE OR REPLACE FUNCTION sp_get_active_events()
 RETURNS TABLE (
     "Id" uuid,
     "EventType" text,
     "Location" geometry,
     "ConfirmationsCount" integer,
-    "UpdatedAt" timestamp with time zone
+    "UpdatedAt" timestamp with time zone,
+    "Address" text
 ) 
 LANGUAGE plpgsql
 AS $$
 BEGIN
     RETURN QUERY 
-    SELECT e."Id", e."EventType", e."Location", e."ConfirmationsCount", e."UpdatedAt"
+    SELECT e."Id", e."EventType", e."Location", e."ConfirmationsCount", e."UpdatedAt", e."Address"
     FROM events e 
     WHERE e."Status" = 'ACTIVE';
 END;
@@ -192,5 +215,23 @@ BEGIN
         
         RETURN QUERY SELECT 'CREATED'::text, e."Id", e."EventType", e."Location", e."ConfirmationsCount", e."UpdatedAt" FROM events e WHERE e."Id" = v_event_id;
     END IF;
+END;
+$$;
+
+-- 8. Expire Events (Background Service)
+CREATE OR REPLACE FUNCTION sp_expire_events()
+RETURNS integer
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_count integer;
+BEGIN
+    UPDATE events
+    SET "Status" = 'EXPIRED'
+    WHERE "Status" = 'ACTIVE' 
+    AND "ValidUntil" < NOW();
+    
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RETURN v_count;
 END;
 $$;

@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { MenuController, ModalController } from '@ionic/angular';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { MenuController, ModalController, LoadingController, Platform } from '@ionic/angular';
 import * as L from 'leaflet';
 import { Geolocation } from '@capacitor/geolocation';
+import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import { ApiService } from '../../services/api.service';
+import { SignalrService } from '../../services/signalr.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,33 +13,116 @@ import { ApiService } from '../../services/api.service';
   styleUrls: ['./dashboard.page.scss'],
   standalone: false
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage implements OnInit, OnDestroy {
   map: L.Map | undefined;
   events: any[] = [];
   watchId: string | null = null;
   userMarker: L.Marker | undefined;
   spokenEvents: Set<string> = new Set(); // Track announced events to avoid spam
+  isListening = false;
 
   isReportModalOpen = false;
+  private subscriptions: Subscription = new Subscription();
 
   constructor(
     private menuCtrl: MenuController,
     private apiService: ApiService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private loadingController: LoadingController,
+    private signalrService: SignalrService,
+    private platform: Platform,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
+    this.subscriptions.add(
+      this.signalrService.eventCreated$.subscribe(evt => {
+        this.handleNewEvent(evt);
+      })
+    );
+
+    this.subscriptions.add(
+      this.signalrService.eventUpdated$.subscribe(evt => {
+        this.handleUpdatedEvent(evt);
+      })
+    );
+
+    // Request speech permissions early
+    this.requestSpeechPermissions();
   }
 
-  setOpen(isOpen: boolean) {
-    this.isReportModalOpen = isOpen;
+  async requestSpeechPermissions() {
+    try {
+      const { available } = await SpeechRecognition.available();
+      if (available) {
+        await SpeechRecognition.requestPermissions();
+      }
+    } catch (e) {
+      console.warn('Speech recognition not available', e);
+    }
   }
 
-  async submitReport(type: string) {
-    this.setOpen(false);
+  async startListening() {
+    if (this.isListening) return;
 
+    try {
+      const available = await SpeechRecognition.available();
+      if (!available.available) {
+        this.speak("Voice recognition is not available.");
+        return;
+      }
+
+      this.isListening = true;
+      this.cdr.detectChanges();
+
+      // Start listening
+      const result = await SpeechRecognition.start({
+        language: "en-US",
+        maxResults: 1,
+        prompt: "Say 'Report accident' or 'Report traffic'",
+        partialResults: false,
+        popup: false,
+      });
+
+      this.isListening = false;
+      this.cdr.detectChanges();
+
+      if (result.matches && result.matches.length > 0) {
+        const text = result.matches[0];
+        this.processVoiceCommand(text);
+      }
+
+    } catch (e) {
+      this.isListening = false;
+      this.cdr.detectChanges();
+      console.error(e);
+      // Don't speak error to avoid loop if it fails silently
+    }
+  }
+
+  processVoiceCommand(text: string) {
+    console.log('Voice command:', text);
+    const lower = text.toLowerCase();
+
+    let type = '';
+    if (lower.includes('pothole') || lower.includes('bump')) type = 'POTHOLE';
+    else if (lower.includes('accident') || lower.includes('crash')) type = 'ACCIDENT';
+    else if (lower.includes('police') || lower.includes('cop')) type = 'POLICE';
+    else if (lower.includes('traffic') || lower.includes('stuck')) type = 'TRAFFIC';
+    else if (lower.includes('park') || lower.includes('parking')) type = 'PARK';
+    else if (lower.includes('lift') || lower.includes('ride')) type = 'LIFT';
+
+    if (type) {
+      this.speak(`Reporting ${type.toLowerCase()}.`);
+      this.submitReportInternal(type, text);
+    } else {
+      this.speak("I didn't catch that. Please try again.");
+    }
+  }
+
+  async submitReportInternal(type: string, rawText: string) {
     if (!this.userMarker) {
-      this.speak("Location not found. Cannot submit report.");
+      this.speak("Location unknown.");
       return;
     }
 
@@ -50,27 +136,73 @@ export class DashboardPage implements OnInit {
       }
     };
 
-    const text = `Manual report: ${type}`;
-
-    this.apiService.sendReport(text, location).subscribe({
+    this.apiService.sendReport(rawText, location).subscribe({
       next: () => {
-        this.speak(`${type} report submitted.`);
-        // Refresh events after a short delay to see the new one
+        // Success handled by signalR mostly, but we can confirm
         setTimeout(() => this.loadEvents(), 1000);
       },
-      error: (err) => {
-        console.error(err);
-        this.speak("Failed to submit report.");
-      }
+      error: () => this.speak("Failed to send report.")
     });
   }
 
+  async submitReport(type: string) {
+    this.setOpen(false);
+    this.submitReportInternal(type, `Manual report: ${type}`);
+    this.speak(`${type} report submitted.`);
+  }
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+    if (this.watchId) {
+      Geolocation.clearWatch({ id: this.watchId });
+    }
+  }
+
+  handleNewEvent(evt: any) {
+    // Check if already exists to avoid duplicates
+    if (this.events.find(e => e.id === evt.id)) return;
+
+    this.events.push(evt);
+    this.plotEvents();
+
+    // Announce if nearby
+    if (this.userMarker) {
+      const userPos = this.userMarker.getLatLng();
+      const dist = this.calculateDistance(userPos.lat, userPos.lng, evt.latitude, evt.longitude);
+      if (dist < 2000) { // 2km radius for new alerts
+        this.speakEvent(evt, dist);
+      }
+    }
+  }
+
+  handleUpdatedEvent(evt: any) {
+    const index = this.events.findIndex(e => e.id === evt.id);
+    if (index !== -1) {
+      this.events[index] = evt;
+      this.plotEvents();
+    }
+  }
+
+  setOpen(isOpen: boolean) {
+    this.isReportModalOpen = isOpen;
+  }
+
   async ionViewDidEnter() {
+    const loading = await this.loadingController.create({
+      message: 'Loading map data...',
+      spinner: 'crescent',
+      duration: 5000 // Fallback
+    });
+    await loading.present();
+
     // Wait for DOM to be ready
     setTimeout(() => {
       this.loadMap();
     }, 100);
-    this.loadEvents();
+
+    this.loadEvents(() => {
+      loading.dismiss();
+    });
+
     this.startTracking();
   }
 
@@ -166,46 +298,33 @@ export class DashboardPage implements OnInit {
     const distanceKm = (distanceMeters / 1000).toFixed(1);
     let text = "";
 
-    // Try to get street name
-    let streetPart = "on the street";
-    try {
-      const street = await this.getStreetName(evt.latitude, evt.longitude);
-      if (street) {
-        streetPart = `on ${street}`;
-      }
-    } catch (e) {
-      console.log('Could not fetch street name');
+    // Use backend-provided address if available
+    let streetPart = "ahead";
+    if (evt.address) {
+       streetPart = `on ${evt.address.split(',')[0]}`; // Just the street/road name
+    } else if (evt.Address) {
+       streetPart = `on ${evt.Address.split(',')[0]}`;
     }
 
     // Customize message based on type
     switch (evt.eventType?.toUpperCase()) {
       case 'POTHOLE':
-        text = `Caution. Potholes ahead in ${distanceKm} kilometers.`;
+        text = `Caution. Potholes ${streetPart} in ${distanceKm} kilometers.`;
         break;
       case 'ACCIDENT':
-        text = `Warning. Accident occurred ${streetPart} ${distanceKm} kilometers ahead.`;
+        text = `Warning. Accident reported ${streetPart} ${distanceKm} kilometers ahead.`;
         break;
       case 'POLICE':
-        text = `Police check reported ahead in ${distanceKm} kilometers.`;
+        text = `Police check reported ${streetPart} in ${distanceKm} kilometers.`;
         break;
       case 'TRAFFIC':
-        text = `Heavy traffic ahead in ${distanceKm} kilometers.`;
+        text = `Heavy traffic ${streetPart} in ${distanceKm} kilometers.`;
         break;
       default:
         text = `${evt.eventType} reported ${streetPart} ${distanceKm} kilometers ahead.`;
     }
 
     this.speak(text);
-  }
-
-  async getStreetName(lat: number, lng: number): Promise<string> {
-    try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-      const data = await response.json();
-      return data.address?.road || '';
-    } catch (error) {
-      return '';
-    }
   }
 
   speak(text: string) {
@@ -233,10 +352,17 @@ export class DashboardPage implements OnInit {
     return R * c; // in metres
   }
 
-  loadEvents() {
-    this.apiService.getEvents().subscribe((data: any) => {
-      this.events = data;
-      this.plotEvents();
+  loadEvents(callback?: () => void) {
+    this.apiService.getEvents().subscribe({
+      next: (data: any) => {
+        this.events = data;
+        this.plotEvents();
+        if (callback) callback();
+      },
+      error: (err) => {
+        console.error('Error loading events', err);
+        if (callback) callback();
+      }
     });
   }
 
@@ -276,6 +402,7 @@ export class DashboardPage implements OnInit {
         .bindPopup(`
           <div style="text-align: center;">
             <h3 style="margin: 0; color: ${config.color};">${evt.eventType}</h3>
+            ${evt.address || evt.Address ? `<p style="margin: 5px 0; font-weight: bold;">${evt.address || evt.Address}</p>` : ''}
             <p>Confirmed: ${evt.confirmationsCount}</p>
             <p style="font-size: 0.8em; color: #666;">${new Date(evt.updatedAt).toLocaleString()}</p>
           </div>

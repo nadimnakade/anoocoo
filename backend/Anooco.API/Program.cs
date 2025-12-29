@@ -30,6 +30,8 @@ builder.Services.AddCors(options =>
 // Domain Services
 builder.Services.AddScoped<Anooco.API.Services.IReportIntakeService, Anooco.API.Services.ReportIntakeService>();
 builder.Services.AddSingleton<Anooco.API.Services.IEncryptionService, Anooco.API.Services.EncryptionService>();
+builder.Services.AddHttpClient<Anooco.API.Services.IGeocodingService, Anooco.API.Services.GeocodingService>();
+builder.Services.AddHostedService<Anooco.API.Services.EventExpiryWorker>();
 
 var app = builder.Build();
 

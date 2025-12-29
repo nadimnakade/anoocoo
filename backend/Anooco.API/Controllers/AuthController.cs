@@ -72,7 +72,7 @@ namespace Anooco.API.Controllers
                     var id = reader.GetGuid(0);
                     var username = reader.GetString(1);
                     var hash = reader.GetString(3);
-                    var trust = reader.GetInt32(5);
+                    var trust = reader.GetInt32(4);
 
                     if (hash != dto.Password) return Unauthorized("Invalid credentials.");
 

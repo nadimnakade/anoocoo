@@ -10,9 +10,41 @@ import { ToastController } from '@ionic/angular';
 })
 export class AppComponent {
   currentUser: any = null;
+  isDarkMode = false;
 
   constructor(private api: ApiService, private toast: ToastController) {
     this.loadUser();
+    this.checkTheme();
+  }
+
+  checkTheme() {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme === 'dark') {
+      this.isDarkMode = true;
+      document.body.classList.add('dark');
+    } else if (savedTheme === 'light') {
+      this.isDarkMode = false;
+      document.body.classList.remove('dark');
+    } else {
+      // Use system preference if no saved theme
+      this.isDarkMode = prefersDark.matches;
+      if (this.isDarkMode) {
+        document.body.classList.add('dark');
+      }
+    }
+  }
+
+  toggleTheme(event: any) {
+    this.isDarkMode = event.detail.checked;
+    if (this.isDarkMode) {
+      document.body.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
   }
 
   loadUser() {

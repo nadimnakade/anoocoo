@@ -21,7 +21,7 @@
 
   <div class="stats-grid">
     <div class="stat-card">
-      <h3>{{ activity?.length || 0 }}</h3>
+      <h3>{{ activity.length || 0 }}</h3>
       <p>Reports</p>
     </div>
     <div class="stat-card">
@@ -32,7 +32,7 @@
 
   <ion-list class="settings-list">
     <ion-list-header>Settings</ion-list-header>
-    <ion-item lines="full">
+    <ion-item lines="full" button (click)="openEditProfile()">
       <ion-label>Edit Profile</ion-label>
       <ion-icon slot="end" name="chevron-forward"></ion-icon>
     </ion-item>

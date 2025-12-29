@@ -16,12 +16,14 @@ namespace Anooco.API.Services
         private readonly ILogger<ReportIntakeService> _logger;
         private readonly DatabaseService _dbService;
         private readonly IHubContext<AlertHub> _hubContext;
+        private readonly IGeocodingService _geocodingService;
 
-        public ReportIntakeService(ILogger<ReportIntakeService> logger, DatabaseService dbService, IHubContext<AlertHub> hubContext)
+        public ReportIntakeService(ILogger<ReportIntakeService> logger, DatabaseService dbService, IHubContext<AlertHub> hubContext, IGeocodingService geocodingService)
         {
             _logger = logger;
             _dbService = dbService;
             _hubContext = hubContext;
+            _geocodingService = geocodingService;
         }
 
         public async Task<Guid> ProcessReportAsync(CreateReportDto reportDto)
@@ -64,6 +66,30 @@ namespace Anooco.API.Services
                     var confirmations = reader.GetInt32(4);
                     var updatedAt = reader.GetDateTime(5);
 
+                    // Close reader so we can execute new commands on the same connection
+                    await reader.CloseAsync();
+
+                    // 3. Geocode (Reverse Geocoding)
+                    string? address = null;
+                    if (eventLoc != null)
+                    {
+                        try
+                        {
+                            address = await _geocodingService.GetAddressAsync(eventLoc.Y, eventLoc.X);
+                            if (!string.IsNullOrEmpty(address))
+                            {
+                                using var updateCmd = new NpgsqlCommand("UPDATE events SET \"Address\" = @addr WHERE \"Id\" = @id", conn);
+                                updateCmd.Parameters.AddWithValue("addr", address);
+                                updateCmd.Parameters.AddWithValue("id", eventId);
+                                await updateCmd.ExecuteNonQueryAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to geocode event");
+                        }
+                    }
+
                     var payload = new 
                     {
                         Id = eventId,
@@ -71,7 +97,8 @@ namespace Anooco.API.Services
                         Latitude = eventLoc?.Y ?? 0,
                         Longitude = eventLoc?.X ?? 0,
                         ConfirmationsCount = confirmations,
-                        UpdatedAt = updatedAt
+                        UpdatedAt = updatedAt,
+                        Address = address
                     };
 
                     if (action == "CREATED")

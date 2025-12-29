@@ -42,6 +42,7 @@ namespace Anooco.API.Models.Entities
         public Guid Id { get; set; }
         public string EventType { get; set; } = string.Empty;
         public string Status { get; set; } = "ACTIVE";
+        public string? Address { get; set; }
         
         [Column(TypeName = "geometry(Point, 4326)")]
         public Point Location { get; set; } = null!;

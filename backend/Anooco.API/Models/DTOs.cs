@@ -20,4 +20,12 @@ namespace Anooco.API.Models
         public double ConfidenceScore { get; set; }
         public string? VoiceAnnouncement { get; set; } // "Accident ahead, 500 meters"
     }
+
+    public class UpdateProfileDto
+    {
+        public Guid UserId { get; set; }
+        public string? Username { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? AvatarUrl { get; set; }
+    }
 }

@@ -10,7 +10,7 @@
     border-radius: 50%;
     overflow: hidden;
     margin-bottom: 15px;
-    background: #f0f0f0;
+    background: var(--ion-color-light);
     
     img {
       width: 100%;
@@ -23,13 +23,14 @@
     font-size: 28px;
     font-weight: 600;
     margin: 0 0 10px;
+    color: var(--ion-text-color);
   }
 
   .trust-badge {
     display: flex;
     align-items: center;
-    background: #e0f7fa;
-    color: #006064;
+    background: var(--ion-color-secondary-tint);
+    color: var(--ion-color-secondary-contrast);
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 14px;
@@ -48,7 +49,7 @@
   margin-bottom: 30px;
 
   .stat-card {
-    background: #f9f9f9;
+    background: var(--ion-color-light);
     padding: 20px;
     border-radius: 12px;
     text-align: center;
@@ -57,10 +58,11 @@
       font-size: 24px;
       font-weight: 700;
       margin: 0 0 5px;
+      color: var(--ion-text-color);
     }
 
     p {
-      color: #666;
+      color: var(--ion-color-medium);
       margin: 0;
       font-size: 14px;
     }
@@ -71,7 +73,7 @@
   ion-list-header {
     font-size: 18px;
     font-weight: 600;
-    color: black;
+    color: var(--ion-text-color);
     padding-left: 0;
     margin-bottom: 10px;
   }

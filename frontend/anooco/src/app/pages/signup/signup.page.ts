@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
-import { AlertController } from '@ionic/angular';
+import { AlertController, LoadingController } from '@ionic/angular';
 
 @Component({
   selector: 'app-signup',
@@ -19,7 +19,8 @@ export class SignupPage implements OnInit {
   constructor(
     private apiService: ApiService,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private loadingController: LoadingController
   ) { }
 
   ngOnInit() {
@@ -31,13 +32,21 @@ export class SignupPage implements OnInit {
       return;
     }
 
+    const loading = await this.loadingController.create({
+      message: 'Creating account...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
     this.apiService.signup(this.user).subscribe({
-      next: (res: any) => {
+      next: async (res: any) => {
+        await loading.dismiss();
         // Save user session
         localStorage.setItem('user', JSON.stringify(res));
         this.router.navigate(['/dashboard']);
       },
       error: async (err) => {
+        await loading.dismiss();
         this.showAlert('Signup Failed', err.error || 'Unknown error');
       }
     });

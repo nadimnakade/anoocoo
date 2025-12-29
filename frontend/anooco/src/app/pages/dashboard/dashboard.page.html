@@ -19,11 +19,12 @@
 
     <!-- Main Action Actions -->
     <div class="action-grid">
-      <div class="action-card" routerLink="/home">
-        <div class="icon-circle black">
-          <ion-icon name="mic"></ion-icon>
+      <div class="action-card" (click)="startListening()">
+        <div class="icon-circle black" [class.listening]="isListening">
+          <ion-icon name="mic" *ngIf="!isListening"></ion-icon>
+          <ion-spinner name="dots" *ngIf="isListening" color="light"></ion-spinner>
         </div>
-        <span>Voice Report</span>
+        <span>{{ isListening ? 'Listening...' : 'Voice Report' }}</span>
       </div>
 
       <div class="action-card" (click)="onManualReport()">
@@ -44,6 +45,10 @@
         </div>
         <div class="item-details">
           <h3>{{ evt.eventType }}</h3>
+          <p *ngIf="evt.address || evt.Address" style="font-size: 0.85em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+            <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
+            {{ evt.address || evt.Address }}
+          </p>
           <p>Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}</p>
         </div>
       </div>

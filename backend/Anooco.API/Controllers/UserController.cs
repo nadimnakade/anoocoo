@@ -1,3 +1,4 @@
+using Anooco.API.Models;
 using Anooco.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
@@ -13,6 +14,32 @@ namespace Anooco.API.Controllers
         public UserController(DatabaseService dbService)
         {
             _dbService = dbService;
+        }
+
+        [HttpPost("update")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        {
+            try
+            {
+                using var conn = await _dbService.CreateConnectionAsync();
+                using var cmd = new NpgsqlCommand("SELECT sp_update_user_profile(@userId, @username, @phone, @avatar)", conn);
+                cmd.Parameters.AddWithValue("userId", dto.UserId);
+                cmd.Parameters.AddWithValue("username", (object)dto.Username ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("phone", (object)dto.PhoneNumber ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("avatar", (object)dto.AvatarUrl ?? DBNull.Value);
+
+                var result = (bool?)await cmd.ExecuteScalarAsync();
+                
+                if (result == true)
+                {
+                    return Ok(new { Message = "Profile updated successfully" });
+                }
+                return NotFound("User not found");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet("profile")]

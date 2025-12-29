@@ -118,6 +118,7 @@ namespace Anooco.API.Controllers
                     );
                     ALTER TABLE events ADD COLUMN IF NOT EXISTS ""ValidUntil"" timestamp with time zone;
                     ALTER TABLE events ADD COLUMN IF NOT EXISTS ""AggregateConfidence"" double precision;
+                    ALTER TABLE events ADD COLUMN IF NOT EXISTS ""Address"" text;
                 ";
                 await command.ExecuteNonQueryAsync();
 

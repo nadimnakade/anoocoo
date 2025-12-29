@@ -1,44 +1,54 @@
 import { Injectable } from '@angular/core';
-import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
+import * as signalR from '@microsoft/signalr';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SignalrService {
-  private hubConnection: HubConnection | undefined;
+  private hubConnection: signalR.HubConnection | undefined;
+  private hubUrl = environment.apiUrl.replace('/api', '/hubs/alerts');
 
-  // Observables for components to subscribe to
-  public eventCreated$ = new BehaviorSubject<any>(null);
-  public eventUpdated$ = new BehaviorSubject<any>(null);
+  public eventCreated$ = new Subject<any>();
+  public eventUpdated$ = new Subject<any>();
+  public connectionStatus$ = new BehaviorSubject<string>('disconnected');
 
-  constructor() { }
+  constructor() {
+    this.startConnection();
+  }
 
   public startConnection = () => {
-    this.hubConnection = new HubConnectionBuilder()
-      .withUrl(`${environment.apiUrl.replace('/api', '')}/hubs/alerts`) // e.g. http://localhost:5000/hubs/alerts
+    this.hubConnection = new signalR.HubConnectionBuilder()
+      .withUrl(this.hubUrl)
       .withAutomaticReconnect()
       .build();
 
     this.hubConnection
       .start()
-      .then(() => console.log('SignalR Connection started'))
-      .catch(err => console.log('Error while starting connection: ' + err));
-
-    this.registerListeners();
+      .then(() => {
+        console.log('Connection started');
+        this.connectionStatus$.next('connected');
+        this.addListeners();
+      })
+      .catch(err => {
+        console.log('Error while starting connection: ' + err);
+        this.connectionStatus$.next('error');
+        // Retry after 5s
+        setTimeout(() => this.startConnection(), 5000);
+      });
   }
 
-  private registerListeners() {
+  private addListeners() {
     if (!this.hubConnection) return;
 
     this.hubConnection.on('EventCreated', (data) => {
-      console.log('SignalR: EventCreated', data);
+      console.log('EventCreated received:', data);
       this.eventCreated$.next(data);
     });
 
     this.hubConnection.on('EventUpdated', (data) => {
-      console.log('SignalR: EventUpdated', data);
+      console.log('EventUpdated received:', data);
       this.eventUpdated$.next(data);
     });
   }

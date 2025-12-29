@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
+import { LoadingController } from '@ionic/angular';
 
 @Component({
   selector: 'app-activity',
@@ -11,7 +12,10 @@ export class ActivityPage implements OnInit {
   activities: any[] = [];
   userId: string = '';
 
-  constructor(private api: ApiService) { }
+  constructor(
+    private api: ApiService,
+    private loadingCtrl: LoadingController
+  ) { }
 
   ngOnInit() {
     const userStr = localStorage.getItem('user');
@@ -22,12 +26,24 @@ export class ActivityPage implements OnInit {
     }
   }
 
-  loadActivity() {
+  async loadActivity() {
     if (!this.userId) return;
 
+    const loading = await this.loadingCtrl.create({
+      message: 'Loading activity...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
     this.api.getUserActivity(this.userId).subscribe({
-      next: (data: any) => this.activities = data,
-      error: (err) => console.error('Activity load error', err)
+      next: (data: any) => {
+        this.activities = data;
+        loading.dismiss();
+      },
+      error: (err) => {
+        console.error('Activity load error', err);
+        loading.dismiss();
+      }
     });
   }
 }

@@ -30,6 +30,10 @@ export class ApiService {
     return this.http.get(`${this.apiUrl}/user/activity?userId=${userId}`);
   }
 
+  updateProfile(userId: string, data: any) {
+    return this.http.post(`${this.apiUrl}/user/update`, { userId, ...data });
+  }
+
   sendReport(text: string, location: any) {
     const payload = {
       rawText: text,

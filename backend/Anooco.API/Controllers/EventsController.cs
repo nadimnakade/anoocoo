@@ -36,7 +36,8 @@ namespace Anooco.API.Controllers
                         Latitude = location?.Y ?? 0,
                         Longitude = location?.X ?? 0,
                         ConfirmationsCount = reader["ConfirmationsCount"],
-                        UpdatedAt = reader["UpdatedAt"]
+                        UpdatedAt = reader["UpdatedAt"],
+                        Address = reader["Address"] as string
                     });
                 }
 

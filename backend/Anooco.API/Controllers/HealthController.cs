@@ -10,11 +10,37 @@ namespace Anooco.API.Controllers
     {
         private readonly DatabaseService _dbService;
         private readonly ILogger<HealthController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public HealthController(DatabaseService dbService, ILogger<HealthController> logger)
+        public HealthController(DatabaseService dbService, ILogger<HealthController> logger, IConfiguration configuration)
         {
             _dbService = dbService;
             _logger = logger;
+            _configuration = configuration;
+        }
+
+        [HttpGet("ping")]
+        public IActionResult Ping()
+        {
+            return Ok(new
+            {
+                Status = "OK",
+                Time = DateTimeOffset.UtcNow
+            });
+        }
+
+        [HttpGet("info")]
+        public IActionResult Info()
+        {
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+            var encryptionEnabled = _configuration.GetValue<bool>("Security:EnableEncryption");
+            var pathBase = _configuration["PathBase"];
+            return Ok(new
+            {
+                Environment = env,
+                Encryption = encryptionEnabled,
+                PathBase = pathBase
+            });
         }
 
         [HttpGet("db")]

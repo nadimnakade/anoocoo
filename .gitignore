@@ -21,3 +21,5 @@ www/
 coverage/
 .DS_Store
 Thumbs.db
+frontend/anooco/android
+backend/Anooco.API/Anooco.API.zip

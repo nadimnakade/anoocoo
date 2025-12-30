@@ -2,56 +2,119 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Text.Json.Serialization;
+using Anooco.API.Services;
+using Anooco.API.Middleware;
+using Anooco.API.Hubs;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(x =>
-   x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+// --------------------
+// Services
+// --------------------
 
+// Controllers + JSON
+builder.Services.AddControllers()
+    .AddJsonOptions(x =>
+        x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Anooco API",
+        Version = "v1"
+    });
+});
+
+// SignalR
 builder.Services.AddSignalR();
 
 // Database (ADO.NET)
-builder.Services.AddSingleton<Anooco.API.Services.DatabaseService>();
+builder.Services.AddSingleton<DatabaseService>();
 
-// CORS
+// Domain Services
+builder.Services.AddScoped<IReportIntakeService, ReportIntakeService>();
+builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
+builder.Services.AddHttpClient<IGeocodingService, GeocodingService>();
+builder.Services.AddHostedService<EventExpiryWorker>();
+
+// --------------------
+// CORS (All environments)
+// --------------------
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder => builder
-            .AllowAnyMethod()
+    options.AddPolicy("AllowAll", policy =>
+        policy
             .AllowAnyHeader()
-            .SetIsOriginAllowed((host) => true)
+            .AllowAnyMethod()
+            .SetIsOriginAllowed(_ => true)
             .AllowCredentials());
 });
 
-// Domain Services
-builder.Services.AddScoped<Anooco.API.Services.IReportIntakeService, Anooco.API.Services.ReportIntakeService>();
-builder.Services.AddSingleton<Anooco.API.Services.IEncryptionService, Anooco.API.Services.EncryptionService>();
-builder.Services.AddHttpClient<Anooco.API.Services.IGeocodingService, Anooco.API.Services.GeocodingService>();
-builder.Services.AddHostedService<Anooco.API.Services.EventExpiryWorker>();
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-// Enable Swagger for ALL environments
-app.UseSwagger();
-app.UseSwaggerUI();
+// --------------------
+// Middleware Pipeline
+// --------------------
 
-// CORS - Must be before UseAuthorization and UseHttpsRedirection (if used)
+// Optional PathBase support for IIS virtual directories
+var pathBase = builder.Configuration["PathBase"];
+if (!string.IsNullOrEmpty(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+
+// Swagger enabled for all environments (production included)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    // Use relative endpoint so Swagger works under IIS virtual directories
+    c.SwaggerEndpoint("v1/swagger.json", "Anooco API v1");
+    c.RoutePrefix = "swagger";
+});
+
+// Global CORS fallback for all responses and preflight
+app.Use(async (ctx, next) =>
+{
+    var origin = ctx.Request.Headers["Origin"].ToString();
+    if (!string.IsNullOrEmpty(origin))
+    {
+        ctx.Response.Headers["Access-Control-Allow-Origin"] = origin;
+        ctx.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+        ctx.Response.Headers["Vary"] = "Origin";
+        ctx.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With";
+        ctx.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+    }
+    if (ctx.Request.Method == "OPTIONS")
+    {
+        ctx.Response.StatusCode = 204;
+        return;
+    }
+    await next();
+});
+
+// Enable CORS for all environments
 app.UseCors("AllowAll");
 
-// Encryption Middleware (after CORS, before Controllers)
-app.UseMiddleware<Anooco.API.Middleware.EncryptionMiddleware>();
+// Custom Encryption Middleware
+app.UseMiddleware<EncryptionMiddleware>();
 
-// app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Enable when SSL is configured
+
 app.UseAuthorization();
-app.MapControllers();
-app.MapHub<Anooco.API.Hubs.AlertHub>("/hubs/alerts");
 
-// Health check
+// --------------------builde
+// Endpoints
+// --------------------
+app.MapControllers();
+app.MapHub<AlertHub>("/hubs/alerts");
+
+
+
+// Health Check
 app.MapGet("/", () => "Anooco API is running!");
 
 app.Run();

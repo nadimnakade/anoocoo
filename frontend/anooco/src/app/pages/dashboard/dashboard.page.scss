@@ -64,6 +64,10 @@
   flex-direction: column;
 }
 
+.bottom-sheet.hidden {
+  display: none;
+}
+
 .sheet-handle {
   width: 40px;
   height: 4px;
@@ -132,6 +136,10 @@
   &.gray {
     background: var(--ion-color-light-shade);
     color: var(--ion-text-color);
+  }
+
+  &.listening {
+    animation: pulse-ring 2s infinite;
   }
 }
 
@@ -209,6 +217,16 @@
   }
 }
 
+::ng-deep .event-label {
+  background: rgba(255, 255, 255, 0.9);
+  color: #222;
+  border-radius: 6px;
+  padding: 2px 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,0,0,0.1);
+  font-size: 12px;
+}
+
 /* Report Modal Styles */
 .report-modal-content {
   padding: 20px;
@@ -263,4 +281,24 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   color: white;
   border: 3px solid white;
+}
+
+.assistant-fab {
+  position: absolute;
+  right: 20px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--ion-color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  z-index: 12;
+}
+
+.assistant-fab.pulse {
+  animation: pulse-ring 2s infinite;
 }

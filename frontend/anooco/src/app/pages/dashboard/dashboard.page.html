@@ -10,7 +10,7 @@
   </div>
 
   <!-- Bottom Sheet / Card -->
-  <div class="bottom-sheet">
+  <div class="bottom-sheet" [class.hidden]="fullMapMode">
     <div class="sheet-handle"></div>
 
     <div class="greeting">
@@ -32,6 +32,27 @@
           <ion-icon name="warning"></ion-icon>
         </div>
         <span>Manual</span>
+      </div>
+
+      <div class="action-card" *ngIf="isListening" (click)="stopListening(true)">
+        <div class="icon-circle gray">
+          <ion-icon name="stop-circle"></ion-icon>
+        </div>
+        <span>Stop Listening</span>
+      </div>
+
+      <div class="action-card" (click)="toggleHandsFree()">
+        <div class="icon-circle gray" [class.listening]="handsFreeEnabled">
+          <ion-icon [name]="handsFreeEnabled ? 'radio' : 'ellipse-outline'"></ion-icon>
+        </div>
+        <span>{{ handsFreeEnabled ? 'Hands-free On' : 'Hands-free Off' }}</span>
+      </div>
+
+      <div class="action-card" (click)="toggleFullMap()">
+        <div class="icon-circle gray">
+          <ion-icon [name]="fullMapMode ? 'map' : 'map-outline'"></ion-icon>
+        </div>
+        <span>{{ fullMapMode ? 'Exit Full Map' : 'Full Events Map' }}</span>
       </div>
     </div>
 
@@ -123,5 +144,9 @@
       </div>
     </ng-template>
   </ion-modal>
+
+  <div class="assistant-fab" (click)="onAssistantPress()" [class.pulse]="isListening || handsFreeEnabled">
+    <ion-icon name="mic"></ion-icon>
+  </div>
 
 </ion-content>

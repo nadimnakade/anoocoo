@@ -20,6 +20,12 @@ export class DashboardPage implements OnInit, OnDestroy {
   userMarker: L.Marker | undefined;
   spokenEvents: Set<string> = new Set(); // Track announced events to avoid spam
   isListening = false;
+  handsFreeEnabled = false;
+  private abortWake = false;
+  private listenTimeout: any;
+  eventMarkers: L.Marker[] = [];
+  showAddressTags = true;
+  fullMapMode = false;
 
   isReportModalOpen = false;
   private subscriptions: Subscription = new Subscription();
@@ -76,6 +82,9 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
 
       // Start listening
+      this.listenTimeout = setTimeout(async () => {
+        await this.stopListening();
+      }, 12000);
       const result = await SpeechRecognition.start({
         language: "en-US",
         maxResults: 1,
@@ -84,6 +93,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         popup: false,
       });
 
+      clearTimeout(this.listenTimeout);
       this.isListening = false;
       this.cdr.detectChanges();
 
@@ -93,11 +103,67 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
 
     } catch (e) {
+      clearTimeout(this.listenTimeout);
       this.isListening = false;
       this.cdr.detectChanges();
       console.error(e);
       // Don't speak error to avoid loop if it fails silently
     }
+  }
+
+  async stopListening(userInitiated: boolean = false) {
+    try {
+      await SpeechRecognition.stop();
+    } catch {}
+    finally {
+      this.isListening = false;
+      clearTimeout(this.listenTimeout);
+      this.cdr.detectChanges();
+    }
+    if (userInitiated) {
+      this.speak("Stopped listening.");
+    }
+  }
+
+  async toggleHandsFree() {
+    this.handsFreeEnabled = !this.handsFreeEnabled;
+    this.cdr.detectChanges();
+    if (this.handsFreeEnabled) {
+      this.startWakeLoop();
+    } else {
+      this.abortWake = true;
+    }
+  }
+
+  private async startWakeLoop() {
+    this.abortWake = false;
+    while (this.handsFreeEnabled && !this.abortWake) {
+      try {
+        const available = await SpeechRecognition.available();
+        if (!available.available) {
+          break;
+        }
+        const res = await SpeechRecognition.start({
+          language: "en-US",
+          maxResults: 1,
+          prompt: "Say 'Hey Anooco'",
+          partialResults: false,
+          popup: false,
+        });
+        const text = (res.matches && res.matches[0]) ? res.matches[0].toLowerCase() : "";
+        if (text.includes("anooco") || text.includes("hey anooco")) {
+          this.speak("Listening...");
+          await this.startListening();
+        }
+      } catch {
+        // ignore transient errors
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  onAssistantPress() {
+    this.startListening();
   }
 
   processVoiceCommand(text: string) {
@@ -214,6 +280,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   openMenu() {
     this.menuCtrl.open();
+  }
+
+  toggleFullMap() {
+    this.fullMapMode = !this.fullMapMode;
+    this.cdr.detectChanges();
   }
 
   async loadMap() {
@@ -369,8 +440,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   plotEvents() {
     if (!this.map) return;
 
-    // Clear existing markers if any (optional, but good practice if real-time)
-    // this.map.eachLayer((layer) => { ... }) // Need to track markers to remove them properly
+    this.eventMarkers.forEach(m => m.remove());
+    this.eventMarkers = [];
 
     this.events.forEach(evt => {
       const type = evt.eventType?.toUpperCase() || 'UNKNOWN';
@@ -409,6 +480,16 @@ export class DashboardPage implements OnInit, OnDestroy {
         `)
         .addTo(this.map!);
 
+      if (this.showAddressTags && (evt.address || evt.Address)) {
+        const street = (evt.address || evt.Address).split(',')[0];
+        marker.bindTooltip(`${evt.eventType}: ${street}`, {
+          permanent: true,
+          direction: 'top',
+          offset: [0, -20],
+          className: 'event-label'
+        }).openTooltip();
+      }
+
       // Add click listener to speak event details
       marker.on('click', () => {
         // We pass 0 distance to force immediate speech without "in X km" prefix logic if we want,
@@ -422,6 +503,7 @@ export class DashboardPage implements OnInit, OnDestroy {
            this.speak(`${evt.eventType} selected.`);
         }
       });
+      this.eventMarkers.push(marker);
     });
   }
 

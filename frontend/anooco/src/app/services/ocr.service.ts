@@ -15,20 +15,19 @@ export class OcrService {
   async captureAndReadSign(): Promise<string[]> {
     try {
       const photo = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: true,
-        resultType: CameraResultType.Uri,
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
         source: CameraSource.Camera,
-        promptLabelHeader: 'Scan Street Sign',
-        presentationStyle: 'fullscreen'
+        promptLabelHeader: 'Scan Street Sign'
       });
 
-      if (!photo.path) {
-        throw new Error('No photo path returned');
+      if (!photo.base64String) {
+        throw new Error('No image data returned');
       }
 
-      const data: TextDetections = await Ocr.detectText({ 
-        filename: photo.path,
+      const data: TextDetections = await Ocr.detectText({
+        base64: photo.base64String
       });
 
       const lines: string[] = [];

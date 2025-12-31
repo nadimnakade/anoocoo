@@ -1,0 +1,111 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Driver Tools & Settings</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <!-- Section: Intelligent Vision -->
+  <ion-list-header>
+    <ion-label>Intelligent Vision</ion-label>
+  </ion-list-header>
+  
+  <ion-card button (click)="scanSign()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="scan-outline" slot="start" class="card-icon"></ion-icon>
+        OCR Street Sign
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Scan and read street signs using your camera.
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Section: Dashcam -->
+  <ion-list-header>
+    <ion-label>Dashcam Connectivity</ion-label>
+  </ion-list-header>
+
+  <ion-card button (click)="connectDashcam()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="wifi-outline" slot="start" class="card-icon"></ion-icon>
+        Connect WiFi
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Connect to your dashcam's WiFi network.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="viewDashcamRecordings()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="videocam-outline" slot="start" class="card-icon"></ion-icon>
+        View Recordings
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Browse files on the connected dashcam.
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Section: Safety & Alerts -->
+  <ion-list-header>
+    <ion-label>Safety & Alerts</ion-label>
+  </ion-list-header>
+
+  <ion-card button (click)="scanPotholeAi()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="analytics-outline" slot="start" class="card-icon"></ion-icon>
+        AI Pothole Detection
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Capture and analyze road surface using on-device AI.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="configureAlerts()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="speedometer-outline" slot="start" class="card-icon"></ion-icon>
+        Alert Thresholds
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Configure speed limits and pothole sensitivity.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="calibratePotholeSensitivity()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="pulse-outline" slot="start" class="card-icon"></ion-icon>
+        Calibrate Pothole Sensitivity
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Measure device motion to auto-set sensitivity.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="configureAutoStart()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="bluetooth-outline" slot="start" class="card-icon"></ion-icon>
+        Auto-Start (Bluetooth)
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Automatically start driving mode when connected to car.
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

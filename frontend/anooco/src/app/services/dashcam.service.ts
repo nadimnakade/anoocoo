@@ -42,7 +42,10 @@ export class DashcamService {
    */
   async disconnect() {
     try {
-      await this.wifiWizard2.disconnect();
+      const current = await this.wifiWizard2.getConnectedSSID();
+      if (current) {
+        await this.wifiWizard2.disconnect(current);
+      }
       this.isConnected$.next(false);
     } catch (error) {
       console.error('Failed to disconnect', error);

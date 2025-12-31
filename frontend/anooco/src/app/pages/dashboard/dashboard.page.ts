@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { MenuController, ModalController, LoadingController, Platform, ToastController, AlertController, ActionSheetController } from '@ionic/angular';
+import { MenuController, ModalController, LoadingController, Platform, ToastController, AlertController, ActionSheetController, NavController } from '@ionic/angular';
 import * as L from 'leaflet';
 import { Geolocation } from '@capacitor/geolocation';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
@@ -52,7 +52,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private drivingService: DrivingService,
     private actionSheetController: ActionSheetController,
     private ocrService: OcrService,
-    private dashcamService: DashcamService
+    private dashcamService: DashcamService,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
@@ -101,177 +102,11 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   async openSettings() {
-    const devices = await this.drivingService.getPairedDevices();
-
-    const inputs = devices.map(d => ({
-      type: 'radio' as const, // explicitly typed
-      label: d.name || d.address,
-      value: d,
-      checked: false
-    }));
-
-    // Add 'None' option
-    inputs.unshift({
-      type: 'radio' as const,
-      label: 'None (Disable Auto-Start)',
-      value: null,
-      checked: false
-    });
-
-    const alert = await this.alertController.create({
-      header: 'Select Car Bluetooth',
-      inputs: inputs,
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Save',
-          handler: (data) => {
-            if (data) {
-              this.drivingService.saveCarDevice(data.name, data.address);
-              this.showToast(`Auto-start set to: ${data.name}`);
-            } else {
-              // Handle disable
-            }
-          }
-        }
-      ]
-    });
-
-    await alert.present();
+    this.navCtrl.navigateForward('/settings');
   }
 
   async openTools() {
-    const actionSheet = await this.actionSheetController.create({
-      header: 'Driver Tools',
-      buttons: [
-        {
-          text: 'Scan Street Sign (OCR)',
-          icon: 'scan-outline',
-          handler: () => {
-            this.scanSign();
-          }
-        },
-        {
-          text: 'Connect to Dashcam',
-          icon: 'wifi-outline',
-          handler: () => {
-            this.connectDashcam();
-          }
-        },
-        {
-          text: 'View Dashcam Recordings',
-          icon: 'videocam-outline',
-          handler: () => {
-            this.viewDashcamRecordings();
-          }
-        },
-        {
-          text: 'Cancel',
-          icon: 'close',
-          role: 'cancel'
-        }
-      ]
-    });
-    await actionSheet.present();
-  }
-
-  async scanSign() {
-    const loading = await this.loadingController.create({
-      message: 'Scanning sign...',
-    });
-    await loading.present();
-
-    try {
-      const texts = await this.ocrService.captureAndReadSign();
-      await loading.dismiss();
-
-      if (texts.length > 0) {
-        const fullText = texts.join(' ');
-        console.log('OCR Text:', fullText);
-        this.showToast(`Read: ${fullText}`);
-        this.speak(`Sign says: ${fullText}`);
-      } else {
-        this.showToast('No text detected', 'warning');
-        this.speak('No text found.');
-      }
-    } catch (e) {
-      await loading.dismiss();
-      console.error('OCR failed', e);
-      this.showToast('Failed to scan sign', 'danger');
-    }
-  }
-
-  async connectDashcam() {
-    const alert = await this.alertController.create({
-      header: 'Connect Dashcam',
-      inputs: [
-        {
-          name: 'ssid',
-          type: 'text',
-          placeholder: 'SSID (e.g. VIOFO_A129)',
-          value: 'VIOFO_A129' // Example default
-        },
-        {
-          name: 'password',
-          type: 'password',
-          placeholder: 'Password (12345678)'
-        }
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Connect',
-          handler: async (data) => {
-            if (data.ssid) {
-              const loading = await this.loadingController.create({ message: 'Connecting...' });
-              await loading.present();
-
-              const success = await this.dashcamService.connectToDashcam(data.ssid, data.password);
-              await loading.dismiss();
-
-              if (success) {
-                this.showToast(`Connected to ${data.ssid}`, 'success');
-              } else {
-                this.showToast('Connection failed. Check range/password.', 'danger');
-              }
-            }
-          }
-        }
-      ]
-    });
-    await alert.present();
-  }
-
-  async viewDashcamRecordings() {
-    const loading = await this.loadingController.create({ message: 'Fetching recordings...' });
-    await loading.present();
-
-    try {
-      const files = await this.dashcamService.listRecordings();
-      await loading.dismiss();
-
-      // Show list in an alert for now (simple UI)
-      const alert = await this.alertController.create({
-        header: 'Dashcam Files',
-        inputs: files.map((f: any) => ({
-          type: 'radio',
-          label: `${f.name} (${f.size})`,
-          value: f
-        })),
-        buttons: ['Close']
-      });
-      await alert.present();
-
-    } catch (e) {
-      await loading.dismiss();
-      this.showToast('Failed to fetch recordings', 'danger');
-    }
+    this.navCtrl.navigateForward('/tools');
   }
 
   async requestSpeechPermissions() {

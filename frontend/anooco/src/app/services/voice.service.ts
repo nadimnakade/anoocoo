@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { Platform } from '@ionic/angular';
 
 @Injectable({
@@ -77,8 +78,32 @@ export class VoiceService {
     });
   }
 
-  speak(text: string) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.speak(utterance);
+  async speak(text: string) {
+    if (this.platform.is('hybrid')) {
+      try {
+        await TextToSpeech.speak({
+          text,
+          lang: 'en-US',
+          rate: 1.0,
+          pitch: 1.0,
+          volume: 1.0,
+          category: 'ambient',
+        });
+      } catch (e) {
+        console.warn('Native TTS failed, falling back to Web API', e);
+        this.fallbackSpeak(text);
+      }
+    } else {
+      this.fallbackSpeak(text);
+    }
+  }
+
+  private fallbackSpeak(text: string) {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
   }
 }

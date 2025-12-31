@@ -43,6 +43,10 @@ const routes: Routes = [
     path: 'tools',
     loadChildren: () => import('./pages/tools/tools.module').then( m => m.ToolsPageModule)
   },
+  {
+    path: 'guide',
+    loadChildren: () => import('./pages/guide/guide.module').then( m => m.GuidePageModule)
+  },
 ];
 
 @NgModule({

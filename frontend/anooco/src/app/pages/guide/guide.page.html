@@ -1,0 +1,86 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>User Guide</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <div class="guide-intro">
+    <img src="assets/icon/icon.png" alt="Anooco Logo" class="guide-logo" onerror="this.style.display='none'">
+    <h1>Welcome to Anooco</h1>
+    <p>Your intelligent road companion. Stay safe, informed, and connected.</p>
+  </div>
+
+  <ion-accordion-group expand="inset">
+    
+    <ion-accordion value="dashboard">
+      <ion-item slot="header" color="light">
+        <ion-icon name="map-outline" slot="start"></ion-icon>
+        <ion-label>Dashboard & Map</ion-label>
+      </ion-item>
+      <div class="ion-padding" slot="content">
+        <p><strong>The Map:</strong> Shows your current location and nearby alerts (potholes, accidents, police, etc.).</p>
+        <p><strong>View Modes:</strong> Tap the "Map/List" button in the bottom sheet to toggle between:</p>
+        <ul>
+          <li><strong>Split:</strong> Map on top, alerts list below.</li>
+          <li><strong>Map Only:</strong> Full screen map.</li>
+          <li><strong>List Only:</strong> Full screen list of alerts.</li>
+        </ul>
+        <p><strong>Expired Alerts:</strong> Use the "Eye" icon in the top menu to show/hide expired or old alerts.</p>
+      </div>
+    </ion-accordion>
+
+    <ion-accordion value="reporting">
+      <ion-item slot="header" color="light">
+        <ion-icon name="mic-outline" slot="start"></ion-icon>
+        <ion-label>Reporting Incidents</ion-label>
+      </ion-item>
+      <div class="ion-padding" slot="content">
+        <p><strong>Voice Reporting:</strong> Tap the microphone button or say "Hey Anooco" (if Hands-free is on). Then say:</p>
+        <ul>
+          <li>"Report accident"</li>
+          <li>"Report pothole"</li>
+          <li>"Report traffic"</li>
+          <li>"Report police"</li>
+        </ul>
+        <p><strong>Manual Reporting:</strong> Tap the "Manual" button to select an incident type from the grid.</p>
+        <p><strong>Hands-free Mode:</strong> Tap "Auto On/Off" to enable background listening for "Hey Anooco". Ideal for driving.</p>
+      </div>
+    </ion-accordion>
+
+    <ion-accordion value="tools">
+      <ion-item slot="header" color="light">
+        <ion-icon name="construct-outline" slot="start"></ion-icon>
+        <ion-label>Tools & Features</ion-label>
+      </ion-item>
+      <div class="ion-padding" slot="content">
+        <p><strong>Dashcam:</strong> Access via the Tools menu. Connects to compatible WiFi dashcams to view and download footage.</p>
+        <p><strong>Road Sign OCR:</strong> Use your camera to scan road signs. The app detects speed limits and warns you if you exceed them.</p>
+        <p><strong>Pothole Detection:</strong> The app uses your phone's accelerometer to automatically detect severe bumps and report potential potholes.</p>
+      </div>
+    </ion-accordion>
+
+    <ion-accordion value="settings">
+      <ion-item slot="header" color="light">
+        <ion-icon name="settings-outline" slot="start"></ion-icon>
+        <ion-label>Settings & Customization</ion-label>
+      </ion-item>
+      <div class="ion-padding" slot="content">
+        <p><strong>Profile:</strong> Update your username and view your Trust Score.</p>
+        <p><strong>Mute Settings:</strong> Configure a mute radius (e.g., around your home) or specific streets where you don't want audio alerts.</p>
+        <p><strong>Calibration:</strong> Use the Tools menu to calibrate the pothole detection sensitivity for your specific vehicle/mount.</p>
+      </div>
+    </ion-accordion>
+
+  </ion-accordion-group>
+
+  <div class="footer-note">
+    <p>Drive Safely!</p>
+    <p>v0.0.1</p>
+  </div>
+
+</ion-content>

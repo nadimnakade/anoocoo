@@ -1,6 +1,6 @@
 <ion-content [fullscreen]="true">
   <!-- Map Background -->
-  <div id="map" class="full-screen-map"></div>
+  <div id="map" class="full-screen-map" [class.hidden]="viewMode === 'list'"></div>
 
   <!-- Top Left Menu Button -->
   <div class="top-overlay">
@@ -22,7 +22,7 @@
   </div>
 
   <!-- Bottom Sheet / Card -->
-  <div class="bottom-sheet" [class.hidden]="fullMapMode">
+  <div class="bottom-sheet" [class.hidden]="viewMode === 'map'" [class.full-screen]="viewMode === 'list'">
     <div class="sheet-handle"></div>
 
     <div class="greeting">
@@ -36,7 +36,7 @@
           <ion-icon name="mic" *ngIf="!isListening"></ion-icon>
           <ion-spinner name="dots" *ngIf="isListening" color="light"></ion-spinner>
         </div>
-        <span>{{ isListening ? 'Listening...' : 'Voice Report' }}</span>
+        <span>{{ isListening ? 'Listening' : 'Voice' }}</span>
       </div>
 
       <div class="action-card" (click)="onManualReport()">
@@ -50,21 +50,21 @@
         <div class="icon-circle gray">
           <ion-icon name="stop-circle"></ion-icon>
         </div>
-        <span>Stop Listening</span>
+        <span>Stop</span>
       </div>
 
       <div class="action-card" (click)="toggleHandsFree()">
         <div class="icon-circle gray" [class.listening]="handsFreeEnabled">
           <ion-icon [name]="handsFreeEnabled ? 'radio' : 'ellipse-outline'"></ion-icon>
         </div>
-        <span>{{ handsFreeEnabled ? 'Hands-free On' : 'Hands-free Off' }}</span>
+        <span>{{ handsFreeEnabled ? 'Auto On' : 'Auto Off' }}</span>
       </div>
 
-      <div class="action-card" (click)="toggleFullMap()">
+      <div class="action-card" (click)="toggleViewMode()">
         <div class="icon-circle gray">
-          <ion-icon [name]="fullMapMode ? 'map' : 'map-outline'"></ion-icon>
+          <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
         </div>
-        <span>{{ fullMapMode ? 'Exit Full Map' : 'Full Events Map' }}</span>
+        <span>{{ viewMode === 'split' ? 'Map' : (viewMode === 'map' ? 'List' : 'Split') }}</span>
       </div>
     </div>
 

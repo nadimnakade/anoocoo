@@ -8,12 +8,12 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  
+
   <!-- Section: Intelligent Vision -->
   <ion-list-header>
     <ion-label>Intelligent Vision</ion-label>
   </ion-list-header>
-  
+
   <ion-card button (click)="scanSign()">
     <ion-card-header>
       <ion-card-title>
@@ -93,6 +93,30 @@
     </ion-card-header>
     <ion-card-content>
       Measure device motion to auto-set sensitivity.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="configureMuteSettings()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="volume-mute-outline" slot="start" class="card-icon"></ion-icon>
+        Mute Settings
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Set mute radius and muted streets to reduce alerts.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="configureSpeedContext()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="chatbox-ellipses-outline" slot="start" class="card-icon"></ion-icon>
+        Speed Alert Context
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Add contextual voice like “School zone ahead”.
     </ion-card-content>
   </ion-card>
 

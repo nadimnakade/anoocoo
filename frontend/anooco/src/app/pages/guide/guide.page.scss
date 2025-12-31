@@ -1,0 +1,53 @@
+.guide-intro {
+  text-align: center;
+  margin-bottom: 20px;
+
+  .guide-logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 10px;
+    border-radius: 16px;
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--ion-color-medium);
+    margin: 0;
+  }
+}
+
+ion-accordion {
+  margin-bottom: 10px;
+  background: var(--ion-card-background);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+ul {
+  padding-left: 20px;
+  margin: 10px 0;
+  
+  li {
+    margin-bottom: 6px;
+    color: var(--ion-text-color);
+  }
+}
+
+p {
+  line-height: 1.5;
+  color: var(--ion-text-color);
+}
+
+.footer-note {
+  text-align: center;
+  margin-top: 30px;
+  color: var(--ion-color-medium);
+  font-size: 12px;
+}

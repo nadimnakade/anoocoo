@@ -40,6 +40,26 @@ export class ToolsPage {
       const result = await this.potholeAiService.confirmPotholeFromCamera();
       await loading.dismiss();
       if (result.isPothole) {
+        let autoVerified = false;
+        let confidence = result.score;
+        if (this.roadFeatureService.hasRecentSpike(30000)) {
+          const spike = this.roadFeatureService.getLastSpike();
+          const base = this.roadFeatureService.potholeThreshold;
+          const severityNorm = spike ? Math.min(1, Math.max(0, (spike.severity - base) / 10)) : 0;
+          confidence = Math.min(1, result.score * 0.6 + severityNorm * 0.4);
+          autoVerified = confidence >= 0.7;
+        }
+
+        if (autoVerified) {
+          const pos = await this.locationService.getCurrentLocation();
+          this.apiService.sendReportWithQueue(`Verified pothole (AI ${result.score.toFixed(2)}, conf ${confidence.toFixed(2)})`, pos)
+            .subscribe({
+              next: () => this.showToast('Pothole auto-reported (verified).'),
+              error: () => this.showToast('Failed to auto-report.')
+            });
+          return;
+        }
+
         const alert = await this.alertController.create({
           header: 'AI Analysis',
           message: `Pothole likely detected (score: ${result.score.toFixed(2)}). Report this?`,
@@ -47,7 +67,7 @@ export class ToolsPage {
             { text: 'Cancel', role: 'cancel' },
             { text: 'Report', handler: async () => {
               const pos = await this.locationService.getCurrentLocation();
-              this.apiService.sendReport(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos)
+              this.apiService.sendReportWithQueue(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos)
                 .subscribe({
                   next: () => this.showToast('Pothole reported.'),
                   error: () => this.showToast('Failed to report.')
@@ -260,6 +280,60 @@ export class ToolsPage {
       await loading.dismiss();
       this.showToast('Calibration failed.');
     }
+  }
+
+  async configureMuteSettings() {
+    const alert = await this.alertController.create({
+      header: 'Mute Settings',
+      inputs: [
+        {
+          name: 'radius',
+          type: 'number',
+          placeholder: 'Mute radius (meters)',
+          value: this.roadFeatureService.mutedRadiusMeters
+        },
+        {
+          name: 'streets',
+          type: 'text',
+          placeholder: 'Muted streets (comma separated)',
+          value: this.roadFeatureService.mutedStreets.join(', ')
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Save', handler: (data) => {
+            const radius = parseInt(data.radius, 10) || 0;
+            const streets = (data.streets || '').split(',').map((s: string) => s.trim());
+            this.roadFeatureService.updateMute(radius, streets);
+            this.showToast('Mute settings updated.');
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async configureSpeedContext() {
+    const alert = await this.alertController.create({
+      header: 'Speed Alert Context',
+      inputs: [
+        {
+          name: 'context',
+          type: 'text',
+          placeholder: 'e.g., School zone ahead',
+          value: this.roadFeatureService.speedContext
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Save', handler: (data) => {
+            this.roadFeatureService.updateSpeedContext(data.context || '');
+            this.showToast('Speed alert context saved.');
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 
   async configureAutoStart() {

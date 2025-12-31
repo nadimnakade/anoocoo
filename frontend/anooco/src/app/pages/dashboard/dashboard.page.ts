@@ -33,6 +33,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   eventMarkers: L.Marker[] = [];
   showAddressTags = true;
   fullMapMode = false;
+  viewMode: 'map' | 'split' | 'list' = 'split';
   showExpired = false;
 
   isReportModalOpen = false;
@@ -81,7 +82,9 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     this.subscriptions.add(
       this.roadFeatureService.speedAlert$.subscribe(evt => {
-        this.speak(`Slow down. Speed limit is ${evt.limit}.`);
+        const ctx = this.roadFeatureService.speedContext;
+        const suffix = ctx && ctx.trim().length > 0 ? ` ${ctx.trim()}` : '';
+        this.speak(`Slow down. Speed limit is ${evt.limit}.${suffix ? ' ' + suffix : ''}`);
         this.showToast(`Speed Alert: Exceeding ${evt.limit} km/h`, 'danger');
       })
     );
@@ -128,6 +131,17 @@ export class DashboardPage implements OnInit, OnDestroy {
   async startListening() {
     if (this.isListening) return;
 
+    // Pause wake loop if active to avoid conflict
+    const wasHandsFree = this.handsFreeEnabled;
+    if (wasHandsFree) {
+        this.abortWake = true;
+        // Allow loop to exit
+        await new Promise(r => setTimeout(r, 200));
+        try {
+            await SpeechRecognition.stop();
+        } catch {}
+    }
+
     try {
       this.isListening = true;
       this.cdr.detectChanges();
@@ -154,6 +168,11 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
       console.error(e);
       // Don't speak error to avoid loop if it fails silently
+    } finally {
+      // Resume wake loop if it was enabled and user didn't turn it off
+      if (wasHandsFree && this.handsFreeEnabled) {
+          this.startWakeLoop();
+      }
     }
   }
 
@@ -178,12 +197,18 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.startWakeLoop();
     } else {
       this.abortWake = true;
+      try { await SpeechRecognition.stop(); } catch {}
     }
   }
 
   private async startWakeLoop() {
     this.abortWake = false;
     while (this.handsFreeEnabled && !this.abortWake) {
+      if (this.isListening) {
+         await new Promise(r => setTimeout(r, 1000));
+         continue;
+      }
+
       try {
         const available = await SpeechRecognition.available();
         if (!available.available) {
@@ -200,6 +225,8 @@ export class DashboardPage implements OnInit, OnDestroy {
         if (text.includes("anooco") || text.includes("hey anooco")) {
           this.speak("Listening...");
           await this.startListening();
+          // startListening handles the resumption of wake loop, so we break this instance
+          break;
         }
       } catch {
         // ignore transient errors
@@ -337,12 +364,29 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.plotEvents();
   }
 
-  private reconfirmEvent(evt: any) {
+  private reconfirmEvent(evt: any, distanceMeters?: number) {
     if (!evt || !evt.id) return;
-    this.apiService.confirmEvent(evt.id).subscribe();
+    this.apiService.confirmEvent(evt.id, distanceMeters).subscribe();
   }
-  toggleFullMap() {
-    this.fullMapMode = !this.fullMapMode;
+
+  private isMutedForEvent(evt: any, userLat: number, userLng: number, distanceMeters: number): boolean {
+    const radius = this.roadFeatureService.mutedRadiusMeters;
+    if (radius > 0 && distanceMeters <= radius) return true;
+    const addr = (evt.address || evt.Address || '').toString().toLowerCase();
+    if (addr && this.roadFeatureService.mutedStreets.length > 0) {
+      const match = this.roadFeatureService.mutedStreets.find(s => addr.includes(s.toLowerCase()));
+      if (match) return true;
+    }
+    return false;
+  }
+  toggleViewMode() {
+    if (this.viewMode === 'split') {
+      this.viewMode = 'map';
+    } else if (this.viewMode === 'map') {
+      this.viewMode = 'list';
+    } else {
+      this.viewMode = 'split';
+    }
     this.cdr.detectChanges();
   }
 
@@ -425,6 +469,9 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     this.events.forEach(evt => {
       const distance = this.calculateDistance(userLat, userLng, evt.latitude, evt.longitude);
+      if (this.isMutedForEvent(evt, userLat, userLng, distance)) {
+        return;
+      }
 
       // If event is within 500m and hasn't been spoken yet
       if (distance < 500 && !this.spokenEvents.has(evt.id)) {
@@ -436,7 +483,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         const last = this.lastReconfirm.get(evt.id) || 0;
         const now = Date.now();
         if (now - last > 10 * 60 * 1000) {
-          this.reconfirmEvent(evt);
+          this.reconfirmEvent(evt, distance);
           this.lastReconfirm.set(evt.id, now);
         }
       }
@@ -477,12 +524,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   speak(text: string) {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
-    }
+    this.voiceService.speak(text);
   }
 
   // Haversine formula to calculate distance in meters

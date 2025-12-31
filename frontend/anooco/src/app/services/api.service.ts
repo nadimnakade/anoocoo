@@ -100,8 +100,12 @@ export class ApiService {
     });
   }
 
-  confirmEvent(eventId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/events/${eventId}/confirm`, {}).pipe(
+  confirmEvent(eventId: string, proximityMeters?: number): Observable<any> {
+    const payload = {
+      confirmedAt: new Date().toISOString(),
+      proximityMeters: proximityMeters ?? null
+    };
+    return this.http.post(`${this.apiUrl}/events/${eventId}/confirm`, payload).pipe(
       catchError(() => of({ ok: false }))
     );
   }

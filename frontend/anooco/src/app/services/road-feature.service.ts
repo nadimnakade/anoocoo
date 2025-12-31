@@ -13,8 +13,12 @@ export class RoadFeatureService {
   // Config
   public speedLimitKmh = 120; // Default limit
   public potholeThreshold = 15; // m/s^2 (Gravity is ~9.8)
+  public mutedRadiusMeters = 0;
+  public mutedStreets: string[] = [];
+  public speedContext = '';
 
   private lastSpeedCheck = 0;
+  private lastPotholeSpike: { severity: number, timestamp: number } | null = null;
 
   constructor(
     private locationService: LocationService,
@@ -29,6 +33,18 @@ export class RoadFeatureService {
 
     const savedPothole = localStorage.getItem('anooco_pothole_threshold');
     if (savedPothole) this.potholeThreshold = parseFloat(savedPothole);
+    const savedRadius = localStorage.getItem('anooco_muted_radius');
+    if (savedRadius) this.mutedRadiusMeters = parseInt(savedRadius, 10);
+    const savedStreets = localStorage.getItem('anooco_muted_streets');
+    if (savedStreets) {
+      try {
+        this.mutedStreets = JSON.parse(savedStreets);
+      } catch {
+        this.mutedStreets = [];
+      }
+    }
+    const savedContext = localStorage.getItem('anooco_speed_context');
+    if (savedContext) this.speedContext = savedContext;
   }
 
   updateConfig(speedLimit: number, potholeSensitivity: number) {
@@ -36,6 +52,18 @@ export class RoadFeatureService {
     this.potholeThreshold = potholeSensitivity;
     localStorage.setItem('anooco_speed_limit', speedLimit.toString());
     localStorage.setItem('anooco_pothole_threshold', potholeSensitivity.toString());
+  }
+
+  updateMute(radiusMeters: number, streets: string[]) {
+    this.mutedRadiusMeters = Math.max(0, radiusMeters || 0);
+    this.mutedStreets = streets.map(s => s.trim()).filter(s => s.length > 0);
+    localStorage.setItem('anooco_muted_radius', this.mutedRadiusMeters.toString());
+    localStorage.setItem('anooco_muted_streets', JSON.stringify(this.mutedStreets));
+  }
+
+  updateSpeedContext(context: string) {
+    this.speedContext = context || '';
+    localStorage.setItem('anooco_speed_context', this.speedContext);
   }
 
   startMonitoring() {
@@ -72,6 +100,7 @@ export class RoadFeatureService {
 
     // If magnitude exceeds threshold (approx > 1.5G)
     if (magnitude > this.potholeThreshold) {
+      this.lastPotholeSpike = { severity: magnitude, timestamp: Date.now() };
       // Debounce/Throttle could be added here
       this.ngZone.run(() => {
         this.potholeDetected$.next({
@@ -133,5 +162,14 @@ export class RoadFeatureService {
         resolve(newThreshold);
       }, seconds * 1000);
     });
+  }
+
+  hasRecentSpike(windowMs: number = 30000): boolean {
+    if (!this.lastPotholeSpike) return false;
+    return Date.now() - this.lastPotholeSpike.timestamp <= windowMs;
+  }
+
+  getLastSpike(): { severity: number, timestamp: number } | null {
+    return this.lastPotholeSpike;
   }
 }

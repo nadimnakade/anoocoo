@@ -109,8 +109,8 @@ app.UseAuthorization();
 // --------------------builde
 // Endpoints
 // --------------------
-app.MapControllers();
-app.MapHub<AlertHub>("/hubs/alerts");
+app.MapControllers().RequireCors("AllowAll");
+app.MapHub<AlertHub>("/hubs/alerts").RequireCors("AllowAll");
 
 
 

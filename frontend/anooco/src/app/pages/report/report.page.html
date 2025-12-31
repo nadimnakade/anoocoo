@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Report</ion-title>
+  </ion-toolbar>
+  <ion-progress-bar *ngIf="submitting" type="indeterminate"></ion-progress-bar>
+</ion-header>
+
+<ion-content>
+  <div class="container">
+    <h2>Select a type</h2>
+    <div class="report-grid">
+      <div
+        class="report-item"
+        *ngFor="let t of types"
+        (click)="submit(t.key)"
+      >
+        <div class="item-icon" [style.backgroundColor]="t.color">
+          <ion-icon [name]="t.icon"></ion-icon>
+        </div>
+        <div class="item-details">
+          <h3>{{ t.label }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

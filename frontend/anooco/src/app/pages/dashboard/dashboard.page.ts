@@ -1,11 +1,17 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { MenuController, ModalController, LoadingController, Platform } from '@ionic/angular';
+import { MenuController, ModalController, LoadingController, Platform, ToastController, AlertController, ActionSheetController } from '@ionic/angular';
 import * as L from 'leaflet';
 import { Geolocation } from '@capacitor/geolocation';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import { ApiService } from '../../services/api.service';
 import { SignalrService } from '../../services/signalr.service';
 import { Subscription } from 'rxjs';
+import { VoiceService } from '../../services/voice.service';
+import { ReportLogicService } from '../../services/report-logic.service';
+import { RoadFeatureService } from '../../services/road-feature.service';
+import { DrivingService } from '../../services/driving.service';
+import { DashcamService } from '../../services/dashcam.service';
+import { OcrService } from '../../services/ocr.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,7 +43,16 @@ export class DashboardPage implements OnInit, OnDestroy {
     private loadingController: LoadingController,
     private signalrService: SignalrService,
     private platform: Platform,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private voiceService: VoiceService,
+    private reportLogicService: ReportLogicService,
+    private roadFeatureService: RoadFeatureService,
+    private toastController: ToastController,
+    private alertController: AlertController,
+    private drivingService: DrivingService,
+    private actionSheetController: ActionSheetController,
+    private ocrService: OcrService,
+    private dashcamService: DashcamService
   ) { }
 
   ngOnInit() {
@@ -53,8 +68,210 @@ export class DashboardPage implements OnInit, OnDestroy {
       })
     );
 
+    // Subscribe to Road Features
+    this.subscriptions.add(
+      this.roadFeatureService.potholeDetected$.subscribe(evt => {
+        console.log('Pothole detected:', evt);
+        this.showToast(`Possible Pothole Detected (Severity: ${evt.severity.toFixed(1)})`);
+      })
+    );
+
+    this.subscriptions.add(
+      this.roadFeatureService.speedAlert$.subscribe(evt => {
+        this.speak(`Slow down. Speed limit is ${evt.limit}.`);
+        this.showToast(`Speed Alert: Exceeding ${evt.limit} km/h`, 'danger');
+      })
+    );
+
+    // Subscribe to Auto-Driving Mode
+    this.subscriptions.add(
+      this.drivingService.isDrivingMode$.subscribe(isDriving => {
+        if (isDriving && !this.handsFreeEnabled) {
+          this.toggleHandsFree();
+          this.showToast('Driving Mode Enabled (Car Detected)', 'success');
+        }
+      })
+    );
+
+    // Start monitoring road features
+    this.roadFeatureService.startMonitoring();
+
     // Request speech permissions early
     this.requestSpeechPermissions();
+  }
+
+  async openSettings() {
+    const devices = await this.drivingService.getPairedDevices();
+
+    const inputs = devices.map(d => ({
+      type: 'radio' as const, // explicitly typed
+      label: d.name || d.address,
+      value: d,
+      checked: false
+    }));
+
+    // Add 'None' option
+    inputs.unshift({
+      type: 'radio' as const,
+      label: 'None (Disable Auto-Start)',
+      value: null,
+      checked: false
+    });
+
+    const alert = await this.alertController.create({
+      header: 'Select Car Bluetooth',
+      inputs: inputs,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Save',
+          handler: (data) => {
+            if (data) {
+              this.drivingService.saveCarDevice(data.name, data.address);
+              this.showToast(`Auto-start set to: ${data.name}`);
+            } else {
+              // Handle disable
+            }
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async openTools() {
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Driver Tools',
+      buttons: [
+        {
+          text: 'Scan Street Sign (OCR)',
+          icon: 'scan-outline',
+          handler: () => {
+            this.scanSign();
+          }
+        },
+        {
+          text: 'Connect to Dashcam',
+          icon: 'wifi-outline',
+          handler: () => {
+            this.connectDashcam();
+          }
+        },
+        {
+          text: 'View Dashcam Recordings',
+          icon: 'videocam-outline',
+          handler: () => {
+            this.viewDashcamRecordings();
+          }
+        },
+        {
+          text: 'Cancel',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async scanSign() {
+    const loading = await this.loadingController.create({
+      message: 'Scanning sign...',
+    });
+    await loading.present();
+
+    try {
+      const texts = await this.ocrService.captureAndReadSign();
+      await loading.dismiss();
+
+      if (texts.length > 0) {
+        const fullText = texts.join(' ');
+        console.log('OCR Text:', fullText);
+        this.showToast(`Read: ${fullText}`);
+        this.speak(`Sign says: ${fullText}`);
+      } else {
+        this.showToast('No text detected', 'warning');
+        this.speak('No text found.');
+      }
+    } catch (e) {
+      await loading.dismiss();
+      console.error('OCR failed', e);
+      this.showToast('Failed to scan sign', 'danger');
+    }
+  }
+
+  async connectDashcam() {
+    const alert = await this.alertController.create({
+      header: 'Connect Dashcam',
+      inputs: [
+        {
+          name: 'ssid',
+          type: 'text',
+          placeholder: 'SSID (e.g. VIOFO_A129)',
+          value: 'VIOFO_A129' // Example default
+        },
+        {
+          name: 'password',
+          type: 'password',
+          placeholder: 'Password (12345678)'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Connect',
+          handler: async (data) => {
+            if (data.ssid) {
+              const loading = await this.loadingController.create({ message: 'Connecting...' });
+              await loading.present();
+
+              const success = await this.dashcamService.connectToDashcam(data.ssid, data.password);
+              await loading.dismiss();
+
+              if (success) {
+                this.showToast(`Connected to ${data.ssid}`, 'success');
+              } else {
+                this.showToast('Connection failed. Check range/password.', 'danger');
+              }
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async viewDashcamRecordings() {
+    const loading = await this.loadingController.create({ message: 'Fetching recordings...' });
+    await loading.present();
+
+    try {
+      const files = await this.dashcamService.listRecordings();
+      await loading.dismiss();
+
+      // Show list in an alert for now (simple UI)
+      const alert = await this.alertController.create({
+        header: 'Dashcam Files',
+        inputs: files.map((f: any) => ({
+          type: 'radio',
+          label: `${f.name} (${f.size})`,
+          value: f
+        })),
+        buttons: ['Close']
+      });
+      await alert.present();
+
+    } catch (e) {
+      await loading.dismiss();
+      this.showToast('Failed to fetch recordings', 'danger');
+    }
   }
 
   async requestSpeechPermissions() {
@@ -72,12 +289,6 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (this.isListening) return;
 
     try {
-      const available = await SpeechRecognition.available();
-      if (!available.available) {
-        this.speak("Voice recognition is not available.");
-        return;
-      }
-
       this.isListening = true;
       this.cdr.detectChanges();
 
@@ -85,21 +296,16 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.listenTimeout = setTimeout(async () => {
         await this.stopListening();
       }, 12000);
-      const result = await SpeechRecognition.start({
-        language: "en-US",
-        maxResults: 1,
-        prompt: "Say 'Report accident' or 'Report traffic'",
-        partialResults: false,
-        popup: false,
-      });
+      const heardText = await this.voiceService.startListening();
 
       clearTimeout(this.listenTimeout);
       this.isListening = false;
       this.cdr.detectChanges();
 
-      if (result.matches && result.matches.length > 0) {
-        const text = result.matches[0];
-        this.processVoiceCommand(text);
+      if (heardText && heardText.length > 0) {
+        this.processVoiceCommand(heardText);
+      } else {
+        this.speak("I didn't catch that. Please try again.");
       }
 
     } catch (e) {
@@ -168,22 +374,26 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   processVoiceCommand(text: string) {
     console.log('Voice command:', text);
-    const lower = text.toLowerCase();
 
-    let type = '';
-    if (lower.includes('pothole') || lower.includes('bump')) type = 'POTHOLE';
-    else if (lower.includes('accident') || lower.includes('crash')) type = 'ACCIDENT';
-    else if (lower.includes('police') || lower.includes('cop')) type = 'POLICE';
-    else if (lower.includes('traffic') || lower.includes('stuck')) type = 'TRAFFIC';
-    else if (lower.includes('park') || lower.includes('parking')) type = 'PARK';
-    else if (lower.includes('lift') || lower.includes('ride')) type = 'LIFT';
+    const intent = this.reportLogicService.parseVoiceCommand(text);
 
-    if (type) {
-      this.speak(`Reporting ${type.toLowerCase()}.`);
-      this.submitReportInternal(type, text);
+    if (intent) {
+      const typeDisplay = intent.type.replace('REPORT_', '').toLowerCase();
+      this.speak(`Reporting ${typeDisplay}.`);
+      this.submitReportInternal(intent.type, text);
     } else {
       this.speak("I didn't catch that. Please try again.");
     }
+  }
+
+  async showToast(msg: string, color: string = 'primary') {
+    const toast = await this.toastController.create({
+      message: msg,
+      duration: 3000,
+      color: color,
+      position: 'top'
+    });
+    await toast.present();
   }
 
   async submitReportInternal(type: string, rawText: string) {
@@ -293,15 +503,25 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
 
     try {
-      // Force Malta for demo purposes if requested, otherwise try geolocation
-      // For now, let's default to Malta as requested by user
-      const lat = 35.9375;
-      const lng = 14.3754;
+      let lat = 35.9375;
+      let lng = 14.3754;
+
+      try {
+        const permission = await Geolocation.checkPermissions();
+        if (permission.location !== 'granted') {
+          await Geolocation.requestPermissions();
+        }
+        const current = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        lat = current.coords.latitude;
+        lng = current.coords.longitude;
+      } catch (geoErr) {
+        console.warn('Geolocation unavailable, using fallback', geoErr);
+      }
 
       this.map = L.map('map', {
         zoomControl: false, // Cleaner UI
         attributionControl: false
-      }).setView([lat, lng], 12); // Zoom level 12 for island view
+      }).setView([lat, lng], 14);
 
       // Add OpenStreetMap tiles
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {

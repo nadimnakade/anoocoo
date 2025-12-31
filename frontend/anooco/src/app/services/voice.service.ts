@@ -28,9 +28,9 @@ export class VoiceService {
       const matches = await SpeechRecognition.start({
         language: "en-US",
         maxResults: 1,
-        prompt: "Say something...",
+        prompt: "Say 'Report accident' or 'Report traffic'",
         partialResults: false,
-        popup: false,
+        popup: true,
       });
 
       this.isListening = false;

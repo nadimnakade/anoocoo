@@ -5,6 +5,8 @@ import { DashcamService } from '../../services/dashcam.service';
 import { RoadFeatureService } from '../../services/road-feature.service';
 import { DrivingService } from '../../services/driving.service';
 import { PotholeAiService } from '../../services/pothole-ai.service';
+import { ApiService } from '../../services/api.service';
+import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-tools',
@@ -24,6 +26,8 @@ export class ToolsPage {
   private drivingService = inject(DrivingService);
   private potholeAiService = inject(PotholeAiService);
   private navCtrl = inject(NavController);
+  private apiService = inject(ApiService);
+  private locationService = inject(LocationService);
 
 
 
@@ -35,12 +39,31 @@ export class ToolsPage {
     try {
       const result = await this.potholeAiService.confirmPotholeFromCamera();
       await loading.dismiss();
-      const alert = await this.alertController.create({
-        header: 'AI Analysis',
-        message: result.isPothole ? `Pothole likely detected (score: ${result.score.toFixed(2)})` : `No pothole detected (score: ${result.score.toFixed(2)})`,
-        buttons: ['OK']
-      });
-      await alert.present();
+      if (result.isPothole) {
+        const alert = await this.alertController.create({
+          header: 'AI Analysis',
+          message: `Pothole likely detected (score: ${result.score.toFixed(2)}). Report this?`,
+          buttons: [
+            { text: 'Cancel', role: 'cancel' },
+            { text: 'Report', handler: async () => {
+              const pos = await this.locationService.getCurrentLocation();
+              this.apiService.sendReport(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos)
+                .subscribe({
+                  next: () => this.showToast('Pothole reported.'),
+                  error: () => this.showToast('Failed to report.')
+                });
+            }}
+          ]
+        });
+        await alert.present();
+      } else {
+        const alert = await this.alertController.create({
+          header: 'AI Analysis',
+          message: `No pothole detected (score: ${result.score.toFixed(2)})`,
+          buttons: ['OK']
+        });
+        await alert.present();
+      }
     } catch (e) {
       await loading.dismiss();
       this.showToast('AI analysis failed.');

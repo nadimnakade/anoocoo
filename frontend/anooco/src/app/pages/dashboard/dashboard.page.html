@@ -15,6 +15,10 @@
     <div class="menu-button" (click)="openTools()" style="margin-left: 10px;">
       <ion-icon name="construct-outline"></ion-icon>
     </div>
+    <!-- Expired Toggle -->
+    <div class="menu-button" (click)="toggleExpiredVisibility()" style="margin-left: 10px;">
+      <ion-icon [name]="showExpired ? 'eye' : 'eye-off'"></ion-icon>
+    </div>
   </div>
 
   <!-- Bottom Sheet / Card -->
@@ -98,7 +102,7 @@
         <div class="modal-header">
           <h2>What's happening?</h2>
         </div>
-        
+
         <div class="report-grid">
           <div class="report-item" (click)="submitReport('ACCIDENT')">
             <div class="report-icon" style="background-color: #D32F2F;">
@@ -131,7 +135,7 @@
             </div>
             <span>Traffic</span>
           </div>
-          
+
           <div class="report-item" (click)="submitReport('PARK')">
             <div class="report-icon" style="background-color: #388E3C;">
                <!-- Inline SVG for Park -->

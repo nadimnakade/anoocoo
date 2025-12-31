@@ -25,6 +25,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   watchId: string | null = null;
   userMarker: L.Marker | undefined;
   spokenEvents: Set<string> = new Set(); // Track announced events to avoid spam
+  private lastReconfirm: Map<string, number> = new Map();
   isListening = false;
   handsFreeEnabled = false;
   private abortWake = false;
@@ -32,6 +33,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   eventMarkers: L.Marker[] = [];
   showAddressTags = true;
   fullMapMode = false;
+  showExpired = false;
 
   isReportModalOpen = false;
   private subscriptions: Subscription = new Subscription();
@@ -96,6 +98,9 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     // Start monitoring road features
     this.roadFeatureService.startMonitoring();
+
+    // Try to sync any offline reports
+    this.apiService.syncOfflineReports().subscribe();
 
     // Request speech permissions early
     this.requestSpeechPermissions();
@@ -327,6 +332,15 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.menuCtrl.open();
   }
 
+  toggleExpiredVisibility() {
+    this.showExpired = !this.showExpired;
+    this.plotEvents();
+  }
+
+  private reconfirmEvent(evt: any) {
+    if (!evt || !evt.id) return;
+    this.apiService.confirmEvent(evt.id).subscribe();
+  }
   toggleFullMap() {
     this.fullMapMode = !this.fullMapMode;
     this.cdr.detectChanges();
@@ -417,6 +431,15 @@ export class DashboardPage implements OnInit, OnDestroy {
         this.speakEvent(evt, distance);
         this.spokenEvents.add(evt.id);
       }
+      // Reconfirm proximity to extend server TTL (throttled)
+      if (distance < 300) {
+        const last = this.lastReconfirm.get(evt.id) || 0;
+        const now = Date.now();
+        if (now - last > 10 * 60 * 1000) {
+          this.reconfirmEvent(evt);
+          this.lastReconfirm.set(evt.id, now);
+        }
+      }
     });
   }
 
@@ -498,15 +521,23 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.eventMarkers.forEach(m => m.remove());
     this.eventMarkers = [];
 
-    this.events.forEach(evt => {
+    const filtered = this.events.filter(evt => {
+      const status = (evt.status || evt.Status || '').toString().toLowerCase();
+      const expired = status === 'expired' || status === 'inactive' || evt.isExpired === true;
+      return this.showExpired ? true : !expired;
+    });
+
+    filtered.forEach(evt => {
       const type = evt.eventType?.toUpperCase() || 'UNKNOWN';
       const config = this.getMarkerConfig(type);
+      const status = (evt.status || evt.Status || '').toString().toLowerCase();
+      const expired = status === 'expired' || status === 'inactive' || evt.isExpired === true;
 
       const customIcon = L.divIcon({
         className: 'custom-event-marker-container', // Wrapper class if needed, or empty
         html: `
           <div class="custom-event-marker" style="
-            background-color: ${config.color};
+            background-color: ${expired ? '#9E9E9E' : config.color};
             width: 32px;
             height: 32px;
             display: flex;
@@ -515,6 +546,7 @@ export class DashboardPage implements OnInit, OnDestroy {
             border-radius: 50%;
             border: 2px solid white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            opacity: ${expired ? 0.7 : 1};
           ">
             ${config.icon}
           </div>
@@ -553,6 +585,7 @@ export class DashboardPage implements OnInit, OnDestroy {
            const userPos = this.userMarker.getLatLng();
            const dist = this.calculateDistance(userPos.lat, userPos.lng, evt.latitude, evt.longitude);
            this.speakEvent(evt, dist);
+           this.reconfirmEvent(evt);
         } else {
            // Fallback if user location unknown, just speak generic
            this.speak(`${evt.eventType} selected.`);

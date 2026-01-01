@@ -102,8 +102,10 @@ namespace Anooco.API.Controllers
                         ""Speed"" double precision,
                         ""ConfidenceScore"" double precision,
                         ""Processed"" boolean,
+                        ""Source"" text,
                         ""CreatedAt"" timestamp with time zone
                     );
+                    ALTER TABLE reports ADD COLUMN IF NOT EXISTS ""Source"" text DEFAULT 'manual';
 
                     -- Events Table Updates
                     CREATE TABLE IF NOT EXISTS events (

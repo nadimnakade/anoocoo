@@ -94,7 +94,8 @@ CREATE OR REPLACE FUNCTION sp_create_report(
     p_location geometry,
     p_heading double precision,
     p_speed double precision,
-    p_confidence_score double precision
+    p_confidence_score double precision,
+    p_source text
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -104,11 +105,11 @@ DECLARE
 BEGIN
     INSERT INTO reports (
         "Id", "UserId", "ReportType", "Description", "Location", 
-        "Heading", "Speed", "ConfidenceScore", "Processed", "CreatedAt"
+        "Heading", "Speed", "ConfidenceScore", "Processed", "Source", "CreatedAt"
     )
     VALUES (
         gen_random_uuid(), p_user_id, p_report_type, p_description, p_location, 
-        p_heading, p_speed, p_confidence_score, false, NOW()
+        p_heading, p_speed, p_confidence_score, false, p_source, NOW()
     )
     RETURNING reports."Id" INTO v_report_id;
     
@@ -145,7 +146,8 @@ RETURNS TABLE (
     "Description" text,
     "Timestamp" timestamp with time zone,
     "Status" text,
-    "ConfidenceScore" double precision
+    "ConfidenceScore" double precision,
+    "Source" text
 ) 
 LANGUAGE plpgsql
 AS $$
@@ -157,7 +159,8 @@ BEGIN
         r."Description", 
         r."CreatedAt", 
         CASE WHEN r."Processed" THEN 'Verified' ELSE 'Pending' END,
-        r."ConfidenceScore"
+        r."ConfidenceScore",
+        r."Source"
     FROM reports r
     WHERE r."UserId" = p_user_id
     ORDER BY r."CreatedAt" DESC;

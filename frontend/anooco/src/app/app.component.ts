@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { ApiService } from './services/api.service';
-import { ToastController } from '@ionic/angular';
+import { ToastController, MenuController } from '@ionic/angular';
+import { App } from '@capacitor/app';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -12,9 +14,36 @@ export class AppComponent {
   currentUser: any = null;
   isDarkMode = false;
 
-  constructor(private api: ApiService, private toast: ToastController) {
+  constructor(
+    private api: ApiService, 
+    private toast: ToastController,
+    private router: Router,
+    public menuCtrl: MenuController
+  ) {
     this.loadUser();
     this.checkTheme();
+    this.initializeApp();
+  }
+
+  initializeApp() {
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        this.checkSession();
+      }
+    });
+  }
+
+  checkSession() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      if (!this.currentUser) {
+        this.currentUser = JSON.parse(userStr);
+      }
+      // If we are on login page, redirect to dashboard
+      if (this.router.url === '/login' || this.router.url === '/') {
+        this.router.navigate(['/dashboard']);
+      }
+    }
   }
 
   checkTheme() {

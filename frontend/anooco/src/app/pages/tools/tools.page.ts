@@ -52,7 +52,7 @@ export class ToolsPage {
 
         if (autoVerified) {
           const pos = await this.locationService.getCurrentLocation();
-          this.apiService.sendReportWithQueue(`Verified pothole (AI ${result.score.toFixed(2)}, conf ${confidence.toFixed(2)})`, pos)
+          this.apiService.sendReportWithQueue(`Verified pothole (AI ${result.score.toFixed(2)}, conf ${confidence.toFixed(2)})`, pos, 'ai')
             .subscribe({
               next: () => this.showToast('Pothole auto-reported (verified).'),
               error: () => this.showToast('Failed to auto-report.')
@@ -67,7 +67,7 @@ export class ToolsPage {
             { text: 'Cancel', role: 'cancel' },
             { text: 'Report', handler: async () => {
               const pos = await this.locationService.getCurrentLocation();
-              this.apiService.sendReportWithQueue(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos)
+              this.apiService.sendReportWithQueue(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos, 'ai')
                 .subscribe({
                   next: () => this.showToast('Pothole reported.'),
                   error: () => this.showToast('Failed to report.')

@@ -42,7 +42,7 @@ export class ReportPage {
       const position = await this.location.getCurrentLocation();
       const text = `Manual report: ${type}`;
       await new Promise<void>((resolve, reject) => {
-        this.api.sendReport(text, position).subscribe({
+        this.api.sendReport(text, position, 'manual').subscribe({
           next: () => resolve(),
           error: (err) => reject(err)
         });

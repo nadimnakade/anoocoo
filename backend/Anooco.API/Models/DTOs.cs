@@ -3,6 +3,7 @@ namespace Anooco.API.Models
     public class CreateReportDto
     {
         public string RawText { get; set; } = string.Empty; // "Pothole here"
+        public string Source { get; set; } = "manual"; // "manual", "voice", "ai"
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public double? Heading { get; set; }

@@ -36,9 +36,10 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/user/update`, { userId, ...data });
   }
 
-  sendReport(text: string, location: any) {
+  sendReport(text: string, location: any, reportType: string = 'manual') {
     const payload = {
       rawText: text,
+      reportType,
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
       heading: location.coords.heading,
@@ -48,12 +49,13 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/reports`, payload);
   }
 
-  sendReportWithQueue(text: string, location: any): Observable<any> {
-    const obs = this.sendReport(text, location).pipe(
+  sendReportWithQueue(text: string, location: any, reportType: string = 'manual'): Observable<any> {
+    const obs = this.sendReport(text, location, reportType).pipe(
       catchError(err => {
         try {
           const payload = {
             rawText: text,
+            reportType,
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
             heading: location.coords.heading,

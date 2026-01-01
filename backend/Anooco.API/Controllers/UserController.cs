@@ -93,7 +93,8 @@ namespace Anooco.API.Controllers
                         Description = reader["Description"],
                         Timestamp = reader["Timestamp"],
                         Status = reader["Status"],
-                        ConfidenceScore = reader["ConfidenceScore"]
+                        ConfidenceScore = reader["ConfidenceScore"],
+                        Source = reader["Source"]
                     });
                 }
 

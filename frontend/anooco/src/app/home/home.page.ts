@@ -41,7 +41,7 @@ export class HomePage {
       this.lastReport = `Heard: "${text}"`;
 
       // 3. Send to API
-      this.apiService.sendReport(text, position).subscribe({
+      this.apiService.sendReport(text, position, 'voice').subscribe({
         next: (res: any) => {
           this.lastReport = `Report Sent! ID: ${res.reportId}`;
           this.voiceService.speak("Report received.");

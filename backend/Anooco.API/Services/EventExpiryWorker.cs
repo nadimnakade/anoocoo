@@ -53,16 +53,16 @@ namespace Anooco.API.Services
 
         private async Task CheckAndExpireEvents(CancellationToken stoppingToken)
         {
-            using var conn = await _dbService.CreateConnectionAsync();
-            using var cmd = new NpgsqlCommand("SELECT sp_expire_events()", conn);
+            // using var conn = await _dbService.CreateConnectionAsync();
+            // using var cmd = new NpgsqlCommand("SELECT sp_expire_events()", conn);
             
-            var result = await cmd.ExecuteScalarAsync(stoppingToken);
-            int expiredCount = result != null ? (int)result : 0;
+            // var result = await cmd.ExecuteScalarAsync(stoppingToken);
+            // int expiredCount = result != null ? (int)result : 0;
 
-            if (expiredCount > 0)
-            {
-                _logger.LogInformation($"Expired {expiredCount} events.");
-            }
+            // if (expiredCount > 0)
+            // {
+            //     _logger.LogInformation($"Expired {expiredCount} events.");
+            // }
         }
     }
 }

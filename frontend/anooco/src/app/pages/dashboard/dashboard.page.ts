@@ -140,6 +140,9 @@ export class DashboardPage implements OnInit, OnDestroy {
   async startListening() {
     if (this.isListening) return;
 
+    // Show guide toast
+    this.showToast('Listening... Say "Report Accident" or "Traffic Ahead"', 'tertiary');
+
     // Pause wake loop if active to avoid conflict
     const wasHandsFree = this.handsFreeEnabled;
     if (wasHandsFree) {
@@ -256,7 +259,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (intent) {
       const typeDisplay = intent.type.replace('REPORT_', '').toLowerCase();
       this.speak(`Reporting ${typeDisplay}.`);
-      this.submitReportInternal(intent.type, text);
+      this.submitReportInternal(intent.type, text, 'voice');
     } else {
       this.speak("I didn't catch that. Please try again.");
     }
@@ -272,7 +275,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     await toast.present();
   }
 
-  async submitReportInternal(type: string, rawText: string) {
+  async submitReportInternal(type: string, rawText: string, reportType: 'manual' | 'voice') {
     if (!this.userMarker) {
       this.speak("Location unknown.");
       return;
@@ -288,7 +291,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
     };
 
-    this.apiService.sendReport(rawText, location).subscribe({
+    this.apiService.sendReport(rawText, location, reportType).subscribe({
       next: () => {
         // Success handled by signalR mostly, but we can confirm
         setTimeout(() => this.loadEvents(), 1000);
@@ -299,7 +302,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async submitReport(type: string) {
     this.setOpen(false);
-    this.submitReportInternal(type, `Manual report: ${type}`);
+    this.submitReportInternal(type, `Manual report: ${type}`, 'manual');
     this.speak(`${type} report submitted.`);
   }
   ngOnDestroy() {

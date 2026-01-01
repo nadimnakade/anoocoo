@@ -25,6 +25,7 @@ namespace Anooco.API.Models.Entities
         public Guid? UserId { get; set; }
         public string ReportType { get; set; } = string.Empty; // ACCIDENT, POTHOLE, etc.
         public string? RawText { get; set; }
+        public string Source { get; set; } = "manual"; // "manual", "voice", "ai"
         
         [Column(TypeName = "geometry(Point, 4326)")]
         public Point Location { get; set; } = null!;

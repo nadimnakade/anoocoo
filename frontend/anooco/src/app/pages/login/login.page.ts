@@ -23,6 +23,11 @@ export class LoginPage implements OnInit {
   ) { }
 
   ngOnInit() {
+    // Check for existing session
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      this.router.navigate(['/dashboard'], { replaceUrl: true });
+    }
   }
 
   async onLogin() {

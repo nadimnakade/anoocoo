@@ -37,7 +37,7 @@ namespace Anooco.API.Services
                 using var conn = await _dbService.CreateConnectionAsync();
                 
                 // 1. Save Report
-                using var cmd = new NpgsqlCommand("SELECT * FROM sp_create_report(@userId, @type, @desc, @loc, @heading, @speed, @conf)", conn);
+                using var cmd = new NpgsqlCommand("SELECT * FROM sp_create_report(@userId, @type, @desc, @loc, @heading, @speed, @conf, @source)", conn);
                 cmd.Parameters.AddWithValue("userId", DBNull.Value);
                 cmd.Parameters.AddWithValue("type", reportType);
                 cmd.Parameters.AddWithValue("desc", reportDto.RawText ?? "");
@@ -45,6 +45,7 @@ namespace Anooco.API.Services
                 cmd.Parameters.AddWithValue("heading", reportDto.Heading ?? 0);
                 cmd.Parameters.AddWithValue("speed", reportDto.Speed ?? 0);
                 cmd.Parameters.AddWithValue("conf", 0.0);
+                cmd.Parameters.AddWithValue("source", reportDto.Source ?? "manual");
 
                 var result = await cmd.ExecuteScalarAsync();
                 if (result == null) throw new Exception("Failed to create report");

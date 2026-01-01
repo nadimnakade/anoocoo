@@ -19,6 +19,10 @@
     <div class="menu-button" (click)="toggleExpiredVisibility()" style="margin-left: 10px;">
       <ion-icon [name]="showExpired ? 'eye' : 'eye-off'"></ion-icon>
     </div>
+    <!-- View Mode Toggle (Always Visible) -->
+    <div class="menu-button" (click)="toggleViewMode()" style="margin-left: 10px;">
+      <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
+    </div>
   </div>
 
   <!-- Speedometer Overlay -->
@@ -44,7 +48,10 @@
           <ion-icon name="mic" *ngIf="!isListening"></ion-icon>
           <ion-spinner name="dots" *ngIf="isListening" color="light"></ion-spinner>
         </div>
-        <span>{{ isListening ? 'Listening' : 'Voice' }}</span>
+        <span>{{ isListening ? 'Listening...' : 'Voice' }}</span>
+        <div *ngIf="isListening" style="position: absolute; top: -40px; background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap;">
+          Say "Accident", "Pothole"...
+        </div>
       </div>
 
       <div class="action-card" (click)="onManualReport()">
@@ -104,7 +111,13 @@
             <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
             {{ evt.address || evt.Address }}
           </p>
-          <p>Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}</p>
+          <p>
+            <ion-icon [name]="evt.reportType === 'voice' ? 'mic' : (evt.reportType === 'ai' ? 'eye' : 'hand-left')"
+                      style="font-size: 0.9em; margin-right: 4px; vertical-align: middle; color: #666;"
+                      [title]="evt.reportType || 'manual'">
+            </ion-icon>
+            Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}
+          </p>
         </div>
       </div>
 

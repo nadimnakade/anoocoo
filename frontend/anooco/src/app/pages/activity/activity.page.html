@@ -24,7 +24,13 @@
       </div>
       <div class="info-column">
         <h3>{{ item.description || 'Incident Report' }}</h3>
-        <p>{{ item.timestamp | date:'MMM d, h:mm a' }}</p>
+        <p>
+          <ion-badge [color]="item.reportType === 'voice' ? 'secondary' : (item.reportType === 'ai' ? 'tertiary' : 'light')" style="margin-right: 6px; font-weight: normal;">
+            <ion-icon [name]="item.reportType === 'voice' ? 'mic' : (item.reportType === 'ai' ? 'eye' : 'hand-left')" style="vertical-align: text-bottom; font-size: 0.9em; margin-right: 2px;"></ion-icon>
+            {{ (item.reportType || 'manual') | titlecase }}
+          </ion-badge>
+          {{ item.timestamp | date:'MMM d, h:mm a' }}
+        </p>
         <span class="status-badge" [class.verified]="item.status === 'verified'">
           {{ item.status }}
         </span>

@@ -378,6 +378,43 @@ export class ToolsPage {
     await alert.present();
   }
 
+  async manageSavedPlaces() {
+    const home = localStorage.getItem('anooco_home_address') || '';
+    const work = localStorage.getItem('anooco_work_address') || '';
+
+    const alert = await this.alertController.create({
+      header: 'Saved Places',
+      inputs: [
+        {
+          name: 'home',
+          type: 'text',
+          placeholder: 'Home Address',
+          value: home,
+          label: 'Home'
+        },
+        {
+          name: 'work',
+          type: 'text',
+          placeholder: 'Work Address',
+          value: work,
+          label: 'Work'
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Save',
+          handler: (data) => {
+            localStorage.setItem('anooco_home_address', data.home || '');
+            localStorage.setItem('anooco_work_address', data.work || '');
+            this.showToast('Saved places updated.');
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   private async showToast(msg: string, color: string = 'primary') {
     const toast = await this.toastController.create({
       message: msg,

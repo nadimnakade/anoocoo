@@ -310,3 +310,40 @@
 .assistant-fab.pulse {
   animation: pulse-ring 2s infinite;
 }
+
+.speedometer-container {
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  z-index: 10;
+}
+
+.speed-circle {
+  width: 60px;
+  height: 60px;
+  background: white;
+  border-radius: 50%;
+  border: 4px solid var(--ion-color-success);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  color: #333;
+
+  &.speeding {
+    border-color: var(--ion-color-danger);
+    color: var(--ion-color-danger);
+  }
+
+  .speed-value {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .speed-unit {
+    font-size: 10px;
+    font-weight: 600;
+  }
+}

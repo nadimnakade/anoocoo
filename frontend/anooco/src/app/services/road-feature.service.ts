@@ -9,6 +9,7 @@ export class RoadFeatureService {
   // Observables for UI
   potholeDetected$ = new Subject<{ severity: number, timestamp: number }>();
   speedAlert$ = new Subject<{ speed: number, limit: number }>();
+  currentSpeed$ = new Subject<number>();
 
   // Config
   public speedLimitKmh = 120; // Default limit
@@ -116,6 +117,11 @@ export class RoadFeatureService {
 
     // Convert m/s to km/h
     const speedKmh = speedMs * 3.6;
+
+    // Emit current speed
+    this.ngZone.run(() => {
+        this.currentSpeed$.next(Math.round(speedKmh));
+    });
 
     // Simple alert logic
     if (speedKmh > this.speedLimitKmh) {

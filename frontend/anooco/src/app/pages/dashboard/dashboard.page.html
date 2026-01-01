@@ -21,6 +21,14 @@
     </div>
   </div>
 
+  <!-- Speedometer Overlay -->
+  <div class="speedometer-container" *ngIf="currentSpeed > 0">
+    <div class="speed-circle" [class.speeding]="currentSpeed > speedLimit">
+      <span class="speed-value">{{ currentSpeed }}</span>
+      <span class="speed-unit">km/h</span>
+    </div>
+  </div>
+
   <!-- Bottom Sheet / Card -->
   <div class="bottom-sheet" [class.hidden]="viewMode === 'map'" [class.full-screen]="viewMode === 'list'">
     <div class="sheet-handle"></div>
@@ -65,6 +73,20 @@
           <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
         </div>
         <span>{{ viewMode === 'split' ? 'Map' : (viewMode === 'map' ? 'List' : 'Split') }}</span>
+      </div>
+
+      <div class="action-card" (click)="navigateTo('HOME')">
+        <div class="icon-circle gray">
+          <ion-icon name="home"></ion-icon>
+        </div>
+        <span>Home</span>
+      </div>
+
+      <div class="action-card" (click)="navigateTo('WORK')">
+        <div class="icon-circle gray">
+          <ion-icon name="briefcase"></ion-icon>
+        </div>
+        <span>Work</span>
       </div>
     </div>
 

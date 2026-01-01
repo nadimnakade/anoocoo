@@ -35,6 +35,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   fullMapMode = false;
   viewMode: 'map' | 'split' | 'list' = 'split';
   showExpired = false;
+  currentSpeed = 0;
+  speedLimit = 120; // Default, update from config
 
   isReportModalOpen = false;
   private subscriptions: Subscription = new Subscription();
@@ -73,6 +75,13 @@ export class DashboardPage implements OnInit, OnDestroy {
     );
 
     // Subscribe to Road Features
+    this.subscriptions.add(
+      this.roadFeatureService.currentSpeed$.subscribe((speed: number) => {
+        this.currentSpeed = speed;
+        this.speedLimit = this.roadFeatureService.speedLimitKmh;
+      })
+    );
+
     this.subscriptions.add(
       this.roadFeatureService.potholeDetected$.subscribe(evt => {
         console.log('Pothole detected:', evt);
@@ -654,6 +663,21 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async onManualReport() {
     this.setOpen(true);
+  }
+
+  async navigateTo(type: 'HOME' | 'WORK') {
+    const key = type === 'HOME' ? 'anooco_home_address' : 'anooco_work_address';
+    const address = localStorage.getItem(key);
+
+    if (!address) {
+      this.showToast(`No ${type.toLowerCase()} address saved. Go to Tools > Navigation to set it.`);
+      return;
+    }
+
+    this.speak(`Navigating to ${type.toLowerCase()}`);
+    // Open Google Maps
+    const query = encodeURIComponent(address);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_system');
   }
 
   getMarkerConfig(type: string) {

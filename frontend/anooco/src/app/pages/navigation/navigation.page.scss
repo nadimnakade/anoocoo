@@ -1,0 +1,123 @@
+ion-content {
+  --background: #f4f5f8;
+}
+
+.search-container {
+  background: white;
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 16px;
+
+  .input-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    margin-bottom: 5px;
+  }
+
+  .connector-line {
+    width: 2px;
+    height: 15px;
+    background: #e0e0e0;
+    margin-left: 23px; // Align with icons
+    margin-top: -5px;
+    margin-bottom: -5px;
+  }
+
+  .radius-item {
+    --padding-start: 0;
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 10px;
+  }
+
+  .suggestions {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin: 0 10px 10px 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+    ion-item {
+      --min-height: 40px;
+      font-size: 0.9em;
+      
+      h3 {
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      p {
+        font-size: 0.8em;
+        color: #666;
+      }
+    }
+  }
+}
+
+.route-stats {
+  margin-bottom: 16px;
+  
+  .stat-box {
+    background: white;
+    padding: 10px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+
+    h3 {
+      margin: 0;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+    }
+    p {
+      margin: 2px 0 0;
+      font-size: 0.8em;
+      color: #888;
+    }
+
+    &.danger h3 {
+      color: var(--ion-color-danger);
+    }
+  }
+}
+
+.map-container {
+  height: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+
+  #nav-map {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.events-list {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+
+  ion-list-header {
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    color: #888;
+  }
+
+  .meta {
+    font-size: 0.8em;
+    color: #888;
+  }
+}

@@ -1,0 +1,108 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Plan Route</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <div class="search-container">
+    <ion-item lines="none" class="input-item">
+      <ion-icon name="location-outline" slot="start" color="medium"></ion-icon>
+      <ion-input label="Start" labelPlacement="floating" [(ngModel)]="startLocation" (ionInput)="onSearchInput($event, 'start')" placeholder="Current Location (or type address)"></ion-input>
+      <ion-button fill="clear" slot="end" (click)="useCurrentLocation()">
+        <ion-icon name="locate"></ion-icon>
+      </ion-button>
+    </ion-item>
+    <div class="suggestions" *ngIf="startSuggestions.length > 0">
+      <ion-list>
+        <ion-item *ngFor="let item of startSuggestions" (click)="selectAddress(item, 'start')" button>
+          <ion-label>
+            <h3>{{ item.display_name.split(',')[0] }}</h3>
+            <p>{{ item.display_name }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <div class="connector-line"></div>
+
+    <ion-item lines="none" class="input-item">
+      <ion-icon name="pin" slot="start" color="danger"></ion-icon>
+      <ion-input label="Destination" labelPlacement="floating" [(ngModel)]="endLocation" (ionInput)="onSearchInput($event, 'end')" placeholder="Enter destination"></ion-input>
+    </ion-item>
+    <div class="suggestions" *ngIf="endSuggestions.length > 0">
+      <ion-list>
+        <ion-item *ngFor="let item of endSuggestions" (click)="selectAddress(item, 'end')" button>
+          <ion-label>
+            <h3>{{ item.display_name.split(',')[0] }}</h3>
+            <p>{{ item.display_name }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <ion-item lines="none" class="radius-item">
+      <ion-label>Alert Radius: {{ alertRadius }} km</ion-label>
+      <ion-range [min]="0.5" [max]="10" [step]="0.5" [pin]="true" [(ngModel)]="alertRadius" (ionChange)="updateRadius()">
+        <ion-icon slot="start" name="radio-button-on"></ion-icon>
+        <ion-icon slot="end" name="radio-button-off"></ion-icon>
+      </ion-range>
+    </ion-item>
+
+    <ion-button expand="block" (click)="findRoute()" [disabled]="!endLocation || isLoading">
+      <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+      <span *ngIf="!isLoading">Find Route & Alerts</span>
+    </ion-button>
+  </div>
+
+  <div class="route-stats" *ngIf="routeStats">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <div class="stat-box">
+            <h3>{{ routeStats.duration }}</h3>
+            <p>Time</p>
+          </div>
+        </ion-col>
+        <ion-col>
+          <div class="stat-box">
+            <h3>{{ routeStats.distance }}</h3>
+            <p>Distance</p>
+          </div>
+        </ion-col>
+        <ion-col>
+          <div class="stat-box danger">
+            <h3>{{ routeEvents.length }}</h3>
+            <p>Alerts</p>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+
+  <div class="map-container">
+    <div id="nav-map"></div>
+  </div>
+
+  <div class="events-list" *ngIf="routeEvents.length > 0">
+    <ion-list-header>
+      <ion-label>Events on Route</ion-label>
+    </ion-list-header>
+    <ion-list>
+      <ion-item *ngFor="let evt of routeEvents" (click)="focusEvent(evt)">
+        <ion-icon [name]="getIcon(evt.eventType)" slot="start" [color]="getColor(evt.eventType)"></ion-icon>
+        <ion-label>
+          <h2>{{ evt.eventType }}</h2>
+          <p>{{ evt.address }}</p>
+          <p class="meta">{{ evt.distanceFromUser }}km away</p>
+        </ion-label>
+        <ion-badge slot="end" color="light">{{ evt.confirmationsCount }} cfm</ion-badge>
+      </ion-item>
+    </ion-list>
+  </div>
+
+</ion-content>

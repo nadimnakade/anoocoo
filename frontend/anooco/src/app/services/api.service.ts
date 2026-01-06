@@ -24,6 +24,13 @@ export class ApiService {
     return this.http.get(`${this.apiUrl}/events`);
   }
 
+  getEventsAlongRoute(route: number[][], radiusKm: number) {
+    return this.http.post(`${this.apiUrl}/events/route`, {
+      route,
+      radiusKm
+    });
+  }
+
   getUserProfile(userId: string) {
     return this.http.get(`${this.apiUrl}/user/profile?userId=${userId}`);
   }

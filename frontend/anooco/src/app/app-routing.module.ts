@@ -47,6 +47,10 @@ const routes: Routes = [
     path: 'guide',
     loadChildren: () => import('./pages/guide/guide.module').then( m => m.GuidePageModule)
   },
+  {
+    path: 'navigation',
+    loadChildren: () => import('./pages/navigation/navigation.module').then( m => m.NavigationPageModule)
+  },
 ];
 
 @NgModule({

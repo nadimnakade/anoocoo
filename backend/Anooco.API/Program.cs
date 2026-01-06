@@ -40,6 +40,7 @@ builder.Services.AddScoped<IReportIntakeService, ReportIntakeService>();
 builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
 builder.Services.AddHttpClient<IGeocodingService, GeocodingService>();
 builder.Services.AddHostedService<EventExpiryWorker>();
+builder.Services.AddScoped<DatabaseInitializer>();
 
 // --------------------
 // CORS (All environments)

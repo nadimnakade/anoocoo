@@ -15,6 +15,7 @@ export class RoadFeatureService {
   public speedLimitKmh = 120; // Default limit
   public potholeThreshold = 15; // m/s^2 (Gravity is ~9.8)
   public mutedRadiusMeters = 0;
+  public alertRadiusKm = 2; // Default 2km
   public mutedStreets: string[] = [];
   public speedContext = '';
 
@@ -36,6 +37,10 @@ export class RoadFeatureService {
     if (savedPothole) this.potholeThreshold = parseFloat(savedPothole);
     const savedRadius = localStorage.getItem('anooco_muted_radius');
     if (savedRadius) this.mutedRadiusMeters = parseInt(savedRadius, 10);
+
+    const savedAlertRadius = localStorage.getItem('anooco_alert_radius_km');
+    if (savedAlertRadius) this.alertRadiusKm = parseFloat(savedAlertRadius);
+
     const savedStreets = localStorage.getItem('anooco_muted_streets');
     if (savedStreets) {
       try {
@@ -60,6 +65,11 @@ export class RoadFeatureService {
     this.mutedStreets = streets.map(s => s.trim()).filter(s => s.length > 0);
     localStorage.setItem('anooco_muted_radius', this.mutedRadiusMeters.toString());
     localStorage.setItem('anooco_muted_streets', JSON.stringify(this.mutedStreets));
+  }
+
+  updateAlertRadius(km: number) {
+    this.alertRadiusKm = Math.max(0.1, km);
+    localStorage.setItem('anooco_alert_radius_km', this.alertRadiusKm.toString());
   }
 
   updateSpeedContext(context: string) {

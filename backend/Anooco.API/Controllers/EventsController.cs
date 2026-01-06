@@ -29,10 +29,17 @@ namespace Anooco.API.Controllers
                 while (await reader.ReadAsync())
                 {
                     var location = reader["Location"] as Point;
+                    
+                    // Log if location is missing (debugging "blank data")
+                    if (location == null)
+                    {
+                        Console.WriteLine($"[Warning] Event {reader["Id"]} has null location.");
+                    }
+
                     events.Add(new
                     {
                         Id = reader["Id"],
-                        EventType = reader["EventType"],
+                        EventType = reader["EventType"]?.ToString(),
                         Latitude = location?.Y ?? 0,
                         Longitude = location?.X ?? 0,
                         ConfirmationsCount = reader["ConfirmationsCount"],

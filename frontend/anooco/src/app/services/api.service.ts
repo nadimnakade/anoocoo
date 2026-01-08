@@ -119,6 +119,14 @@ export class ApiService {
     );
   }
 
+  clearEvent(eventId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/events/${eventId}/clear`, {});
+  }
+
+  reportFalseEvent(eventId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/events/${eventId}/false`, {});
+  }
+
   seedData() {
     return this.http.post(`${this.apiUrl}/seed`, {});
   }

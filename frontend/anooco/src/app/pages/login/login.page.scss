@@ -37,10 +37,11 @@
 }
 
 .input-group {
-  background: var(--ion-item-background);
-  border: 1px solid var(--ion-color-light-shade);
-  border-radius: 8px;
-  padding: 4px 12px;
+  background: #ffffff;
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+  padding: 6px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .uber-input {

@@ -264,6 +264,60 @@ export class ToolsPage {
     await alert.present();
   }
 
+  async configureVoiceAlerts() {
+    const alert = await this.alertController.create({
+      header: 'Voice Alert Radius',
+      inputs: [
+        {
+          name: 'voiceRadius',
+          type: 'number',
+          placeholder: 'Radius (km)',
+          value: this.roadFeatureService.voiceAlertKm
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Save', handler: (data) => {
+            const r = parseFloat(data.voiceRadius) || 1.0;
+            this.roadFeatureService.updateVoiceAlertRadius(r);
+            this.showToast(`Voice alerts at ${r} km`);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async configureTrafficDetection() {
+    const alert = await this.alertController.create({
+      header: 'Traffic Detection',
+      inputs: [
+        { name: 'minKmh', type: 'number', placeholder: 'Min km/h', value: this.roadFeatureService.trafficSlowMinKmh },
+        { name: 'maxKmh', type: 'number', placeholder: 'Max km/h', value: this.roadFeatureService.trafficSlowMaxKmh },
+        { name: 'sustainSamples', type: 'number', placeholder: 'Sustain samples', value: this.roadFeatureService.trafficSustainSamples },
+        { name: 'cooldownMs', type: 'number', placeholder: 'Cooldown ms', value: this.roadFeatureService.trafficCooldownMs },
+        { name: 'resetSpeedKmh', type: 'number', placeholder: 'Reset speed km/h', value: this.roadFeatureService.trafficResetSpeedKmh },
+        { name: 'stoppedThresholdKmh', type: 'number', placeholder: 'Stopped threshold km/h', value: this.roadFeatureService.trafficStoppedThresholdKmh }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Save', handler: (data) => {
+            this.roadFeatureService.updateTrafficConfig({
+              minKmh: parseFloat(data.minKmh),
+              maxKmh: parseFloat(data.maxKmh),
+              sustainSamples: parseInt(data.sustainSamples, 10),
+              cooldownMs: parseInt(data.cooldownMs, 10),
+              resetSpeedKmh: parseFloat(data.resetSpeedKmh),
+              stoppedThresholdKmh: parseFloat(data.stoppedThresholdKmh)
+            });
+            this.showToast('Traffic detection thresholds updated.');
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   async calibratePotholeSensitivity() {
     const loading = await this.loadingController.create({ message: 'Calibrating motion...' });
     await loading.present();

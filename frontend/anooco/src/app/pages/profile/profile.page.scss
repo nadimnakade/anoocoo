@@ -10,7 +10,8 @@
     border-radius: 50%;
     overflow: hidden;
     margin-bottom: 15px;
-    background: var(--ion-color-light);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     
     img {
       width: 100%;
@@ -49,10 +50,11 @@
   margin-bottom: 30px;
 
   .stat-card {
-    background: var(--ion-color-light);
+    background: #ffffff;
     padding: 20px;
-    border-radius: 12px;
+    border-radius: 16px;
     text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 
     h3 {
       font-size: 24px;
@@ -73,7 +75,7 @@
   ion-list-header {
     font-size: 18px;
     font-weight: 600;
-    color: var(--ion-text-color);
+    color: var(--ion-color-medium);
     padding-left: 0;
     margin-bottom: 10px;
   }

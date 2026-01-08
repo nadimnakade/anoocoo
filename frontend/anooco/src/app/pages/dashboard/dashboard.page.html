@@ -99,7 +99,10 @@
 
     <!-- Recent Activity / List -->
     <div class="recent-list">
-      <div class="list-header">Nearby Alerts ({{ events.length }})</div>
+      <div class="list-header">
+        {{ events.length > 0 ? 'Nearby Alerts' : (isEventsLoading ? 'Loading Alerts' : 'Recent Alerts') }}
+        ({{ events.length > 0 ? events.length : (isEventsLoading ? 3 : recentEvents.length) }})
+      </div>
 
       <div class="list-item" *ngFor="let evt of events" (click)="focusOnEvent(evt)">
         <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
@@ -121,13 +124,37 @@
         </div>
       </div>
 
-      <div class="list-item" *ngFor="let item of [1,2,3]" [hidden]="events.length > 0">
-        <ion-skeleton-text animated style="width: 40px; height: 40px; border-radius: 50%;"></ion-skeleton-text>
-        <div class="item-details" style="width: 100%;">
-          <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
-          <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+      <ng-container *ngIf="isEventsLoading && events.length === 0">
+        <div class="list-item" *ngFor="let item of [1,2,3]">
+          <ion-skeleton-text animated style="width: 40px; height: 40px; border-radius: 50%;"></ion-skeleton-text>
+          <div class="item-details" style="width: 100%;">
+            <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+            <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+          </div>
         </div>
-      </div>
+      </ng-container>
+
+      <ng-container *ngIf="!isEventsLoading && events.length === 0">
+        <div class="list-item" *ngFor="let evt of recentEvents" (click)="focusOnEvent(evt)">
+          <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
+            <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
+          </div>
+          <div class="item-details">
+            <h3>{{ evt.eventType }}</h3>
+            <p *ngIf="evt.address || evt.Address" style="font-size: 0.85em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+              <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
+              {{ evt.address || evt.Address }}
+            </p>
+            <p>
+              <ion-icon [name]="evt.reportType === 'voice' ? 'mic' : (evt.reportType === 'ai' ? 'eye' : 'hand-left')"
+                        style="font-size: 0.9em; margin-right: 4px; vertical-align: middle; color: #666;"
+                        [title]="evt.reportType || 'manual'">
+              </ion-icon>
+              Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}
+            </p>
+          </div>
+        </div>
+      </ng-container>
     </div>
   </div>
 

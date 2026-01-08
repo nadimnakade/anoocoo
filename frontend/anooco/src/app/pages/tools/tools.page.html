@@ -84,6 +84,30 @@
     </ion-card-content>
   </ion-card>
 
+  <ion-card button (click)="configureVoiceAlerts()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="megaphone-outline" slot="start" class="card-icon"></ion-icon>
+        Voice Alert Radius
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Set proximity radius for voice alerts.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="configureTrafficDetection()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="car-outline" slot="start" class="card-icon"></ion-icon>
+        Traffic Detection
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Configure slow traffic thresholds and cooldowns.
+    </ion-card-content>
+  </ion-card>
+
   <ion-card button (click)="calibratePotholeSensitivity()">
     <ion-card-header>
       <ion-card-title>

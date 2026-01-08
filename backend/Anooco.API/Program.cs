@@ -41,6 +41,7 @@ builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
 builder.Services.AddHttpClient<IGeocodingService, GeocodingService>();
 builder.Services.AddHostedService<EventExpiryWorker>();
 builder.Services.AddScoped<DatabaseInitializer>();
+builder.Services.AddScoped<SchemaUpdater>();
 
 // --------------------
 // CORS (All environments)
@@ -117,5 +118,14 @@ app.MapHub<AlertHub>("/hubs/alerts").RequireCors("AllowAll");
 
 // Health Check
 app.MapGet("/", () => "Anooco API is running!");
+
+// Run Schema Updates
+using (var scope = app.Services.CreateScope())
+{
+    var schemaUpdater = scope.ServiceProvider.GetRequiredService<SchemaUpdater>();
+    // We run this synchronously or fire-and-forget to avoid blocking too long, 
+    // but better to await it. Since Program.cs top-level is async, we can await.
+    schemaUpdater.UpdateSchemaAsync().GetAwaiter().GetResult();
+}
 
 app.Run();

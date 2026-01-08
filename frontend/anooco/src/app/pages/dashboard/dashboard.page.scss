@@ -53,10 +53,10 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--ion-background-color);
+  background: #ffffff;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  padding: 12px 20px 0 20px; /* Reduced bottom padding */
+  padding: 16px 20px 0 20px;
   z-index: 10;
   box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
   max-height: 40vh; /* Limit height to 40% of viewport */
@@ -79,7 +79,7 @@
 .sheet-handle {
   width: 40px;
   height: 4px;
-  background: var(--ion-color-light-shade);
+  background: var(--ion-color-primary-tint);
   border-radius: 2px;
   margin: 0 auto 20px auto;
   flex-shrink: 0;
@@ -102,7 +102,7 @@
 
 .action-card {
   flex: 1;
-  background: var(--ion-color-light);
+  background: #ffffff;
   border-radius: 12px;
   padding: 8px; /* Reduced from 16px */
   display: flex;
@@ -111,9 +111,10 @@
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 
   &:active {
-    background: var(--ion-color-medium);
+    background: var(--ion-color-light);
   }
 
   span {
@@ -155,6 +156,10 @@
   flex: 1;
   overflow-y: auto; /* Allow scrolling within the list part */
   padding-bottom: 20px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 
   .list-header {
     font-size: 16px;
@@ -163,7 +168,7 @@
     color: var(--ion-text-color);
     position: sticky;
     top: 0;
-    background: var(--ion-background-color);
+    background: #ffffff;
     padding-bottom: 8px;
   }
 }
@@ -172,7 +177,7 @@
   display: flex;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid var(--ion-color-light-shade);
+  border-bottom: 1px solid #eeeeee;
   cursor: pointer;
   transition: background-color 0.2s;
 

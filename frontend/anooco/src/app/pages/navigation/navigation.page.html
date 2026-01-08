@@ -1,13 +1,17 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Plan Route</ion-title>
+    <ion-title>Where we go?</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+  <div class="banner">
+    <div class="banner-title">Your trip planner</div>
+    <div class="banner-sub">Set start and destination</div>
+  </div>
   
   <div class="search-container">
     <ion-item lines="none" class="input-item">
@@ -87,6 +91,12 @@
   <div class="map-container">
     <div id="nav-map"></div>
   </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 20px; margin-right: 10px;">
+    <ion-fab-button (click)="toggleHandsFree()" [color]="handsFreeEnabled ? 'success' : 'light'">
+      <ion-icon [name]="handsFreeEnabled ? 'mic' : 'mic-off'"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 
   <div class="events-list" *ngIf="routeEvents.length > 0">
     <ion-list-header>

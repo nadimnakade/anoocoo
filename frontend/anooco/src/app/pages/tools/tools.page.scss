@@ -2,6 +2,7 @@ ion-card {
   margin-bottom: 16px;
   --background: #ffffff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-radius: 16px;
 }
 
 ion-card-title {
@@ -9,6 +10,7 @@ ion-card-title {
   align-items: center;
   font-size: 1.1em;
   font-weight: 600;
+  color: var(--ion-text-color);
 }
 
 .card-icon {
@@ -22,7 +24,7 @@ ion-list-header {
   margin-top: 10px;
   font-weight: bold;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--ion-color-medium);
   text-transform: uppercase;
   font-size: 0.85em;
 }

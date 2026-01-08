@@ -22,6 +22,8 @@ import { OcrService } from '../../services/ocr.service';
 export class DashboardPage implements OnInit, OnDestroy {
   map: L.Map | undefined;
   events: any[] = [];
+  recentEvents: any[] = [];
+  isEventsLoading = false;
   watchId: string | null = null;
   userMarker: L.Marker | undefined;
   spokenEvents: Set<string> = new Set(); // Track announced events to avoid spam
@@ -556,14 +558,22 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   loadEvents(callback?: () => void) {
+    this.isEventsLoading = true;
     this.apiService.getEvents().subscribe({
       next: (data: any) => {
-        this.events = data;
+        this.events = Array.isArray(data) ? data : [];
+        this.isEventsLoading = false;
+        if (!this.events.length && Array.isArray(data)) {
+          this.recentEvents = data.slice(0, 3);
+        } else {
+          this.recentEvents = [];
+        }
         this.plotEvents();
         if (callback) callback();
       },
       error: (err) => {
         console.error('Error loading events', err);
+        this.isEventsLoading = false;
         if (callback) callback();
       }
     });

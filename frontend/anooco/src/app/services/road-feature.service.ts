@@ -10,17 +10,30 @@ export class RoadFeatureService {
   potholeDetected$ = new Subject<{ severity: number, timestamp: number }>();
   speedAlert$ = new Subject<{ speed: number, limit: number }>();
   currentSpeed$ = new Subject<number>();
+  trafficDetected$ = new Subject<void>();
 
   // Config
   public speedLimitKmh = 120; // Default limit
   public potholeThreshold = 15; // m/s^2 (Gravity is ~9.8)
   public mutedRadiusMeters = 0;
   public alertRadiusKm = 2; // Default 2km
+  public potholeConfirmationMode = true; // Default to prompting user
+  public voiceAlertKm = 0.7;
   public mutedStreets: string[] = [];
   public speedContext = '';
+  public trafficSlowMinKmh = 2;
+  public trafficSlowMaxKmh = 8;
+  public trafficSustainSamples = 20;
+  public trafficCooldownMs = 300000;
+  public trafficResetSpeedKmh = 10;
+  public trafficStoppedThresholdKmh = 0.2;
 
   private lastSpeedCheck = 0;
   private lastPotholeSpike: { severity: number, timestamp: number } | null = null;
+
+  // Traffic detection
+  private lowSpeedSamples = 0;
+  private lastTrafficReport = 0;
 
   constructor(
     private locationService: LocationService,
@@ -40,6 +53,8 @@ export class RoadFeatureService {
 
     const savedAlertRadius = localStorage.getItem('anooco_alert_radius_km');
     if (savedAlertRadius) this.alertRadiusKm = parseFloat(savedAlertRadius);
+    const savedVoiceAlert = localStorage.getItem('anooco_voice_alert_km');
+    if (savedVoiceAlert) this.voiceAlertKm = parseFloat(savedVoiceAlert);
 
     const savedStreets = localStorage.getItem('anooco_muted_streets');
     if (savedStreets) {
@@ -51,6 +66,18 @@ export class RoadFeatureService {
     }
     const savedContext = localStorage.getItem('anooco_speed_context');
     if (savedContext) this.speedContext = savedContext;
+    const tMin = localStorage.getItem('anooco_traffic_min_kmh');
+    if (tMin) this.trafficSlowMinKmh = parseFloat(tMin);
+    const tMax = localStorage.getItem('anooco_traffic_max_kmh');
+    if (tMax) this.trafficSlowMaxKmh = parseFloat(tMax);
+    const tSamples = localStorage.getItem('anooco_traffic_sustain_samples');
+    if (tSamples) this.trafficSustainSamples = parseInt(tSamples, 10);
+    const tCooldown = localStorage.getItem('anooco_traffic_cooldown_ms');
+    if (tCooldown) this.trafficCooldownMs = parseInt(tCooldown, 10);
+    const tReset = localStorage.getItem('anooco_traffic_reset_speed');
+    if (tReset) this.trafficResetSpeedKmh = parseFloat(tReset);
+    const tStop = localStorage.getItem('anooco_traffic_stopped_threshold');
+    if (tStop) this.trafficStoppedThresholdKmh = parseFloat(tStop);
   }
 
   updateConfig(speedLimit: number, potholeSensitivity: number) {
@@ -70,6 +97,31 @@ export class RoadFeatureService {
   updateAlertRadius(km: number) {
     this.alertRadiusKm = Math.max(0.1, km);
     localStorage.setItem('anooco_alert_radius_km', this.alertRadiusKm.toString());
+  }
+  updateVoiceAlertRadius(km: number) {
+    this.voiceAlertKm = Math.max(0.1, km);
+    localStorage.setItem('anooco_voice_alert_km', this.voiceAlertKm.toString());
+  }
+  updateTrafficConfig(cfg: {
+    minKmh?: number;
+    maxKmh?: number;
+    sustainSamples?: number;
+    cooldownMs?: number;
+    resetSpeedKmh?: number;
+    stoppedThresholdKmh?: number;
+  }) {
+    if (cfg.minKmh !== undefined) this.trafficSlowMinKmh = Math.max(0, cfg.minKmh);
+    if (cfg.maxKmh !== undefined) this.trafficSlowMaxKmh = Math.max(this.trafficSlowMinKmh, cfg.maxKmh);
+    if (cfg.sustainSamples !== undefined) this.trafficSustainSamples = Math.max(1, Math.floor(cfg.sustainSamples));
+    if (cfg.cooldownMs !== undefined) this.trafficCooldownMs = Math.max(0, Math.floor(cfg.cooldownMs));
+    if (cfg.resetSpeedKmh !== undefined) this.trafficResetSpeedKmh = Math.max(0, cfg.resetSpeedKmh);
+    if (cfg.stoppedThresholdKmh !== undefined) this.trafficStoppedThresholdKmh = Math.max(0, cfg.stoppedThresholdKmh);
+    localStorage.setItem('anooco_traffic_min_kmh', this.trafficSlowMinKmh.toString());
+    localStorage.setItem('anooco_traffic_max_kmh', this.trafficSlowMaxKmh.toString());
+    localStorage.setItem('anooco_traffic_sustain_samples', this.trafficSustainSamples.toString());
+    localStorage.setItem('anooco_traffic_cooldown_ms', this.trafficCooldownMs.toString());
+    localStorage.setItem('anooco_traffic_reset_speed', this.trafficResetSpeedKmh.toString());
+    localStorage.setItem('anooco_traffic_stopped_threshold', this.trafficStoppedThresholdKmh.toString());
   }
 
   updateSpeedContext(context: string) {
@@ -132,6 +184,24 @@ export class RoadFeatureService {
     this.ngZone.run(() => {
         this.currentSpeed$.next(Math.round(speedKmh));
     });
+
+    // Auto-Traffic Detection
+    // If speed is between 0.5 and 5 km/h (slow moving, not stopped)
+    if (speedKmh > this.trafficSlowMinKmh && speedKmh < this.trafficSlowMaxKmh) {
+      this.lowSpeedSamples++;
+      if (this.lowSpeedSamples > this.trafficSustainSamples) {
+        const now = Date.now();
+        if (now - this.lastTrafficReport > this.trafficCooldownMs) {
+           this.trafficDetected$.next();
+           this.lastTrafficReport = now;
+           this.lowSpeedSamples = 0;
+        }
+      }
+    } else {
+      if (speedKmh > this.trafficResetSpeedKmh || speedKmh < this.trafficStoppedThresholdKmh) {
+         this.lowSpeedSamples = 0;
+      }
+    }
 
     // Simple alert logic
     if (speedKmh > this.speedLimitKmh) {

@@ -1,11 +1,30 @@
 ion-content {
-  --background: #f4f5f8;
+  --background: linear-gradient(180deg, #eff6ff 0%, #f4f5f8 100%);
+}
+
+.banner {
+  background: linear-gradient(180deg, rgba(37,99,235,1) 0%, rgba(37,99,235,0.85) 100%);
+  color: #fff;
+  padding: 16px 16px 20px;
+  border-radius: 18px;
+  box-shadow: 0 6px 16px rgba(37,99,235,0.25);
+  margin-bottom: 14px;
+  .banner-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .banner-sub {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
 }
 
 .search-container {
   background: white;
-  border-radius: 16px;
-  padding: 10px;
+  border-radius: 20px;
+  padding: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   margin-bottom: 16px;
 
@@ -13,6 +32,14 @@ ion-content {
     --padding-start: 0;
     --inner-padding-end: 0;
     margin-bottom: 5px;
+    --background: #f8fafc;
+    --border-radius: 12px;
+    ion-input {
+      --color: #0f172a;
+    }
+    ion-icon[slot="start"] {
+      color: var(--ion-color-primary);
+    }
   }
 
   .connector-line {
@@ -29,6 +56,12 @@ ion-content {
     font-size: 0.9em;
     color: #666;
     margin-top: 10px;
+    ion-range {
+      --bar-background: #e2e8f0;
+      --bar-background-active: var(--ion-color-primary);
+      --pin-background: var(--ion-color-primary);
+      --knob-background: var(--ion-color-primary);
+    }
   }
 
   .suggestions {
@@ -64,7 +97,7 @@ ion-content {
   .stat-box {
     background: white;
     padding: 10px;
-    border-radius: 12px;
+    border-radius: 14px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 
@@ -88,7 +121,7 @@ ion-content {
 
 .map-container {
   height: 300px;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   margin-bottom: 16px;
@@ -103,7 +136,7 @@ ion-content {
 
 .events-list {
   background: white;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   margin-bottom: 20px;
@@ -120,4 +153,14 @@ ion-content {
     font-size: 0.8em;
     color: #888;
   }
+}
+
+// Fix for Leaflet Routing Machine text overlay
+::ng-deep .leaflet-routing-container {
+  display: none !important;
+}
+
+// Ensure zoom is possible
+::ng-deep .leaflet-container {
+  touch-action: none; // Allow map to handle touches
 }

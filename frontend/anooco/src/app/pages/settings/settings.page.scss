@@ -1,14 +1,22 @@
 ion-list-header {
   font-size: 18px;
   font-weight: 600;
-  color: var(--ion-text-color);
+  color: var(--ion-color-medium);
   margin-top: 15px;
   margin-bottom: 5px;
+}
+
+ion-list {
+  background: transparent;
 }
 
 ion-item {
   --padding-start: 0;
   --inner-padding-end: 0;
+  --background: #ffffff;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   
   ion-icon {
     margin-right: 15px;

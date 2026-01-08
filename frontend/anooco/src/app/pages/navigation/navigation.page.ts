@@ -1,10 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
 import { LocationService } from 'src/app/services/location.service';
 import { RoadFeatureService } from 'src/app/services/road-feature.service';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { DrivingService } from 'src/app/services/driving.service';
+import { VoiceService } from 'src/app/services/voice.service';
+import { LoadingController, ToastController, AlertController } from '@ionic/angular';
 import * as L from 'leaflet';
 import 'leaflet-routing-machine';
+import { Subscription } from 'rxjs';
+import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 
 // Fix for Leaflet icons
 const iconRetinaUrl = 'assets/marker-icon-2x.png';
@@ -51,17 +55,51 @@ export class NavigationPage implements OnInit, OnDestroy {
 
   private currentRoutePath: number[][] | null = null;
   private lastEventsRefresh = 0;
+  private subscriptions = new Subscription();
+  public handsFreeEnabled = false;
+  private isListening = false;
+  private abortWake = false;
 
   constructor(
     private api: ApiService,
     private locationService: LocationService,
     private roadFeatureService: RoadFeatureService,
+    private drivingService: DrivingService,
+    private voiceService: VoiceService,
     private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
     this.alertRadius = this.roadFeatureService.alertRadiusKm;
+
+    // Subscribe to Auto-Traffic Detection
+    this.subscriptions.add(
+      this.roadFeatureService.trafficDetected$.subscribe(() => {
+        this.handleTrafficDetected();
+      })
+    );
+
+    // Subscribe to Pothole Detection (AI Confirmation Mode)
+    this.subscriptions.add(
+      this.roadFeatureService.potholeDetected$.subscribe(evt => {
+        if (this.roadFeatureService.potholeConfirmationMode) {
+          this.handlePotholeDetected(evt);
+        }
+      })
+    );
+
+    // Auto-Handsfree when Driving Mode detected
+    this.subscriptions.add(
+      this.drivingService.isDrivingMode$.subscribe(isDriving => {
+        if (isDriving && !this.handsFreeEnabled) {
+          this.toggleHandsFree();
+          this.showToast('Driving Mode Enabled (Hands-free ON)');
+        }
+      })
+    );
   }
 
   ionViewDidEnter() {
@@ -75,6 +113,7 @@ export class NavigationPage implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.stopTracking();
+    this.subscriptions.unsubscribe();
     if (this.map) {
       this.map.remove();
     }
@@ -147,7 +186,7 @@ export class NavigationPage implements OnInit, OnDestroy {
       evt.distanceFromUser = distKm.toFixed(1);
 
       // Trigger Voice Alert if < 1km and not spoken
-      if (distKm < 1.0 && !this.spokenEvents.has(evt.id)) {
+      if (distKm < this.roadFeatureService.voiceAlertKm && !this.spokenEvents.has(evt.id)) {
         this.speakEvent(evt, distKm);
         this.spokenEvents.add(evt.id);
       }
@@ -157,19 +196,112 @@ export class NavigationPage implements OnInit, OnDestroy {
   speakEvent(evt: any, distKm: number) {
     const text = `Caution. ${evt.eventType} reported ${distKm.toFixed(1)} kilometers ahead.`;
 
-    // Use Web Speech API or Capacitor TTS
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(utterance);
-    }
+    // Use shared speak method
+    this.speak(text);
 
-    this.showToast(`Voice Alert: ${text}`);
+    // Show Confirmation UI (Proactive Confirmation)
+    this.presentConfirmationToast(evt, text);
+  }
+
+  async presentConfirmationToast(evt: any, msg: string) {
+    const toast = await this.toastCtrl.create({
+      message: msg,
+      position: 'bottom',
+      duration: 10000, // Stay longer for interaction
+      buttons: [
+        {
+          text: 'Confirm',
+          role: 'confirm',
+          handler: () => {
+            this.confirmEvent(evt);
+          }
+        },
+        {
+          text: 'Not Here',
+          role: 'cancel',
+          handler: () => {
+            this.reportNotHere(evt);
+          }
+        }
+      ]
+    });
+    toast.present();
+  }
+
+  confirmEvent(evt: any) {
+    this.api.confirmEvent(evt.id).subscribe({
+      next: () => this.showToast('Thanks for confirming!'),
+      error: () => this.showToast('Could not confirm.')
+    });
+  }
+
+  async reportNotHere(evt: any) {
+    const actionSheet = await this.alertCtrl.create({
+      header: 'Is this issue gone?',
+      buttons: [
+        {
+          text: 'Yes, Cleared/Passed',
+          handler: () => {
+            this.api.clearEvent(evt.id).subscribe(() => this.showToast('Marked as cleared.'));
+          }
+        },
+        {
+          text: 'Never was here (False Report)',
+          handler: () => {
+            this.api.reportFalseEvent(evt.id).subscribe(() => this.showToast('Reported as false.'));
+          }
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async handleTrafficDetected() {
+    const pos = await this.locationService.getCurrentLocation();
+    this.api.sendReport('Heavy traffic detected automatically', pos, 'TRAFFIC').subscribe({
+      next: () => this.showToast('Heavy traffic auto-reported.'),
+      error: (e) => console.error('Auto-traffic report failed', e)
+    });
+  }
+
+  async handlePotholeDetected(evt: { severity: number }) {
+    // Show a quick prompt
+    const alert = await this.alertCtrl.create({
+      header: 'Pothole Detected',
+      message: `Possible pothole detected (Severity: ${evt.severity.toFixed(1)}). Report it?`,
+      buttons: [
+        {
+          text: 'No',
+          role: 'cancel'
+        },
+        {
+          text: 'Report',
+          handler: async () => {
+            const pos = await this.locationService.getCurrentLocation();
+            this.api.sendReport(`Pothole detected via AI (Severity ${evt.severity.toFixed(1)})`, pos, 'POTHOLE').subscribe({
+              next: () => this.showToast('Pothole reported.'),
+              error: () => this.showToast('Failed to report.')
+            });
+          }
+        }
+      ]
+    });
+    await alert.present();
   }
 
   async initMap() {
     if (this.map) return;
 
-    this.map = L.map('nav-map').setView([35.9375, 14.3754], 11); // Default Malta
+    this.map = L.map('nav-map', {
+      zoomControl: true,
+      scrollWheelZoom: true,
+      touchZoom: true,
+      dragging: true
+    }).setView([35.9375, 14.3754], 11); // Default Malta
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -209,6 +341,94 @@ export class NavigationPage implements OnInit, OnDestroy {
     }
   }
 
+  async toggleHandsFree() {
+    this.handsFreeEnabled = !this.handsFreeEnabled;
+    this.cdr.detectChanges();
+    if (this.handsFreeEnabled) {
+      this.showToast('Hands-free mode enabled');
+      this.startWakeLoop();
+    } else {
+      this.abortWake = true;
+      this.showToast('Hands-free mode disabled');
+      try { await SpeechRecognition.stop(); } catch {}
+    }
+  }
+
+  private async startWakeLoop() {
+    this.abortWake = false;
+    while (this.handsFreeEnabled && !this.abortWake) {
+      if (this.isListening) {
+         await new Promise(r => setTimeout(r, 1000));
+         continue;
+      }
+
+      try {
+        const available = await SpeechRecognition.available();
+        if (!available.available) {
+          break;
+        }
+        // Continuous listening for Wake Word
+        const res = await SpeechRecognition.start({
+          language: "en-US",
+          maxResults: 1,
+          prompt: "Say 'Hey Anooco'",
+          partialResults: false,
+          popup: false,
+        });
+        const text = (res.matches && res.matches[0]) ? res.matches[0].toLowerCase() : "";
+        if (text.includes("anooco") || text.includes("hey anooco")) {
+          this.speak("Listening...");
+          await this.listenForCommand();
+        }
+      } catch {
+        // ignore transient errors
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  async listenForCommand() {
+    this.isListening = true;
+    try {
+      const command = await this.voiceService.startListening();
+      if (command) {
+        await this.processVoiceCommand(command);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      this.isListening = false;
+    }
+  }
+
+  speak(text: string) {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  async processVoiceCommand(cmd: string) {
+    const lower = cmd.toLowerCase();
+    const pos = await this.locationService.getCurrentLocation();
+
+    if (lower.includes('pothole')) {
+      this.api.sendReport('Pothole reported via Voice', pos, 'POTHOLE').subscribe();
+      this.speak("Pothole reported.");
+    } else if (lower.includes('accident')) {
+      this.api.sendReport('Accident reported via Voice', pos, 'ACCIDENT').subscribe();
+      this.speak("Accident reported.");
+    } else if (lower.includes('traffic')) {
+      this.api.sendReport('Traffic reported via Voice', pos, 'TRAFFIC').subscribe();
+      this.speak("Traffic reported.");
+    } else if (lower.includes('police')) {
+      this.api.sendReport('Police reported via Voice', pos, 'POLICE').subscribe();
+      this.speak("Police reported.");
+    } else {
+      this.speak("Sorry, I didn't catch that.");
+    }
+  }
+
   onSearchInput(event: any, type: 'start' | 'end') {
     const query = event.detail.value;
 
@@ -239,7 +459,7 @@ export class NavigationPage implements OnInit, OnDestroy {
 
   async searchAddress(query: string) {
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=mt&limit=5`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
       const res = await fetch(url);
       return await res.json();
     } catch (e) {
@@ -267,6 +487,22 @@ export class NavigationPage implements OnInit, OnDestroy {
 
     // Geocode Start (if not current)
     let startCoords = L.latLng(this.currentLat, this.currentLng);
+
+    // Check if we are using current location but don't have it yet
+    const isUsingCurrentLocation = this.startLocation === 'Current Location' || this.startLocation.trim() === '';
+    
+    if (isUsingCurrentLocation && (this.currentLat === 0 && this.currentLng === 0)) {
+      this.showToast('Fetching current location...');
+      await this.getCurrentLocation();
+      // Update coords after fetch
+      startCoords = L.latLng(this.currentLat, this.currentLng);
+      
+      if (this.currentLat === 0 && this.currentLng === 0) {
+        this.showToast('Current location not found. Please ensure GPS is enabled.');
+        this.isLoading = false;
+        return;
+      }
+    }
 
     // Note: For a real app, you'd use a Geocoding service here to convert text address to lat/lng.
     // For this demo, we'll assume start is current location if text is "Current Location"
@@ -457,7 +693,7 @@ export class NavigationPage implements OnInit, OnDestroy {
 
   // Simple client-side geocoding shim (Nominatim)
   async geocode(query: string): Promise<L.LatLng | null> {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ' Malta')}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
     const res = await fetch(url);
     const data = await res.json();
     if (data && data.length > 0) {

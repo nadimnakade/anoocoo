@@ -12,12 +12,13 @@
     <div class="banner-title">Your trip planner</div>
     <div class="banner-sub">Set start and destination</div>
   </div>
-  
+
   <div class="search-container">
     <ion-item lines="none" class="input-item">
       <ion-icon name="location-outline" slot="start" color="medium"></ion-icon>
       <ion-input label="Start" labelPlacement="floating" [(ngModel)]="startLocation" (ionInput)="onSearchInput($event, 'start')" placeholder="Current Location (or type address)"></ion-input>
-      <ion-button fill="clear" slot="end" (click)="useCurrentLocation()">
+      <ion-spinner *ngIf="isStartLoading" slot="end" name="dots" color="primary"></ion-spinner>
+      <ion-button *ngIf="!isStartLoading" fill="clear" slot="end" (click)="useCurrentLocation()">
         <ion-icon name="locate"></ion-icon>
       </ion-button>
     </ion-item>
@@ -37,6 +38,7 @@
     <ion-item lines="none" class="input-item">
       <ion-icon name="pin" slot="start" color="danger"></ion-icon>
       <ion-input label="Destination" labelPlacement="floating" [(ngModel)]="endLocation" (ionInput)="onSearchInput($event, 'end')" placeholder="Enter destination"></ion-input>
+      <ion-spinner *ngIf="isEndLoading" slot="end" name="dots" color="primary"></ion-spinner>
     </ion-item>
     <div class="suggestions" *ngIf="endSuggestions.length > 0">
       <ion-list>

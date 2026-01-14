@@ -44,6 +44,8 @@ export class NavigationPage implements OnInit, OnDestroy {
 
   startSuggestions: any[] = [];
   endSuggestions: any[] = [];
+  isStartLoading = false;
+  isEndLoading = false;
   private searchTimeout: any;
 
   private routingControl: any;
@@ -434,6 +436,10 @@ export class NavigationPage implements OnInit, OnDestroy {
 
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
 
+    // Reset loading on clear or new input (will be re-enabled in timeout if valid)
+    if (type === 'start') this.isStartLoading = false;
+    else this.isEndLoading = false;
+
     if (!query || query.length < 3) {
       if (type === 'start') this.startSuggestions = [];
       else this.endSuggestions = [];
@@ -441,9 +447,18 @@ export class NavigationPage implements OnInit, OnDestroy {
     }
 
     this.searchTimeout = setTimeout(async () => {
+      if (type === 'start') this.isStartLoading = true;
+      else this.isEndLoading = true;
+
       const results = await this.searchAddress(query);
-      if (type === 'start') this.startSuggestions = results;
-      else this.endSuggestions = results;
+
+      if (type === 'start') {
+        this.startSuggestions = results;
+        this.isStartLoading = false;
+      } else {
+        this.endSuggestions = results;
+        this.isEndLoading = false;
+      }
     }, 500); // 500ms debounce
   }
 
@@ -490,13 +505,13 @@ export class NavigationPage implements OnInit, OnDestroy {
 
     // Check if we are using current location but don't have it yet
     const isUsingCurrentLocation = this.startLocation === 'Current Location' || this.startLocation.trim() === '';
-    
+
     if (isUsingCurrentLocation && (this.currentLat === 0 && this.currentLng === 0)) {
       this.showToast('Fetching current location...');
       await this.getCurrentLocation();
       // Update coords after fetch
       startCoords = L.latLng(this.currentLat, this.currentLng);
-      
+
       if (this.currentLat === 0 && this.currentLng === 0) {
         this.showToast('Current location not found. Please ensure GPS is enabled.');
         this.isLoading = false;

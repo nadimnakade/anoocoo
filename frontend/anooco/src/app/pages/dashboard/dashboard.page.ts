@@ -12,6 +12,8 @@ import { RoadFeatureService } from '../../services/road-feature.service';
 import { DrivingService } from '../../services/driving.service';
 import { DashcamService } from '../../services/dashcam.service';
 import { OcrService } from '../../services/ocr.service';
+import { PotholeAiService } from '../../services/pothole-ai.service';
+import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -39,6 +41,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   showExpired = false;
   currentSpeed = 0;
   speedLimit = 120; // Default, update from config
+  speedLimitSource: 'default' | 'ocr' | 'manual' = 'default';
 
   isReportModalOpen = false;
   private subscriptions: Subscription = new Subscription();
@@ -60,7 +63,9 @@ export class DashboardPage implements OnInit, OnDestroy {
     private actionSheetController: ActionSheetController,
     private ocrService: OcrService,
     private dashcamService: DashcamService,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private potholeAiService: PotholeAiService,
+    private locationService: LocationService
   ) { }
 
   ngOnInit() {
@@ -81,6 +86,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.roadFeatureService.currentSpeed$.subscribe((speed: number) => {
         this.currentSpeed = speed;
         this.speedLimit = this.roadFeatureService.speedLimitKmh;
+        this.speedLimitSource = this.roadFeatureService.speedLimitSource;
       })
     );
 
@@ -126,6 +132,180 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async openTools() {
     this.navCtrl.navigateForward('/tools');
+  }
+
+  async openEventActions(evt: any) {
+    const type = (evt.eventType || '').toUpperCase();
+    const falseLabel = type === 'POTHOLE' ? 'Not a pothole' : type === 'TRAFFIC' ? 'Not traffic' : 'Not relevant / false';
+    const clearLabel = 'Gone / cleared';
+
+    const sheet = await this.actionSheetController.create({
+      header: 'Event options',
+      buttons: [
+        {
+          text: 'Focus on map',
+          handler: () => this.focusOnEvent(evt)
+        },
+        {
+          text: 'Confirm',
+          handler: () => {
+            this.apiService.confirmEvent(evt.id).subscribe({
+              next: () => this.showToast('Thanks for confirming!'),
+              error: () => this.showToast('Could not confirm.')
+            });
+          }
+        },
+        {
+          text: clearLabel,
+          handler: () => {
+            this.apiService.clearEvent(evt.id).subscribe({
+              next: () => this.showToast('Marked as cleared.'),
+              error: () => this.showToast('Could not update.')
+            });
+          }
+        },
+        {
+          text: falseLabel,
+          handler: () => {
+            this.apiService.reportFalseEvent(evt.id).subscribe({
+              next: () => this.showToast('Marked as false.'),
+              error: () => this.showToast('Could not update.')
+            });
+          }
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
+    });
+    await sheet.present();
+  }
+
+  async quickScanPotholeAi() {
+    const loading = await this.loadingController.create({
+      message: 'Analyzing road surface...'
+    });
+    await loading.present();
+    try {
+      const result = await this.potholeAiService.confirmPotholeFromCamera();
+      await loading.dismiss();
+      if (result.isPothole) {
+        let autoVerified = false;
+        let confidence = result.score;
+        if (this.roadFeatureService.hasRecentSpike(30000)) {
+          const spike = this.roadFeatureService.getLastSpike();
+          const base = this.roadFeatureService.potholeThreshold;
+          const severityNorm = spike ? Math.min(1, Math.max(0, (spike.severity - base) / 10)) : 0;
+          confidence = Math.min(1, result.score * 0.6 + severityNorm * 0.4);
+          autoVerified = confidence >= 0.7;
+        }
+
+        if (autoVerified) {
+          const pos = await this.locationService.getCurrentLocation();
+          this.apiService.sendReportWithQueue(`Verified pothole (AI ${result.score.toFixed(2)}, conf ${confidence.toFixed(2)})`, pos, 'ai')
+            .subscribe({
+              next: () => this.showToast('Pothole auto-reported (verified).'),
+              error: () => this.showToast('Failed to auto-report.')
+            });
+          return;
+        }
+
+        const alert = await this.alertController.create({
+          header: 'AI Analysis',
+          message: `Pothole likely detected (score: ${result.score.toFixed(2)}). Report this?`,
+          buttons: [
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Report', handler: async () => {
+                const pos = await this.locationService.getCurrentLocation();
+                this.apiService.sendReportWithQueue(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos, 'ai')
+                  .subscribe({
+                    next: () => this.showToast('Pothole reported.'),
+                    error: () => this.showToast('Failed to report.')
+                  });
+              }
+            }
+          ]
+        });
+        await alert.present();
+      } else {
+        const alert = await this.alertController.create({
+          header: 'AI Analysis',
+          message: `No pothole detected (score: ${result.score.toFixed(2)})`,
+          buttons: ['OK']
+        });
+        await alert.present();
+      }
+    } catch {
+      await loading.dismiss();
+      this.showToast('AI analysis failed.');
+    }
+  }
+
+  async quickScanSign() {
+    const loading = await this.loadingController.create({
+      message: 'Scanning sign...'
+    });
+    await loading.present();
+
+    try {
+      const texts = await this.ocrService.captureAndReadSign();
+      await loading.dismiss();
+
+      if (texts.length > 0) {
+        const detectedLimit = this.extractSpeedLimitFromTexts(texts);
+
+        if (detectedLimit) {
+          const alert = await this.alertController.create({
+            header: 'Speed Limit Detected',
+            message: `Detected ${detectedLimit} km/h from sign.\n\nRaw text:\n${texts.join('\n')}`,
+            buttons: [
+              {
+                text: 'Ignore',
+                role: 'cancel'
+              },
+              {
+                text: 'Use for alerts',
+                handler: () => {
+                  this.roadFeatureService.setTemporarySpeedLimit(detectedLimit, 'from road sign');
+                  this.showToast(`Speed limit set to ${detectedLimit} km/h`);
+                }
+              }
+            ]
+          });
+          await alert.present();
+        } else {
+          const alert = await this.alertController.create({
+            header: 'Sign Detected',
+            message: texts.join('\n'),
+            buttons: ['OK']
+          });
+          await alert.present();
+        }
+      } else {
+        this.showToast('No text detected.');
+      }
+    } catch {
+      await loading.dismiss();
+      this.showToast('Failed to scan sign.');
+    }
+  }
+
+  private extractSpeedLimitFromTexts(texts: string[]): number | null {
+    const joined = texts.join(' ').replace(/\s+/g, ' ');
+    const regex = /\b([1-9][0-9]{0,2})\s*(km\/h|kmh|kph)?\b/gi;
+    const candidates: number[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(joined)) !== null) {
+      const val = parseInt(match[1], 10);
+      if (val >= 10 && val <= 160) {
+        candidates.push(val);
+      }
+    }
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => a - b);
+    return candidates[0];
   }
 
   async requestSpeechPermissions() {
@@ -278,27 +458,40 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   async submitReportInternal(type: string, rawText: string, reportType: 'manual' | 'voice') {
-    if (!this.userMarker) {
-      this.speak("Location unknown.");
+    let location: any = null;
+
+    try {
+      location = await this.locationService.getCurrentLocation();
+    } catch (e) {
+      console.warn('Dashboard report: geolocation failed, falling back to marker', e);
+    }
+
+    if (!location && this.userMarker) {
+      const pos = this.userMarker.getLatLng();
+      location = {
+        coords: {
+          latitude: pos.lat,
+          longitude: pos.lng,
+          heading: 0,
+          speed: 0
+        }
+      };
+    }
+
+    if (!location) {
+      this.showToast('Location unavailable. Please enable GPS.', 'danger');
+      this.speak('Location unknown.');
       return;
     }
 
-    const pos = this.userMarker.getLatLng();
-    const location = {
-      coords: {
-        latitude: pos.lat,
-        longitude: pos.lng,
-        heading: 0,
-        speed: 0
-      }
-    };
-
     this.apiService.sendReport(rawText, location, reportType).subscribe({
       next: () => {
-        // Success handled by signalR mostly, but we can confirm
         setTimeout(() => this.loadEvents(), 1000);
       },
-      error: () => this.speak("Failed to send report.")
+      error: () => {
+        this.showToast('Failed to send report.', 'danger');
+        this.speak("Failed to send report.");
+      }
     });
   }
 

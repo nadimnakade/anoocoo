@@ -9,6 +9,8 @@ import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 import { Subscription } from 'rxjs';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
+import { OcrService } from 'src/app/services/ocr.service';
+import { PotholeAiService } from 'src/app/services/pothole-ai.service';
 
 // Fix for Leaflet icons
 const iconRetinaUrl = 'assets/marker-icon-2x.png';
@@ -38,6 +40,9 @@ export class NavigationPage implements OnInit, OnDestroy {
   endLocation = '';
   alertRadius = 2.0;
   isLoading = false;
+  currentSpeed = 0;
+  speedLimit = 120;
+  speedLimitSource: 'default' | 'ocr' | 'manual' = 'default';
 
   routeStats: { duration: string, distance: string } | null = null;
   routeEvents: any[] = [];
@@ -71,11 +76,21 @@ export class NavigationPage implements OnInit, OnDestroy {
     private loadingCtrl: LoadingController,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private ocrService: OcrService,
+    private potholeAiService: PotholeAiService
   ) { }
 
   ngOnInit() {
     this.alertRadius = this.roadFeatureService.alertRadiusKm;
+
+    this.subscriptions.add(
+      this.roadFeatureService.currentSpeed$.subscribe(speed => {
+        this.currentSpeed = speed;
+        this.speedLimit = this.roadFeatureService.speedLimitKmh;
+        this.speedLimitSource = this.roadFeatureService.speedLimitSource;
+      })
+    );
 
     // Subscribe to Auto-Traffic Detection
     this.subscriptions.add(
@@ -295,19 +310,162 @@ export class NavigationPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  async quickScanSign() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Scanning sign...'
+    });
+    await loading.present();
+
+    try {
+      const texts = await this.ocrService.captureAndReadSign();
+      await loading.dismiss();
+
+      if (texts.length > 0) {
+        const detectedLimit = this.extractSpeedLimitFromTexts(texts);
+
+        if (detectedLimit) {
+          const alert = await this.alertCtrl.create({
+            header: 'Speed Limit Detected',
+            message: `Detected ${detectedLimit} km/h from sign.\n\nRaw text:\n${texts.join('\n')}`,
+            buttons: [
+              {
+                text: 'Ignore',
+                role: 'cancel'
+              },
+              {
+                text: 'Use for alerts',
+                handler: () => {
+                  this.roadFeatureService.setTemporarySpeedLimit(detectedLimit, 'from road sign');
+                  this.showToast(`Speed limit set to ${detectedLimit} km/h`);
+                }
+              }
+            ]
+          });
+          await alert.present();
+        } else {
+          const alert = await this.alertCtrl.create({
+            header: 'Sign Detected',
+            message: texts.join('\n'),
+            buttons: ['OK']
+          });
+          await alert.present();
+        }
+      } else {
+        this.showToast('No text detected.');
+      }
+    } catch {
+      await loading.dismiss();
+      this.showToast('Failed to scan sign.');
+    }
+  }
+
+  async quickScanPotholeAi() {
+    const loading = await this.loadingCtrl.create({
+      message: 'Analyzing road surface...'
+    });
+    await loading.present();
+    try {
+      const result = await this.potholeAiService.confirmPotholeFromCamera();
+      await loading.dismiss();
+      if (result.isPothole) {
+        let autoVerified = false;
+        let confidence = result.score;
+        if (this.roadFeatureService.hasRecentSpike(30000)) {
+          const spike = this.roadFeatureService.getLastSpike();
+          const base = this.roadFeatureService.potholeThreshold;
+          const severityNorm = spike ? Math.min(1, Math.max(0, (spike.severity - base) / 10)) : 0;
+          confidence = Math.min(1, result.score * 0.6 + severityNorm * 0.4);
+          autoVerified = confidence >= 0.7;
+        }
+
+        if (autoVerified) {
+          const pos = await this.locationService.getCurrentLocation();
+          this.api.sendReportWithQueue(`Verified pothole (AI ${result.score.toFixed(2)}, conf ${confidence.toFixed(2)})`, pos, 'ai')
+            .subscribe({
+              next: () => this.showToast('Pothole auto-reported (verified).'),
+              error: () => this.showToast('Failed to auto-report.')
+            });
+          return;
+        }
+
+        const alert = await this.alertCtrl.create({
+          header: 'AI Analysis',
+          message: `Pothole likely detected (score: ${result.score.toFixed(2)}). Report this?`,
+          buttons: [
+            { text: 'Cancel', role: 'cancel' },
+            {
+              text: 'Report', handler: async () => {
+                const pos = await this.locationService.getCurrentLocation();
+                this.api.sendReportWithQueue(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos, 'ai')
+                  .subscribe({
+                    next: () => this.showToast('Pothole reported.'),
+                    error: () => this.showToast('Failed to report.')
+                  });
+              }
+            }
+          ]
+        });
+        await alert.present();
+      } else {
+        const alert = await this.alertCtrl.create({
+          header: 'AI Analysis',
+          message: `No pothole detected (score: ${result.score.toFixed(2)})`,
+          buttons: ['OK']
+        });
+        await alert.present();
+      }
+    } catch {
+      await loading.dismiss();
+      this.showToast('AI analysis failed.');
+    }
+  }
+
+  private extractSpeedLimitFromTexts(texts: string[]): number | null {
+    const joined = texts.join(' ').replace(/\s+/g, ' ');
+    const regex = /\b([1-9][0-9]{0,2})\s*(km\/h|kmh|kph)?\b/gi;
+    const candidates: number[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(joined)) !== null) {
+      const val = parseInt(match[1], 10);
+      if (val >= 10 && val <= 160) {
+        candidates.push(val);
+      }
+    }
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => a - b);
+    return candidates[0];
+  }
+
   async initMap() {
     if (this.map) return;
+
+    let lat = 35.9375;
+    let lng = 14.3754;
+
+    try {
+      const pos = await this.locationService.getCurrentLocation();
+      if (pos && pos.coords) {
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+        this.currentLat = lat;
+        this.currentLng = lng;
+      }
+    } catch (e) {
+      console.warn('Navigation init: geolocation unavailable, using fallback', e);
+    }
 
     this.map = L.map('nav-map', {
       zoomControl: true,
       scrollWheelZoom: true,
       touchZoom: true,
       dragging: true
-    }).setView([35.9375, 14.3754], 11); // Default Malta
+    }).setView([lat, lng], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
+
+    this.updateUserMarker();
   }
 
   async getCurrentLocation() {
@@ -319,9 +477,7 @@ export class NavigationPage implements OnInit, OnDestroy {
 
         if (this.map) {
           this.map.setView([this.currentLat, this.currentLng], 13);
-          L.marker([this.currentLat, this.currentLng])
-            .bindPopup('You are here')
-            .addTo(this.map);
+          this.updateUserMarker();
         }
       }
     } catch (e) {
@@ -404,10 +560,7 @@ export class NavigationPage implements OnInit, OnDestroy {
   }
 
   speak(text: string) {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(utterance);
-    }
+    this.voiceService.speak(text);
   }
 
   async processVoiceCommand(cmd: string) {

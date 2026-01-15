@@ -119,12 +119,13 @@ app.MapHub<AlertHub>("/hubs/alerts").RequireCors("AllowAll");
 // Health Check
 app.MapGet("/", () => "Anooco API is running!");
 
-// Run Schema Updates
+// Run DB initialization and schema updates
 using (var scope = app.Services.CreateScope())
 {
+    var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    dbInitializer.InitializeAsync().GetAwaiter().GetResult();
+
     var schemaUpdater = scope.ServiceProvider.GetRequiredService<SchemaUpdater>();
-    // We run this synchronously or fire-and-forget to avoid blocking too long, 
-    // but better to await it. Since Program.cs top-level is async, we can await.
     schemaUpdater.UpdateSchemaAsync().GetAwaiter().GetResult();
 }
 

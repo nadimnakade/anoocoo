@@ -3,6 +3,7 @@ using Anooco.API.Models;
 using Microsoft.AspNetCore.SignalR;
 using NetTopologySuite.Geometries;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace Anooco.API.Services
 {
@@ -38,7 +39,8 @@ namespace Anooco.API.Services
                 
                 // 1. Save Report
                 using var cmd = new NpgsqlCommand("SELECT * FROM sp_create_report(@userId, @type, @desc, @loc, @heading, @speed, @conf, @source)", conn);
-                cmd.Parameters.AddWithValue("userId", DBNull.Value);
+                var userParam = cmd.Parameters.Add("userId", NpgsqlDbType.Uuid);
+                userParam.Value = DBNull.Value;
                 cmd.Parameters.AddWithValue("type", reportType);
                 cmd.Parameters.AddWithValue("desc", reportDto.RawText ?? "");
                 cmd.Parameters.AddWithValue("loc", location);

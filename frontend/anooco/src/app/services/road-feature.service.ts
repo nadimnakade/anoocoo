@@ -21,6 +21,7 @@ export class RoadFeatureService {
   public voiceAlertKm = 0.7;
   public mutedStreets: string[] = [];
   public speedContext = '';
+  public speedLimitSource: 'default' | 'ocr' | 'manual' = 'default';
   public trafficSlowMinKmh = 2;
   public trafficSlowMaxKmh = 8;
   public trafficSustainSamples = 20;
@@ -66,6 +67,10 @@ export class RoadFeatureService {
     }
     const savedContext = localStorage.getItem('anooco_speed_context');
     if (savedContext) this.speedContext = savedContext;
+    const savedSource = localStorage.getItem('anooco_speed_source');
+    if (savedSource === 'ocr' || savedSource === 'manual' || savedSource === 'default') {
+      this.speedLimitSource = savedSource;
+    }
     const tMin = localStorage.getItem('anooco_traffic_min_kmh');
     if (tMin) this.trafficSlowMinKmh = parseFloat(tMin);
     const tMax = localStorage.getItem('anooco_traffic_max_kmh');
@@ -85,6 +90,8 @@ export class RoadFeatureService {
     this.potholeThreshold = potholeSensitivity;
     localStorage.setItem('anooco_speed_limit', speedLimit.toString());
     localStorage.setItem('anooco_pothole_threshold', potholeSensitivity.toString());
+    this.speedLimitSource = 'manual';
+    localStorage.setItem('anooco_speed_source', this.speedLimitSource);
   }
 
   updateMute(radiusMeters: number, streets: string[]) {
@@ -127,6 +134,17 @@ export class RoadFeatureService {
   updateSpeedContext(context: string) {
     this.speedContext = context || '';
     localStorage.setItem('anooco_speed_context', this.speedContext);
+  }
+
+  setTemporarySpeedLimit(limitKmh: number, context?: string) {
+    this.speedLimitKmh = Math.max(10, Math.min(160, Math.round(limitKmh)));
+    if (context !== undefined) {
+      this.speedContext = context || '';
+    }
+    this.speedLimitSource = context === 'from road sign' ? 'ocr' : 'manual';
+    localStorage.setItem('anooco_speed_limit', this.speedLimitKmh.toString());
+    localStorage.setItem('anooco_speed_context', this.speedContext);
+    localStorage.setItem('anooco_speed_source', this.speedLimitSource);
   }
 
   startMonitoring() {

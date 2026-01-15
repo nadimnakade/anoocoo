@@ -23,6 +23,12 @@ namespace Anooco.API.Controllers
 
             var reportId = await _intakeService.ProcessReportAsync(report);
 
+            if (reportId == Guid.Empty)
+            {
+                _logger.LogError("Report processing failed for payload with text: {RawText}", report.RawText);
+                return StatusCode(500, "Failed to process report");
+            }
+
             return Ok(new { Message = "Report received", ReportId = reportId });
         }
     }

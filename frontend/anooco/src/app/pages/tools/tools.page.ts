@@ -54,7 +54,13 @@ export class ToolsPage {
           const pos = await this.locationService.getCurrentLocation();
           this.apiService.sendReportWithQueue(`Verified pothole (AI ${result.score.toFixed(2)}, conf ${confidence.toFixed(2)})`, pos, 'ai')
             .subscribe({
-              next: () => this.showToast('Pothole auto-reported (verified).'),
+              next: (res) => {
+                if (res && res.queued) {
+                  this.showToast('Pothole report queued (offline).');
+                } else {
+                  this.showToast('Pothole auto-reported (verified).');
+                }
+              },
               error: () => this.showToast('Failed to auto-report.')
             });
           return;
@@ -69,7 +75,13 @@ export class ToolsPage {
               const pos = await this.locationService.getCurrentLocation();
               this.apiService.sendReportWithQueue(`Pothole detected via AI (score ${result.score.toFixed(2)})`, pos, 'ai')
                 .subscribe({
-                  next: () => this.showToast('Pothole reported.'),
+                  next: (res) => {
+                    if (res && res.queued) {
+                      this.showToast('Pothole report queued (offline).');
+                    } else {
+                      this.showToast('Pothole reported.');
+                    }
+                  },
                   error: () => this.showToast('Failed to report.')
                 });
             }}
@@ -96,31 +108,82 @@ export class ToolsPage {
 
   // --- OCR Section ---
   async scanSign() {
-    const loading = await this.loadingController.create({
-      message: 'Scanning sign...',
+    const hint = await this.alertController.create({
+      header: 'How Sign Scan Works',
+      message: 'Point your phone camera at a real-world speed sign so the numbers are large, clear, and well lit. Scanning from another screen can be unreliable.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Continue',
+          handler: async () => {
+            const loading = await this.loadingController.create({
+              message: 'Scanning sign...',
+            });
+            await loading.present();
+
+            try {
+              const texts = await this.ocrService.captureAndReadSign();
+              await loading.dismiss();
+
+              if (texts.length > 0) {
+                const detectedLimit = this.extractSpeedLimit(texts);
+
+                if (detectedLimit) {
+                  const alert = await this.alertController.create({
+                    header: 'Speed Limit Detected',
+                    message: `Detected ${detectedLimit} km/h from sign.\n\nRaw text:\n${texts.join('\n')}`,
+                    buttons: [
+                      {
+                        text: 'Ignore',
+                        role: 'cancel'
+                      },
+                      {
+                        text: 'Use for alerts',
+                        handler: () => {
+                          this.roadFeatureService.setTemporarySpeedLimit(detectedLimit, 'from road sign');
+                          this.showToast(`Speed limit set to ${detectedLimit} km/h`);
+                        }
+                      }
+                    ]
+                  });
+                  await alert.present();
+                } else {
+                  const alert = await this.alertController.create({
+                    header: 'Sign Detected',
+                    message: texts.join('\n'),
+                    buttons: ['OK']
+                  });
+                  await alert.present();
+                }
+              } else {
+                this.showToast('No text detected.');
+              }
+            } catch (e) {
+              await loading.dismiss();
+              console.error('OCR Error', e);
+              this.showToast('Failed to scan sign.');
+            }
+          }
+        }
+      ]
     });
-    await loading.present();
+    await hint.present();
+  }
 
-    try {
-      const texts = await this.ocrService.captureAndReadSign();
-      await loading.dismiss();
-
-      if (texts.length > 0) {
-        // Show result
-        const alert = await this.alertController.create({
-          header: 'Sign Detected',
-          message: texts.join('\n'),
-          buttons: ['OK']
-        });
-        await alert.present();
-      } else {
-        this.showToast('No text detected.');
+  private extractSpeedLimit(texts: string[]): number | null {
+    const joined = texts.join(' ').replace(/\s+/g, ' ');
+    const regex = /\b([1-9][0-9]{0,2})\s*(km\/h|kmh|kph)?\b/gi;
+    const candidates: number[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(joined)) !== null) {
+      const val = parseInt(match[1], 10);
+      if (val >= 10 && val <= 160) {
+        candidates.push(val);
       }
-    } catch (e) {
-      await loading.dismiss();
-      console.error('OCR Error', e);
-      this.showToast('Failed to scan sign.');
     }
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => a - b);
+    return candidates[0];
   }
 
   // --- Dashcam Section ---
@@ -319,21 +382,37 @@ export class ToolsPage {
   }
 
   async calibratePotholeSensitivity() {
-    const loading = await this.loadingController.create({ message: 'Calibrating motion...' });
-    await loading.present();
-    try {
-      const threshold = await this.roadFeatureService.calibrateSensitivity(5);
-      await loading.dismiss();
-      const alert = await this.alertController.create({
-        header: 'Calibration Complete',
-        message: `New sensitivity set to ${threshold.toFixed(1)} m/s²`,
-        buttons: ['OK']
-      });
-      await alert.present();
-    } catch {
-      await loading.dismiss();
-      this.showToast('Calibration failed.');
-    }
+    const hint = await this.alertController.create({
+      header: 'Before You Start',
+      message: 'Find a short stretch of normal road, hold the phone as you usually drive, and tap Start. We will measure bumps for about 5 seconds.',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Start',
+          handler: async () => {
+            const loading = await this.loadingController.create({ message: 'Calibrating motion...' });
+            await loading.present();
+            try {
+              const threshold = await this.roadFeatureService.calibrateSensitivity(5);
+              await loading.dismiss();
+              const alert = await this.alertController.create({
+                header: 'Calibration Complete',
+                message: `New sensitivity set to ${threshold.toFixed(1)} m/s²`,
+                buttons: ['OK']
+              });
+              await alert.present();
+            } catch {
+              await loading.dismiss();
+              this.showToast('Calibration failed.');
+            }
+          }
+        }
+      ]
+    });
+    await hint.present();
   }
 
   async configureMuteSettings() {

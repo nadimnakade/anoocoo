@@ -31,6 +31,11 @@
       <span class="speed-value">{{ currentSpeed }}</span>
       <span class="speed-unit">km/h</span>
     </div>
+    <div class="speed-limit-chip">
+      <span class="limit-value">{{ speedLimit }}</span>
+      <span class="limit-unit">km/h</span>
+      <span *ngIf="speedLimitSource === 'ocr'" class="limit-source">SIGN</span>
+    </div>
   </div>
 
   <!-- Bottom Sheet / Card -->
@@ -59,6 +64,20 @@
           <ion-icon name="warning"></ion-icon>
         </div>
         <span>Manual</span>
+      </div>
+
+      <div class="action-card" (click)="quickScanSign()">
+        <div class="icon-circle gray">
+          <ion-icon name="scan-outline"></ion-icon>
+        </div>
+        <span>Scan Sign</span>
+      </div>
+
+      <div class="action-card" (click)="quickScanPotholeAi()">
+        <div class="icon-circle gray">
+          <ion-icon name="analytics-outline"></ion-icon>
+        </div>
+        <span>AI Pothole</span>
       </div>
 
       <div class="action-card" *ngIf="isListening" (click)="stopListening(true)">
@@ -104,7 +123,7 @@
         ({{ events.length > 0 ? events.length : (isEventsLoading ? 3 : recentEvents.length) }})
       </div>
 
-      <div class="list-item" *ngFor="let evt of events" (click)="focusOnEvent(evt)">
+      <div class="list-item" *ngFor="let evt of events" (click)="openEventActions(evt)">
         <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
           <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
         </div>
@@ -135,7 +154,7 @@
       </ng-container>
 
       <ng-container *ngIf="!isEventsLoading && events.length === 0">
-        <div class="list-item" *ngFor="let evt of recentEvents" (click)="focusOnEvent(evt)">
+        <div class="list-item" *ngFor="let evt of recentEvents" (click)="openEventActions(evt)">
           <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
             <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
           </div>

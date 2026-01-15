@@ -238,7 +238,7 @@
     </ng-template>
   </ion-modal>
 
-  <div class="assistant-fab" (click)="onAssistantPress()" [class.pulse]="isListening || handsFreeEnabled">
+  <div class="assistant-fab" (click)="onAssistantPress()" [class.pulse]="isListening || handsFreeEnabled" [class.hidden]="viewMode !== 'map'">
     <ion-icon name="mic"></ion-icon>
   </div>
 

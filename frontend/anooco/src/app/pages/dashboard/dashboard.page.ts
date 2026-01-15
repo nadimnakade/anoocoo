@@ -91,9 +91,39 @@ export class DashboardPage implements OnInit, OnDestroy {
     );
 
     this.subscriptions.add(
-      this.roadFeatureService.potholeDetected$.subscribe(evt => {
+      this.roadFeatureService.potholeDetected$.subscribe(async evt => {
         console.log('Pothole detected:', evt);
-        this.showToast(`Possible Pothole Detected (Severity: ${evt.severity.toFixed(1)})`);
+        this.speak('Possible pothole detected ahead.');
+        const alert = await this.alertController.create({
+          header: 'Pothole Detected',
+          message: `Possible pothole detected (severity ${evt.severity.toFixed(1)}). Report it?`,
+          buttons: [
+            {
+              text: 'Ignore',
+              role: 'cancel'
+            },
+            {
+              text: 'Report',
+              handler: async () => {
+                try {
+                  const pos = await this.locationService.getCurrentLocation();
+                  this.apiService.sendReportWithQueue('Pothole detected via gyro', pos, 'ai')
+                    .subscribe({
+                      next: () => {
+                        this.showToast('Pothole reported.');
+                      },
+                      error: () => {
+                        this.showToast('Failed to report pothole.', 'danger');
+                      }
+                    });
+                } catch {
+                  this.showToast('Location unavailable. Could not report pothole.', 'danger');
+                }
+              }
+            }
+          ]
+        });
+        await alert.present();
       })
     );
 
@@ -385,13 +415,36 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   async toggleHandsFree() {
-    this.handsFreeEnabled = !this.handsFreeEnabled;
+    const targetState = !this.handsFreeEnabled;
+
+    if (targetState) {
+      try {
+        const perm = await SpeechRecognition.checkPermissions();
+        if (perm.speechRecognition !== 'granted') {
+          const req = await SpeechRecognition.requestPermissions();
+          if (req.speechRecognition !== 'granted') {
+            this.showToast('Speech recognition permission is required for hands-free mode.', 'danger');
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Speech recognition permission error', e);
+        this.showToast('Speech recognition is not available on this device.', 'danger');
+        return;
+      }
+    }
+
+    this.handsFreeEnabled = targetState;
     this.cdr.detectChanges();
+
     if (this.handsFreeEnabled) {
+      this.showToast('Hands-free on. Say "Hey Anooco" or a report command.', 'tertiary');
+      this.speak('Hands-free mode on. You can say Hey Anooco or directly say a report like report accident.');
       this.startWakeLoop();
     } else {
       this.abortWake = true;
       try { await SpeechRecognition.stop(); } catch {}
+      this.showToast('Hands-free mode turned off.');
     }
   }
 
@@ -415,12 +468,15 @@ export class DashboardPage implements OnInit, OnDestroy {
           partialResults: false,
           popup: false,
         });
-        const text = (res.matches && res.matches[0]) ? res.matches[0].toLowerCase() : "";
+        const raw = (res.matches && res.matches[0]) ? res.matches[0] : "";
+        const text = raw.toLowerCase();
         if (text.includes("anooco") || text.includes("hey anooco")) {
           this.speak("Listening...");
           await this.startListening();
           // startListening handles the resumption of wake loop, so we break this instance
           break;
+        } else if (raw && raw.trim().length > 0) {
+          this.processVoiceCommand(raw);
         }
       } catch {
         // ignore transient errors
@@ -616,6 +672,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         lng = current.coords.longitude;
       } catch (geoErr) {
         console.warn('Geolocation unavailable, using fallback', geoErr);
+        this.showToast('Location unavailable. Showing default map. Please enable GPS.');
       }
 
       this.map = L.map('map', {

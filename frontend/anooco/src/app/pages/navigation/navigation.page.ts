@@ -452,6 +452,7 @@ export class NavigationPage implements OnInit, OnDestroy {
       }
     } catch (e) {
       console.warn('Navigation init: geolocation unavailable, using fallback', e);
+      this.showToast('Location unavailable. Showing default map. Please enable GPS.');
     }
 
     this.map = L.map('nav-map', {
@@ -500,10 +501,31 @@ export class NavigationPage implements OnInit, OnDestroy {
   }
 
   async toggleHandsFree() {
-    this.handsFreeEnabled = !this.handsFreeEnabled;
+    const targetState = !this.handsFreeEnabled;
+
+    if (targetState) {
+      try {
+        const perm = await SpeechRecognition.checkPermissions();
+        if (perm.speechRecognition !== 'granted') {
+          const req = await SpeechRecognition.requestPermissions();
+          if (req.speechRecognition !== 'granted') {
+            this.showToast('Speech recognition permission is required for hands-free mode.', 'danger');
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Speech recognition permission error', e);
+        this.showToast('Speech recognition is not available on this device.', 'danger');
+        return;
+      }
+    }
+
+    this.handsFreeEnabled = targetState;
     this.cdr.detectChanges();
+
     if (this.handsFreeEnabled) {
-      this.showToast('Hands-free mode enabled');
+      this.showToast('Hands-free on. Say "Hey Anooco" or a report command.', 'tertiary');
+      this.speak('Hands-free mode on. You can say Hey Anooco or directly say a report like report pothole.');
       this.startWakeLoop();
     } else {
       this.abortWake = true;
@@ -533,10 +555,13 @@ export class NavigationPage implements OnInit, OnDestroy {
           partialResults: false,
           popup: false,
         });
-        const text = (res.matches && res.matches[0]) ? res.matches[0].toLowerCase() : "";
+        const raw = (res.matches && res.matches[0]) ? res.matches[0] : "";
+        const text = raw.toLowerCase();
         if (text.includes("anooco") || text.includes("hey anooco")) {
           this.speak("Listening...");
           await this.listenForCommand();
+        } else if (raw && raw.trim().length > 0) {
+          await this.processVoiceCommand(raw);
         }
       } catch {
         // ignore transient errors

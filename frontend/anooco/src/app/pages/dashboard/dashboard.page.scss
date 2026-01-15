@@ -59,9 +59,10 @@
   padding: 16px 20px 0 20px;
   z-index: 10;
   box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-  max-height: 40vh; /* Limit height to 40% of viewport */
+  max-height: 60vh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .bottom-sheet.full-screen {
@@ -299,7 +300,7 @@
 .assistant-fab {
   position: absolute;
   right: 20px;
-  bottom: 24px;
+  bottom: 80px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -309,11 +310,15 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-  z-index: 12;
+  z-index: 8;
 }
 
 .assistant-fab.pulse {
   animation: pulse-ring 2s infinite;
+}
+
+.assistant-fab.hidden {
+  display: none;
 }
 
 .speedometer-container {

@@ -1,0 +1,21 @@
+.alerts-container {
+  padding: 16px;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--ion-color-medium);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+

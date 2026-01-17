@@ -7,7 +7,7 @@ import { VoiceService } from 'src/app/services/voice.service';
 import { LoadingController, ToastController, AlertController } from '@ionic/angular';
 import * as L from 'leaflet';
 import 'leaflet-routing-machine';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import { OcrService } from 'src/app/services/ocr.service';
 import { PotholeAiService } from 'src/app/services/pothole-ai.service';
@@ -44,8 +44,9 @@ export class NavigationPage implements OnInit, OnDestroy {
   speedLimit = 120;
   speedLimitSource: 'default' | 'ocr' | 'manual' = 'default';
 
-  routeStats: { duration: string, distance: string } | null = null;
+  routeStats: { duration: string, distance: string, roughnessIndex?: number, potholeCount?: number, potholesLast24h?: number } | null = null;
   routeEvents: any[] = [];
+  enforcementHotspots: any[] = [];
 
   startSuggestions: any[] = [];
   endSuggestions: any[] = [];
@@ -55,9 +56,11 @@ export class NavigationPage implements OnInit, OnDestroy {
 
   private routingControl: any;
   private eventMarkers: (L.Marker | L.CircleMarker)[] = [];
+  private enforcementMarkers: L.CircleMarker[] = [];
   private currentLat = 0;
   private currentLng = 0;
   private spokenEvents = new Set<string>();
+  private spokenHotspots = new Set<string>();
   private trackingInterval: any;
 
   private currentRoutePath: number[][] | null = null;
@@ -158,6 +161,8 @@ export class NavigationPage implements OnInit, OnDestroy {
           // Check proximity
           this.checkProximityToEvents();
 
+          this.checkProximityToHotspots();
+
           // Check route deviation
           this.checkRouteDeviation();
 
@@ -165,6 +170,7 @@ export class NavigationPage implements OnInit, OnDestroy {
           const now = Date.now();
           if (this.currentRoutePath && (now - this.lastEventsRefresh > 60000)) {
             this.fetchEventsAlongRoute(this.currentRoutePath, true); // silent refresh
+            this.fetchEnforcementHotspots(this.currentRoutePath, true);
             this.lastEventsRefresh = now;
           }
         }
@@ -206,6 +212,22 @@ export class NavigationPage implements OnInit, OnDestroy {
       if (distKm < this.roadFeatureService.voiceAlertKm && !this.spokenEvents.has(evt.id)) {
         this.speakEvent(evt, distKm);
         this.spokenEvents.add(evt.id);
+      }
+    });
+  }
+
+  checkProximityToHotspots() {
+    if (this.enforcementHotspots.length === 0) return;
+
+    this.enforcementHotspots.forEach(h => {
+      const distKm = this.calculateDistance(this.currentLat, this.currentLng, h.latitude, h.longitude);
+      h.distanceFromUser = distKm.toFixed(1);
+
+      const key = `${h.latitude}:${h.longitude}:${h.typicalDayOfWeek}:${h.typicalHourOfDay}`;
+
+      if (distKm < this.roadFeatureService.voiceAlertKm && !this.spokenHotspots.has(key)) {
+        this.speakEnforcementHotspot(h, distKm);
+        this.spokenHotspots.add(key);
       }
     });
   }
@@ -509,13 +531,13 @@ export class NavigationPage implements OnInit, OnDestroy {
         if (perm.speechRecognition !== 'granted') {
           const req = await SpeechRecognition.requestPermissions();
           if (req.speechRecognition !== 'granted') {
-            this.showToast('Speech recognition permission is required for hands-free mode.', 'danger');
+            this.showToast('Speech recognition permission is required for hands-free mode.');
             return;
           }
         }
       } catch (e) {
         console.warn('Speech recognition permission error', e);
-        this.showToast('Speech recognition is not available on this device.', 'danger');
+        this.showToast('Speech recognition is not available on this device.');
         return;
       }
     }
@@ -524,7 +546,7 @@ export class NavigationPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     if (this.handsFreeEnabled) {
-      this.showToast('Hands-free on. Say "Hey Anooco" or a report command.', 'tertiary');
+      this.showToast('Hands-free on. Say "Hey Anooco" or a report command.');
       this.speak('Hands-free mode on. You can say Hey Anooco or directly say a report like report pothole.');
       this.startWakeLoop();
     } else {
@@ -667,6 +689,9 @@ export class NavigationPage implements OnInit, OnDestroy {
     this.isLoading = true;
     this.routeEvents = [];
     this.routeStats = null;
+    this.enforcementHotspots = [];
+    this.spokenEvents.clear();
+    this.spokenHotspots.clear();
 
     // Clear old route
     if (this.routingControl) {
@@ -677,6 +702,8 @@ export class NavigationPage implements OnInit, OnDestroy {
     // Clear old markers
     this.eventMarkers.forEach(m => m.remove());
     this.eventMarkers = [];
+    this.enforcementMarkers.forEach(m => m.remove());
+    this.enforcementMarkers = [];
 
     // Geocode Start (if not current)
     let startCoords = L.latLng(this.currentLat, this.currentLng);
@@ -720,9 +747,6 @@ export class NavigationPage implements OnInit, OnDestroy {
         return;
       }
 
-      // Calculate Route using OSRM (via Leaflet Routing Machine)
-      // Note: L.Routing.control usually adds itself to map. We need to hook into it to get the path.
-
       this.routingControl = (L as any).Routing.control({
         waypoints: [
           startCoords,
@@ -732,23 +756,13 @@ export class NavigationPage implements OnInit, OnDestroy {
         show: false, // Hide the default instructions panel for cleaner UI
         addWaypoints: false
       }).on('routesfound', (e: any) => {
-        const routes = e.routes;
-        const route = routes[0];
-
-        this.routeStats = {
-          distance: (route.summary.totalDistance / 1000).toFixed(1) + ' km',
-          duration: Math.round(route.summary.totalTime / 60) + ' min'
-        };
-
-        // Extract coordinates for backend search
-        // OSRM returns array of {lat, lng}
-        const path = route.coordinates.map((c: any) => [c.lat, c.lng]);
-
-        this.currentRoutePath = path; // Store for deviation checks and refresh
-        this.lastEventsRefresh = Date.now();
-
-        this.fetchEventsAlongRoute(path);
-
+        const routes = e.routes || [];
+        if (!routes.length) {
+          this.showToast('No route found.');
+          this.isLoading = false;
+          return;
+        }
+        this.selectSmoothestRoute(routes);
       }).addTo(this.map);
 
     } catch (e) {
@@ -778,6 +792,112 @@ export class NavigationPage implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         console.error(err);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  async fetchRouteSmoothness(path: number[][]) {
+    this.api.getRouteSmoothness(path, this.alertRadius).subscribe({
+      next: (data: any) => {
+        if (!this.routeStats) {
+          return;
+        }
+
+        this.routeStats = {
+          ...this.routeStats,
+          roughnessIndex: data?.roughnessIndex ?? 0,
+          potholeCount: data?.potholeCount ?? 0,
+          potholesLast24h: data?.potholesLast24h ?? 0
+        };
+      },
+      error: (err: any) => {
+        console.error(err);
+      }
+    });
+  }
+
+  async fetchEnforcementHotspots(path: number[][], silent = false) {
+    this.api.getEnforcementHotspots(path, this.alertRadius).subscribe({
+      next: (data: any) => {
+        this.enforcementHotspots = Array.isArray(data?.hotspots) ? data.hotspots : [];
+        this.plotEnforcementHotspots(this.enforcementHotspots);
+
+        if (!silent && this.enforcementHotspots.length > 0) {
+          this.showToast(`Enforcement hotspots nearby: ${this.enforcementHotspots.length}`);
+        }
+      },
+      error: (err: any) => {
+        console.error(err);
+      }
+    });
+  }
+
+  private selectSmoothestRoute(routes: any[]) {
+    const paths = routes.map((route: any) =>
+      route.coordinates.map((c: any) => [c.lat, c.lng]) as number[][]
+    );
+
+    const summaries = routes.map((route: any) => ({
+      distanceKm: route.summary.totalDistance / 1000,
+      durationMin: Math.round(route.summary.totalTime / 60)
+    }));
+
+    const smoothnessRequests = paths.map(path =>
+      this.api.getRouteSmoothness(path, this.alertRadius)
+    );
+
+    forkJoin(smoothnessRequests).subscribe({
+      next: (results: any[]) => {
+        let bestIndex = 0;
+        let bestScore = Number.POSITIVE_INFINITY;
+
+        results.forEach((data, index) => {
+          const score = data?.roughnessIndex ?? 1;
+          if (score < bestScore) {
+            bestScore = score;
+            bestIndex = index;
+          }
+        });
+
+        const bestPath = paths[bestIndex];
+        const summary = summaries[bestIndex];
+        const data = results[bestIndex] || {};
+
+        this.currentRoutePath = bestPath;
+        this.lastEventsRefresh = Date.now();
+
+        this.routeStats = {
+          distance: summary.distanceKm.toFixed(1) + ' km',
+          duration: summary.durationMin + ' min',
+          roughnessIndex: data.roughnessIndex ?? 0,
+          potholeCount: data.potholeCount ?? 0,
+          potholesLast24h: data.potholesLast24h ?? 0
+        };
+
+        this.fetchEventsAlongRoute(bestPath);
+        this.fetchEnforcementHotspots(bestPath);
+
+        this.isLoading = false;
+      },
+      error: (err: any) => {
+        console.error(err);
+
+        const route = routes[0];
+        const path = paths[0];
+        const summary = summaries[0];
+
+        this.currentRoutePath = path;
+        this.lastEventsRefresh = Date.now();
+
+        this.routeStats = {
+          distance: summary.distanceKm.toFixed(1) + ' km',
+          duration: summary.durationMin + ' min'
+        };
+
+        this.fetchEventsAlongRoute(path);
+        this.fetchEnforcementHotspots(path);
+
         this.isLoading = false;
       }
     });
@@ -884,6 +1004,29 @@ export class NavigationPage implements OnInit, OnDestroy {
     });
   }
 
+  plotEnforcementHotspots(hotspots: any[]) {
+    if (!this.map) return;
+
+    this.enforcementMarkers.forEach(m => m.remove());
+    this.enforcementMarkers = [];
+
+    hotspots.forEach(h => {
+      const marker = L.circleMarker([h.latitude, h.longitude], {
+        radius: 10,
+        fillColor: '#eb445a',
+        color: '#ffffff',
+        weight: 2,
+        opacity: 0.9,
+        fillOpacity: 0.4
+      }).bindPopup(`
+        <b>Enforcement hotspot</b><br>
+        Typically active on ${this.getDayName(h.typicalDayOfWeek)} around ${h.typicalHourOfDay}:00
+      `).addTo(this.map!);
+
+      this.enforcementMarkers.push(marker);
+    });
+  }
+
   // Simple client-side geocoding shim (Nominatim)
   async geocode(query: string): Promise<L.LatLng | null> {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
@@ -924,6 +1067,22 @@ export class NavigationPage implements OnInit, OnDestroy {
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
+  }
+
+  private getDayName(index: number): string {
+    const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    if (index < 0 || index >= names.length) {
+      return 'Unknown';
+    }
+    return names[index];
+  }
+
+  speakEnforcementHotspot(h: any, distKm: number) {
+    const day = this.getDayName(h.typicalDayOfWeek);
+    const hour = h.typicalHourOfDay ?? 0;
+    const hourLabel = `${hour.toString().padStart(2, '0')}:00`;
+    const text = `Caution. Enforcement hotspot about ${distKm.toFixed(1)} kilometers ahead. Typically active on ${day} around ${hourLabel}.`;
+    this.speak(text);
   }
 
   focusEvent(evt: any) {

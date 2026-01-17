@@ -92,6 +92,26 @@
           </div>
         </ion-col>
       </ion-row>
+      <ion-row *ngIf="routeStats.roughnessIndex !== undefined">
+        <ion-col>
+          <div class="stat-box">
+            <h3>{{ routeStats.potholeCount || 0 }}</h3>
+            <p>Potholes on route</p>
+          </div>
+        </ion-col>
+        <ion-col>
+          <div class="stat-box">
+            <h3>{{ routeStats.potholesLast24h || 0 }}</h3>
+            <p>Last 24h</p>
+          </div>
+        </ion-col>
+        <ion-col>
+          <div class="stat-box">
+            <h3>{{ routeStats.roughnessIndex | number:'1.2-2' }}</h3>
+            <p>Roughness (0 = smooth, 1 = rough)</p>
+          </div>
+        </ion-col>
+      </ion-row>
     </ion-grid>
   </div>
 

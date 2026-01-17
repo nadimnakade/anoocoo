@@ -4,7 +4,7 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: 'home',
-    loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
+    loadChildren: () => import('./home/home.module').then(m => m.HomePageModule)
   },
   {
     path: '',
@@ -13,43 +13,47 @@ const routes: Routes = [
   },
   {
     path: 'signup',
-    loadChildren: () => import('./pages/signup/signup.module').then( m => m.SignupPageModule)
+    loadChildren: () => import('./pages/signup/signup.module').then(m => m.SignupPageModule)
   },
   {
     path: 'dashboard',
-    loadChildren: () => import('./pages/dashboard/dashboard.module').then( m => m.DashboardPageModule)
+    loadChildren: () => import('./pages/dashboard/dashboard.module').then(m => m.DashboardPageModule)
   },
   {
     path: 'report',
-    loadChildren: () => import('./pages/report/report.module').then( m => m.ReportPageModule)
+    loadChildren: () => import('./pages/report/report.module').then(m => m.ReportPageModule)
   },
   {
     path: 'profile',
-    loadChildren: () => import('./pages/profile/profile.module').then( m => m.ProfilePageModule)
+    loadChildren: () => import('./pages/profile/profile.module').then(m => m.ProfilePageModule)
   },
   {
     path: 'activity',
-    loadChildren: () => import('./pages/activity/activity.module').then( m => m.ActivityPageModule)
+    loadChildren: () => import('./pages/activity/activity.module').then(m => m.ActivityPageModule)
+  },
+  {
+    path: 'alerts',
+    loadChildren: () => import('./pages/alerts/alerts.module').then(m => m.AlertsPageModule)
   },
   {
     path: 'settings',
-    loadChildren: () => import('./pages/settings/settings.module').then( m => m.SettingsPageModule)
+    loadChildren: () => import('./pages/settings/settings.module').then(m => m.SettingsPageModule)
   },
   {
     path: 'login',
-    loadChildren: () => import('./pages/login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () => import('./pages/login/login.module').then(m => m.LoginPageModule)
   },
   {
     path: 'tools',
-    loadChildren: () => import('./pages/tools/tools.module').then( m => m.ToolsPageModule)
+    loadChildren: () => import('./pages/tools/tools.module').then(m => m.ToolsPageModule)
   },
   {
     path: 'guide',
-    loadChildren: () => import('./pages/guide/guide.module').then( m => m.GuidePageModule)
+    loadChildren: () => import('./pages/guide/guide.module').then(m => m.GuidePageModule)
   },
   {
     path: 'navigation',
-    loadChildren: () => import('./pages/navigation/navigation.module').then( m => m.NavigationPageModule)
+    loadChildren: () => import('./pages/navigation/navigation.module').then(m => m.NavigationPageModule)
   },
 ];
 

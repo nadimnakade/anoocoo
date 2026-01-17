@@ -14,6 +14,7 @@ import { DashcamService } from '../../services/dashcam.service';
 import { OcrService } from '../../services/ocr.service';
 import { PotholeAiService } from '../../services/pothole-ai.service';
 import { LocationService } from '../../services/location.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -42,6 +43,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   currentSpeed = 0;
   speedLimit = 120; // Default, update from config
   speedLimitSource: 'default' | 'ocr' | 'manual' = 'default';
+  eventFilter: 'all' | 'pothole' = 'all';
+  pendingFocusEventId: string | null = null;
 
   isReportModalOpen = false;
   private subscriptions: Subscription = new Subscription();
@@ -65,7 +68,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private dashcamService: DashcamService,
     private navCtrl: NavController,
     private potholeAiService: PotholeAiService,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit() {
@@ -593,6 +597,11 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   async ionViewDidEnter() {
+    const focusId = this.route.snapshot.queryParamMap.get('focusEventId');
+    if (focusId) {
+      this.pendingFocusEventId = focusId;
+    }
+
     const loading = await this.loadingController.create({
       message: 'Loading map data...',
       spinner: 'crescent',
@@ -606,6 +615,16 @@ export class DashboardPage implements OnInit, OnDestroy {
     }, 100);
 
     this.loadEvents(() => {
+      if (this.pendingFocusEventId) {
+        const target = this.events.find(e => {
+          const id = (e.id || e.Id)?.toString();
+          return id === this.pendingFocusEventId;
+        });
+        if (target) {
+          this.focusOnEvent(target);
+        }
+        this.pendingFocusEventId = null;
+      }
       loading.dismiss();
     });
 
@@ -758,7 +777,6 @@ export class DashboardPage implements OnInit, OnDestroy {
     const distanceKm = (distanceMeters / 1000).toFixed(1);
     let text = "";
 
-    // Use backend-provided address if available
     let streetPart = "ahead";
     if (evt.address) {
        streetPart = `on ${evt.address.split(',')[0]}`; // Just the street/road name
@@ -766,10 +784,25 @@ export class DashboardPage implements OnInit, OnDestroy {
        streetPart = `on ${evt.Address.split(',')[0]}`;
     }
 
-    // Customize message based on type
+    const updatedAt = evt.updatedAt || evt.UpdatedAt;
+    let potholeWindow = '';
+    if (updatedAt) {
+      const t = new Date(updatedAt).getTime();
+      if (!isNaN(t)) {
+        const hours = (Date.now() - t) / (1000 * 60 * 60);
+        if (hours <= 24) {
+          potholeWindow = 'in this street in the last 24 hours';
+        }
+      }
+    }
+
     switch (evt.eventType?.toUpperCase()) {
       case 'POTHOLE':
-        text = `Caution. Potholes ${streetPart} in ${distanceKm} kilometers.`;
+        if (potholeWindow) {
+          text = `Caution. Potholes reported ${potholeWindow}.`;
+        } else {
+          text = `Caution. Potholes ${streetPart} in ${distanceKm} kilometers.`;
+        }
         break;
       case 'ACCIDENT':
         text = `Warning. Accident reported ${streetPart} ${distanceKm} kilometers ahead.`;
@@ -789,6 +822,21 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   speak(text: string) {
     this.voiceService.speak(text);
+  }
+
+  setEventFilter(filter: 'all' | 'pothole') {
+    this.eventFilter = filter;
+    this.plotEvents();
+  }
+
+  getFilteredEvents(): any[] {
+    return this.events.filter(evt => {
+      const status = (evt.status || evt.Status || '').toString().toLowerCase();
+      const expired = status === 'expired' || status === 'inactive' || evt.isExpired === true;
+      if (!this.showExpired && expired) return false;
+      if (this.eventFilter === 'pothole' && (evt.eventType || '').toUpperCase() !== 'POTHOLE') return false;
+      return true;
+    });
   }
 
   // Haversine formula to calculate distance in meters
@@ -835,11 +883,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.eventMarkers.forEach(m => m.remove());
     this.eventMarkers = [];
 
-    const filtered = this.events.filter(evt => {
-      const status = (evt.status || evt.Status || '').toString().toLowerCase();
-      const expired = status === 'expired' || status === 'inactive' || evt.isExpired === true;
-      return this.showExpired ? true : !expired;
-    });
+    const filtered = this.getFilteredEvents();
 
     filtered.forEach(evt => {
       const type = evt.eventType?.toUpperCase() || 'UNKNOWN';

@@ -31,6 +31,20 @@ export class ApiService {
     });
   }
 
+  getRouteSmoothness(route: number[][], radiusKm: number) {
+    return this.http.post(`${this.apiUrl}/events/route/smoothness`, {
+      route,
+      radiusKm
+    });
+  }
+
+  getEnforcementHotspots(route: number[][], radiusKm: number) {
+    return this.http.post(`${this.apiUrl}/events/enforcement-hotspots`, {
+      route,
+      radiusKm
+    });
+  }
+
   getUserProfile(userId: string) {
     return this.http.get(`${this.apiUrl}/user/profile?userId=${userId}`);
   }

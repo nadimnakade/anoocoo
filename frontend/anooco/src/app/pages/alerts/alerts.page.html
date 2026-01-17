@@ -1,0 +1,46 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Recent Alerts</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="loadAlerts($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="alerts-container">
+    <ion-list *ngIf="alerts.length > 0">
+      <ion-list-header>
+        <ion-label>Last {{ recentHours }} hours ({{ alerts.length }})</ion-label>
+      </ion-list-header>
+
+      <ion-item *ngFor="let evt of alerts" button (click)="openOnMap(evt)">
+        <ion-icon
+          [name]="getIcon(evt.eventType)"
+          slot="start"
+          [style.color]="getColor(evt.eventType)">
+        </ion-icon>
+        <ion-label>
+          <h2>{{ evt.eventType }}</h2>
+          <p *ngIf="evt.address">{{ evt.address }}</p>
+          <p class="meta">
+            Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'short' }}
+          </p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div class="empty" *ngIf="!isLoading && alerts.length === 0">
+      <p>No alerts in the last {{ recentHours }} hours.</p>
+    </div>
+
+    <div class="loading" *ngIf="isLoading">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  </div>
+</ion-content>
+

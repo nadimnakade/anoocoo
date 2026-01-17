@@ -119,11 +119,20 @@
     <!-- Recent Activity / List -->
     <div class="recent-list">
       <div class="list-header">
-        {{ events.length > 0 ? 'Nearby Alerts' : (isEventsLoading ? 'Loading Alerts' : 'Recent Alerts') }}
-        ({{ events.length > 0 ? events.length : (isEventsLoading ? 3 : recentEvents.length) }})
+        {{ getFilteredEvents().length > 0 ? 'Nearby Alerts' : (isEventsLoading ? 'Loading Alerts' : 'Recent Alerts') }}
+        ({{ getFilteredEvents().length > 0 ? getFilteredEvents().length : (isEventsLoading ? 3 : recentEvents.length) }})
       </div>
 
-      <div class="list-item" *ngFor="let evt of events" (click)="openEventActions(evt)">
+      <div class="filter-row">
+        <button type="button" class="filter-chip" [class.active]="eventFilter === 'all'" (click)="setEventFilter('all')">
+          All
+        </button>
+        <button type="button" class="filter-chip" [class.active]="eventFilter === 'pothole'" (click)="setEventFilter('pothole')">
+          Potholes
+        </button>
+      </div>
+
+      <div class="list-item" *ngFor="let evt of getFilteredEvents()" (click)="openEventActions(evt)">
         <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
           <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
         </div>

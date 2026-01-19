@@ -2,6 +2,42 @@
   padding: 16px;
 }
 
+.filters {
+  margin-bottom: 12px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ion-text-color);
+  margin-right: 4px;
+}
+
+.filter-chip {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.filter-chip.active {
+  background: var(--ion-color-primary);
+  border-color: var(--ion-color-primary);
+  color: #ffffff;
+}
+
 .meta {
   font-size: 12px;
   color: var(--ion-color-medium);
@@ -18,4 +54,3 @@
   justify-content: center;
   padding: 24px 0;
 }
-

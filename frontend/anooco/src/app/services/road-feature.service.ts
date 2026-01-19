@@ -28,6 +28,13 @@ export class RoadFeatureService {
   public trafficCooldownMs = 300000;
   public trafficResetSpeedKmh = 10;
   public trafficStoppedThresholdKmh = 0.2;
+  public enableAccidentReports = true;
+  public enablePotholeReports = true;
+  public enableTrafficReports = true;
+  public enableEnforcementReports = true;
+  public enableEmergencyAlerts = true;
+  public enableParkingAutoMark = false;
+  public reportingPaused = false;
 
   private lastSpeedCheck = 0;
   private lastPotholeSpike: { severity: number, timestamp: number } | null = null;
@@ -83,6 +90,24 @@ export class RoadFeatureService {
     if (tReset) this.trafficResetSpeedKmh = parseFloat(tReset);
     const tStop = localStorage.getItem('anooco_traffic_stopped_threshold');
     if (tStop) this.trafficStoppedThresholdKmh = parseFloat(tStop);
+    const confMode = localStorage.getItem('anooco_pothole_confirm_mode');
+    if (confMode === 'auto') {
+      this.potholeConfirmationMode = false;
+    }
+    const accPref = localStorage.getItem('anooco_enable_accident_reports');
+    if (accPref !== null) this.enableAccidentReports = accPref === '1';
+    const potPref = localStorage.getItem('anooco_enable_pothole_reports');
+    if (potPref !== null) this.enablePotholeReports = potPref === '1';
+    const trafPref = localStorage.getItem('anooco_enable_traffic_reports');
+    if (trafPref !== null) this.enableTrafficReports = trafPref === '1';
+    const enfPref = localStorage.getItem('anooco_enable_enforcement_reports');
+    if (enfPref !== null) this.enableEnforcementReports = enfPref === '1';
+    const emergencyPref = localStorage.getItem('anooco_enable_emergency_alerts');
+    if (emergencyPref !== null) this.enableEmergencyAlerts = emergencyPref === '1';
+    const parkAuto = localStorage.getItem('anooco_parking_auto_mark');
+    if (parkAuto !== null) this.enableParkingAutoMark = parkAuto === '1';
+    const paused = localStorage.getItem('anooco_reporting_paused');
+    if (paused !== null) this.reportingPaused = paused === '1';
   }
 
   updateConfig(speedLimit: number, potholeSensitivity: number) {
@@ -134,6 +159,50 @@ export class RoadFeatureService {
   updateSpeedContext(context: string) {
     this.speedContext = context || '';
     localStorage.setItem('anooco_speed_context', this.speedContext);
+  }
+
+  updatePotholeConfirmationMode(confirm: boolean) {
+    this.potholeConfirmationMode = confirm;
+    localStorage.setItem('anooco_pothole_confirm_mode', confirm ? 'confirm' : 'auto');
+  }
+
+  updateReportPreferences(cfg: {
+    accidents?: boolean;
+    potholes?: boolean;
+    traffic?: boolean;
+    enforcement?: boolean;
+    emergencyAlerts?: boolean;
+  }) {
+    if (cfg.accidents !== undefined) {
+      this.enableAccidentReports = cfg.accidents;
+      localStorage.setItem('anooco_enable_accident_reports', cfg.accidents ? '1' : '0');
+    }
+    if (cfg.potholes !== undefined) {
+      this.enablePotholeReports = cfg.potholes;
+      localStorage.setItem('anooco_enable_pothole_reports', cfg.potholes ? '1' : '0');
+    }
+    if (cfg.traffic !== undefined) {
+      this.enableTrafficReports = cfg.traffic;
+      localStorage.setItem('anooco_enable_traffic_reports', cfg.traffic ? '1' : '0');
+    }
+    if (cfg.enforcement !== undefined) {
+      this.enableEnforcementReports = cfg.enforcement;
+      localStorage.setItem('anooco_enable_enforcement_reports', cfg.enforcement ? '1' : '0');
+    }
+    if (cfg.emergencyAlerts !== undefined) {
+      this.enableEmergencyAlerts = cfg.emergencyAlerts;
+      localStorage.setItem('anooco_enable_emergency_alerts', cfg.emergencyAlerts ? '1' : '0');
+    }
+  }
+
+  updateParkingAutoMark(enabled: boolean) {
+    this.enableParkingAutoMark = enabled;
+    localStorage.setItem('anooco_parking_auto_mark', enabled ? '1' : '0');
+  }
+
+  setReportingPaused(paused: boolean) {
+    this.reportingPaused = paused;
+    localStorage.setItem('anooco_reporting_paused', paused ? '1' : '0');
   }
 
   setTemporarySpeedLimit(limitKmh: number, context?: string) {

@@ -38,7 +38,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   eventMarkers: L.Marker[] = [];
   showAddressTags = true;
   fullMapMode = false;
-  viewMode: 'map' | 'split' | 'list' = 'split';
+  viewMode: 'map' | 'split' | 'list' = 'map';
   showExpired = false;
   currentSpeed = 0;
   speedLimit = 120; // Default, update from config
@@ -97,37 +97,57 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.roadFeatureService.potholeDetected$.subscribe(async evt => {
         console.log('Pothole detected:', evt);
-        this.speak('Possible pothole detected ahead.');
-        const alert = await this.alertController.create({
-          header: 'Pothole Detected',
-          message: `Possible pothole detected (severity ${evt.severity.toFixed(1)}). Report it?`,
-          buttons: [
-            {
-              text: 'Ignore',
-              role: 'cancel'
-            },
-            {
-              text: 'Report',
-              handler: async () => {
-                try {
-                  const pos = await this.locationService.getCurrentLocation();
-                  this.apiService.sendReportWithQueue('Pothole detected via gyro', pos, 'ai')
-                    .subscribe({
-                      next: () => {
-                        this.showToast('Pothole reported.');
-                      },
-                      error: () => {
-                        this.showToast('Failed to report pothole.', 'danger');
-                      }
-                    });
-                } catch {
-                  this.showToast('Location unavailable. Could not report pothole.', 'danger');
+        if (!this.roadFeatureService.enablePotholeReports || this.roadFeatureService.reportingPaused) {
+          return;
+        }
+        if (this.roadFeatureService.potholeConfirmationMode) {
+          this.speak('Possible pothole detected ahead.');
+          const alert = await this.alertController.create({
+            header: 'Pothole Detected',
+            message: `Possible pothole detected (severity ${evt.severity.toFixed(1)}). Report it?`,
+            buttons: [
+              {
+                text: 'Ignore',
+                role: 'cancel'
+              },
+              {
+                text: 'Report',
+                handler: async () => {
+                  try {
+                    const pos = await this.locationService.getCurrentLocation();
+                    this.apiService.sendReportWithQueue('Pothole detected via gyro', pos, 'ai')
+                      .subscribe({
+                        next: () => {
+                          this.showToast('Pothole reported.');
+                        },
+                        error: () => {
+                          this.showToast('Failed to report pothole.', 'danger');
+                        }
+                      });
+                  } catch {
+                    this.showToast('Location unavailable. Could not report pothole.', 'danger');
+                  }
                 }
               }
-            }
-          ]
-        });
-        await alert.present();
+            ]
+          });
+          await alert.present();
+        } else {
+          try {
+            const pos = await this.locationService.getCurrentLocation();
+            this.apiService.sendReportWithQueue('Pothole auto-reported via gyro', pos, 'ai')
+              .subscribe({
+                next: () => {
+                  this.showToast('Pothole auto-reported.');
+                },
+                error: () => {
+                  this.showToast('Failed to auto-report pothole.', 'danger');
+                }
+              });
+          } catch {
+            this.showToast('Location unavailable. Could not auto-report pothole.', 'danger');
+          }
+        }
       })
     );
 
@@ -166,6 +186,32 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async openTools() {
     this.navCtrl.navigateForward('/tools');
+  }
+
+  async openSettingsMenu() {
+    const sheet = await this.actionSheetController.create({
+      header: 'Settings',
+      buttons: [
+        {
+          text: 'Settings',
+          handler: () => this.openSettings()
+        },
+        {
+          text: 'Tools',
+          handler: () => this.openTools()
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        }
+      ]
+    });
+    await sheet.present();
+  }
+
+  openAlerts() {
+    this.viewMode = 'list';
+    this.cdr.detectChanges();
   }
 
   async openEventActions(evt: any) {
@@ -468,19 +514,17 @@ export class DashboardPage implements OnInit, OnDestroy {
         const res = await SpeechRecognition.start({
           language: "en-US",
           maxResults: 1,
-          prompt: "Say 'Hey Anooco'",
+          prompt: "Say 'Hey Anooco' or 'Hey Scout'",
           partialResults: false,
           popup: false,
         });
         const raw = (res.matches && res.matches[0]) ? res.matches[0] : "";
         const text = raw.toLowerCase();
-        if (text.includes("anooco") || text.includes("hey anooco")) {
+        const wake = text.includes("hey anooco") || text.includes("hey scout") || text.includes("hey echo");
+        if (wake) {
           this.speak("Listening...");
           await this.startListening();
-          // startListening handles the resumption of wake loop, so we break this instance
           break;
-        } else if (raw && raw.trim().length > 0) {
-          this.processVoiceCommand(raw);
         }
       } catch {
         // ignore transient errors
@@ -496,9 +540,80 @@ export class DashboardPage implements OnInit, OnDestroy {
   processVoiceCommand(text: string) {
     console.log('Voice command:', text);
 
+    const lower = text.toLowerCase();
+
+    if (lower.includes('scout') || lower.includes('echo')) {
+      if (lower.includes('on') || lower.includes('start')) {
+        if (!this.handsFreeEnabled) {
+          this.toggleHandsFree();
+        } else {
+          this.speak('Hands-free already on.');
+        }
+        return;
+      }
+      if (lower.includes('off') || lower.includes('stop')) {
+        if (this.handsFreeEnabled) {
+          this.toggleHandsFree();
+        } else {
+          this.speak('Hands-free already off.');
+        }
+        return;
+      }
+      if (lower.includes('pause') || lower.includes('mute')) {
+        this.roadFeatureService.setReportingPaused(true);
+        this.speak('Reporting paused.');
+        return;
+      }
+      if (lower.includes('resume') || lower.includes('unpause')) {
+        this.roadFeatureService.setReportingPaused(false);
+        this.speak('Reporting resumed.');
+        return;
+      }
+      if (lower.includes('take me to my car') || lower.includes('my car')) {
+        this.navigateToCar();
+        return;
+      }
+      if (lower.includes('beam') && lower.includes('emergency')) {
+        this.handleEmergencyBeamCommand();
+        return;
+      }
+    }
+
+    if (lower.includes('take me to my car') || lower.includes('my car')) {
+      this.navigateToCar();
+      return;
+    }
+
+    if (lower.includes('park here') || lower.includes('save parking') || lower.includes('save my car')) {
+      this.saveParkingSpot();
+      return;
+    }
+
     const intent = this.reportLogicService.parseVoiceCommand(text);
 
     if (intent) {
+      if (this.roadFeatureService.reportingPaused) {
+        this.speak('Reporting is currently paused.');
+        return;
+      }
+
+      if (intent.type === 'REPORT_ACCIDENT' && !this.roadFeatureService.enableAccidentReports) {
+        this.speak('Accident reporting is disabled in settings.');
+        return;
+      }
+      if (intent.type === 'REPORT_HAZARD' && !this.roadFeatureService.enablePotholeReports) {
+        this.speak('Hazard reporting is disabled in settings.');
+        return;
+      }
+      if (intent.type === 'REPORT_ENFORCEMENT' && !this.roadFeatureService.enableEnforcementReports) {
+        this.speak('Enforcement reporting is disabled in settings.');
+        return;
+      }
+      if (intent.type === 'REPORT_TRAFFIC' && !this.roadFeatureService.enableTrafficReports) {
+        this.speak('Traffic reporting is disabled in settings.');
+        return;
+      }
+
       const typeDisplay = intent.type.replace('REPORT_', '').toLowerCase();
       this.speak(`Reporting ${typeDisplay}.`);
       this.submitReportInternal(intent.type, text, 'voice');
@@ -555,10 +670,116 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
   }
 
+  private async handleEmergencyBeamCommand() {
+    if (this.roadFeatureService.reportingPaused) {
+      this.speak('Reporting is currently paused.');
+      return;
+    }
+    try {
+      const location = await this.locationService.getCurrentLocation();
+      const text = 'Ambulance approaching ahead, please give way.';
+      this.apiService.sendReport(text, location, 'voice').subscribe({
+        next: () => {
+          this.speak('Emergency beam sent.');
+        },
+        error: () => {
+          this.speak('Failed to send emergency beam.');
+        }
+      });
+    } catch {
+      this.speak('Location unavailable. Could not send emergency beam.');
+    }
+  }
+
   async submitReport(type: string) {
     this.setOpen(false);
+    if (this.roadFeatureService.reportingPaused) {
+      this.showToast('Reporting is paused in settings.', 'medium');
+      this.speak('Reporting is currently paused.');
+      return;
+    }
+    const upperType = (type || '').toUpperCase();
+    if (upperType === 'ACCIDENT' && !this.roadFeatureService.enableAccidentReports) {
+      this.showToast('Accident reporting disabled in settings.', 'medium');
+      this.speak('Accident reporting is disabled.');
+      return;
+    }
+    if (upperType === 'POTHOLE' && !this.roadFeatureService.enablePotholeReports) {
+      this.showToast('Pothole reporting disabled in settings.', 'medium');
+      this.speak('Pothole reporting is disabled.');
+      return;
+    }
+    if (upperType === 'POLICE' && !this.roadFeatureService.enableEnforcementReports) {
+      this.showToast('Enforcement reporting disabled in settings.', 'medium');
+      this.speak('Enforcement reporting is disabled.');
+      return;
+    }
+    if (upperType === 'TRAFFIC' && !this.roadFeatureService.enableTrafficReports) {
+      this.showToast('Traffic reporting disabled in settings.', 'medium');
+      this.speak('Traffic reporting is disabled.');
+      return;
+    }
+
     this.submitReportInternal(type, `Manual report: ${type}`, 'manual');
     this.speak(`${type} report submitted.`);
+  }
+
+  navigateToCar() {
+    const stored = localStorage.getItem('anooco_parking_spot');
+    if (!stored) {
+      this.speak('No parking location saved.');
+      this.showToast('No parking location saved.', 'medium');
+      return;
+    }
+    try {
+      const data = JSON.parse(stored);
+      if (!data.lat || !data.lng) {
+        this.speak('Parking location is invalid.');
+        return;
+      }
+      const query = encodeURIComponent(`${data.lat},${data.lng}`);
+      this.speak('Opening route to your car.');
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_system');
+    } catch {
+      this.speak('Parking location is invalid.');
+    }
+  }
+
+  async saveParkingSpot() {
+    try {
+      let lat: number | null = null;
+      let lng: number | null = null;
+
+      try {
+        const pos = await this.locationService.getCurrentLocation();
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch {
+        if (this.userMarker) {
+          const pos = this.userMarker.getLatLng();
+          lat = pos.lat;
+          lng = pos.lng;
+        }
+      }
+
+      if (lat === null || lng === null) {
+        this.showToast('Location unavailable. Could not save parking.', 'medium');
+        this.speak('Location unavailable. Could not save parking.');
+        return;
+      }
+
+      const data = {
+        lat,
+        lng,
+        savedAt: new Date().toISOString(),
+        source: 'dashboard'
+      };
+      localStorage.setItem('anooco_parking_spot', JSON.stringify(data));
+      this.showToast('Parking location saved.', 'medium');
+      this.speak('Parking location saved.');
+    } catch {
+      this.showToast('Failed to save parking location.', 'danger');
+    }
   }
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
@@ -813,6 +1034,15 @@ export class DashboardPage implements OnInit, OnDestroy {
       case 'TRAFFIC':
         text = `Heavy traffic ${streetPart} in ${distanceKm} kilometers.`;
         break;
+      case 'EMERGENCY_VEHICLE': {
+        if (!this.roadFeatureService.enableEmergencyAlerts) {
+          return;
+        }
+        const avgSpeedKmh = 40;
+        const etaMinutes = Math.max(1, Math.round((distanceMeters / 1000) / avgSpeedKmh * 60));
+        text = `Emergency vehicle approaching your way in ${etaMinutes} minutes.`;
+        break;
+      }
       default:
         text = `${evt.eventType} reported ${streetPart} ${distanceKm} kilometers ahead.`;
     }
@@ -837,6 +1067,10 @@ export class DashboardPage implements OnInit, OnDestroy {
       if (this.eventFilter === 'pothole' && (evt.eventType || '').toUpperCase() !== 'POTHOLE') return false;
       return true;
     });
+  }
+
+  getAlertCount(): number {
+    return this.getFilteredEvents().length;
   }
 
   // Haversine formula to calculate distance in meters
@@ -1019,6 +1253,11 @@ export class DashboardPage implements OnInit, OnDestroy {
         return {
           color: '#212121',
           icon: `<svg viewBox="0 0 512 512" style="width: 20px; height: 20px; fill: white;"><path d="M128 416H64V128h64v288zm32-288v288h224c17.7 0 32-14.3 32-32 0-3.6-.6-7.1-1.7-10.4l-32-96c-5-15.1-19.2-25.6-35.1-25.6H208c-17.7 0-32 14.3-32 32zm0-64h128c17.7 0 32 14.3 32 32v32h-32V96H160v32zm256 96h32c17.7 0 32 14.3 32 32v160c0 17.7-14.3 32-32 32h-32V160z"/></svg>`
+        };
+      case 'EMERGENCY_VEHICLE':
+        return {
+          color: '#9C27B0',
+          icon: `<svg viewBox="0 0 512 512" style="width: 20px; height: 20px; fill: white;"><path d="M256 32l64 128h96l-80 96 32 160-112-64-112 64 32-160-80-96h96z"/></svg>`
         };
       default:
         return {

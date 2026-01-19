@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { LoadingController, AlertController, ToastController, ActionSheetController, NavController } from '@ionic/angular';
 import { OcrService } from '../../services/ocr.service';
 import { DashcamService } from '../../services/dashcam.service';
@@ -14,7 +14,7 @@ import { LocationService } from '../../services/location.service';
   styleUrls: ['./tools.page.scss'],
   standalone: false
 })
-export class ToolsPage {
+export class ToolsPage implements OnInit {
 
   private loadingController = inject(LoadingController);
   private alertController = inject(AlertController);
@@ -29,9 +29,30 @@ export class ToolsPage {
   private apiService = inject(ApiService);
   private locationService = inject(LocationService);
 
+  reportAccidents = true;
+  reportPotholes = true;
+  reportTraffic = true;
+  reportEnforcement = true;
+  emergencyAlerts = true;
+  potholeConfirmMode = true;
+  parkingAutoMark = false;
+
+  ngOnInit() {
+    this.reportAccidents = this.roadFeatureService.enableAccidentReports;
+    this.reportPotholes = this.roadFeatureService.enablePotholeReports;
+    this.reportTraffic = this.roadFeatureService.enableTrafficReports;
+    this.reportEnforcement = this.roadFeatureService.enableEnforcementReports;
+    this.emergencyAlerts = this.roadFeatureService.enableEmergencyAlerts;
+    this.potholeConfirmMode = this.roadFeatureService.potholeConfirmationMode;
+    this.parkingAutoMark = this.roadFeatureService.enableParkingAutoMark;
+  }
 
 
   async scanPotholeAi() {
+    if (!this.roadFeatureService.enablePotholeReports || this.roadFeatureService.reportingPaused) {
+      this.showToast('Pothole reporting is disabled in Reporting Preferences.');
+      return;
+    }
     const loading = await this.loadingController.create({
       message: 'Analyzing road surface...'
     });
@@ -446,6 +467,19 @@ export class ToolsPage {
     await alert.present();
   }
 
+  updateReportingPreferences() {
+    this.roadFeatureService.updateReportPreferences({
+      accidents: this.reportAccidents,
+      potholes: this.reportPotholes,
+      traffic: this.reportTraffic,
+      enforcement: this.reportEnforcement,
+      emergencyAlerts: this.emergencyAlerts
+    });
+    this.roadFeatureService.updatePotholeConfirmationMode(this.potholeConfirmMode);
+    this.roadFeatureService.updateParkingAutoMark(this.parkingAutoMark);
+    this.showToast('Reporting preferences updated.');
+  }
+
   async configureSpeedContext() {
     const alert = await this.alertController.create({
       header: 'Speed Alert Context',
@@ -546,6 +580,22 @@ export class ToolsPage {
       ]
     });
     await alert.present();
+  }
+
+  async saveParkingSpotManual() {
+    try {
+      const pos = await this.locationService.getCurrentLocation();
+      const data = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        savedAt: new Date().toISOString(),
+        source: 'tools'
+      };
+      localStorage.setItem('anooco_parking_spot', JSON.stringify(data));
+      this.showToast('Parking location saved.');
+    } catch {
+      this.showToast('Location unavailable. Could not save parking.');
+    }
   }
 
   private async showToast(msg: string, color: string = 'primary') {

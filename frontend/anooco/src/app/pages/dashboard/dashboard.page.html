@@ -2,26 +2,37 @@
   <!-- Map Background -->
   <div id="map" class="full-screen-map" [class.hidden]="viewMode === 'list'"></div>
 
-  <!-- Top Left Menu Button -->
   <div class="top-overlay">
-    <div class="menu-button" (click)="openMenu()">
+    <div
+      class="menu-button"
+      role="button"
+      tabindex="0"
+      aria-label="Open menu"
+      (click)="openMenu()"
+      (keyup.enter)="openMenu()">
       <ion-icon name="menu-outline"></ion-icon>
     </div>
-    <!-- Settings Button -->
-    <div class="menu-button" (click)="openSettings()" style="margin-left: 10px;">
+    <div
+      class="menu-button"
+      role="button"
+      tabindex="0"
+      aria-label="Open settings and tools"
+      (click)="openSettingsMenu()"
+      (keyup.enter)="openSettingsMenu()"
+      style="margin-left: 10px;">
       <ion-icon name="settings-outline"></ion-icon>
     </div>
-    <!-- Tools Button -->
-    <div class="menu-button" (click)="openTools()" style="margin-left: 10px;">
-      <ion-icon name="construct-outline"></ion-icon>
-    </div>
-    <!-- Expired Toggle -->
-    <div class="menu-button" (click)="toggleExpiredVisibility()" style="margin-left: 10px;">
-      <ion-icon [name]="showExpired ? 'eye' : 'eye-off'"></ion-icon>
-    </div>
-    <!-- View Mode Toggle (Always Visible) -->
-    <div class="menu-button" (click)="toggleViewMode()" style="margin-left: 10px;">
-      <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
+    <div class="top-right">
+      <div
+        class="menu-button alerts-button"
+        role="button"
+        tabindex="0"
+        aria-label="Open alerts list"
+        (click)="openAlerts()"
+        (keyup.enter)="openAlerts()">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <span class="badge" *ngIf="getAlertCount() > 0">{{ getAlertCount() }}</span>
+      </div>
     </div>
   </div>
 
@@ -46,9 +57,14 @@
       <h2>Report Incident</h2>
     </div>
 
-    <!-- Main Action Actions -->
     <div class="action-grid">
-      <div class="action-card" (click)="startListening()">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="Start voice command"
+        (click)="startListening()"
+        (keyup.enter)="startListening()">
         <div class="icon-circle black" [class.listening]="isListening">
           <ion-icon name="mic" *ngIf="!isListening"></ion-icon>
           <ion-spinner name="dots" *ngIf="isListening" color="light"></ion-spinner>
@@ -59,56 +75,105 @@
         </div>
       </div>
 
-      <div class="action-card" (click)="onManualReport()">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="Open manual report options"
+        (click)="onManualReport()"
+        (keyup.enter)="onManualReport()">
         <div class="icon-circle gray">
           <ion-icon name="warning"></ion-icon>
         </div>
         <span>Manual</span>
       </div>
 
-      <div class="action-card" (click)="quickScanSign()">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="Scan road sign"
+        (click)="quickScanSign()"
+        (keyup.enter)="quickScanSign()">
         <div class="icon-circle gray">
           <ion-icon name="scan-outline"></ion-icon>
         </div>
         <span>Scan Sign</span>
       </div>
 
-      <div class="action-card" (click)="quickScanPotholeAi()">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="AI pothole scan"
+        (click)="quickScanPotholeAi()"
+        (keyup.enter)="quickScanPotholeAi()">
         <div class="icon-circle gray">
           <ion-icon name="analytics-outline"></ion-icon>
         </div>
         <span>AI Pothole</span>
       </div>
 
-      <div class="action-card" *ngIf="isListening" (click)="stopListening(true)">
+      <div
+        class="action-card"
+        *ngIf="isListening"
+        role="button"
+        tabindex="0"
+        aria-label="Stop listening"
+        (click)="stopListening(true)"
+        (keyup.enter)="stopListening(true)">
         <div class="icon-circle gray">
           <ion-icon name="stop-circle"></ion-icon>
         </div>
         <span>Stop</span>
       </div>
 
-      <div class="action-card" (click)="toggleHandsFree()">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="Toggle hands-free auto mode"
+        (click)="toggleHandsFree()"
+        (keyup.enter)="toggleHandsFree()">
         <div class="icon-circle gray" [class.listening]="handsFreeEnabled">
           <ion-icon [name]="handsFreeEnabled ? 'radio' : 'ellipse-outline'"></ion-icon>
         </div>
         <span>{{ handsFreeEnabled ? 'Auto On' : 'Auto Off' }}</span>
       </div>
 
-      <div class="action-card" (click)="toggleViewMode()">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="Change view mode"
+        (click)="toggleViewMode()"
+        (keyup.enter)="toggleViewMode()">
         <div class="icon-circle gray">
           <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
         </div>
         <span>{{ viewMode === 'split' ? 'Map' : (viewMode === 'map' ? 'List' : 'Split') }}</span>
       </div>
 
-      <div class="action-card" (click)="navigateTo('HOME')">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="Navigate home"
+        (click)="navigateTo('HOME')"
+        (keyup.enter)="navigateTo('HOME')">
         <div class="icon-circle gray">
           <ion-icon name="home"></ion-icon>
         </div>
         <span>Home</span>
       </div>
 
-      <div class="action-card" (click)="navigateTo('WORK')">
+      <div
+        class="action-card"
+        role="button"
+        tabindex="0"
+        aria-label="Navigate to work"
+        (click)="navigateTo('WORK')"
+        (keyup.enter)="navigateTo('WORK')">
         <div class="icon-circle gray">
           <ion-icon name="briefcase"></ion-icon>
         </div>
@@ -247,7 +312,15 @@
     </ng-template>
   </ion-modal>
 
-  <div class="assistant-fab" (click)="onAssistantPress()" [class.pulse]="isListening || handsFreeEnabled" [class.hidden]="viewMode !== 'map'">
+  <div
+    class="assistant-fab"
+    role="button"
+    tabindex="0"
+    aria-label="Voice assistant"
+    (click)="onAssistantPress()"
+    (keyup.enter)="onAssistantPress()"
+    [class.pulse]="isListening || handsFreeEnabled"
+    [class.hidden]="viewMode !== 'map'">
     <ion-icon name="mic"></ion-icon>
   </div>
 

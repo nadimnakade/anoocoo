@@ -13,9 +13,43 @@
   </ion-refresher>
 
   <div class="alerts-container">
+    <div class="filters">
+      <div class="filter-group">
+        <span class="filter-label">Time</span>
+        <button type="button" class="filter-chip" [class.active]="timeWindowHours === 2" (click)="setTimeWindow(2)">
+          2h
+        </button>
+        <button type="button" class="filter-chip" [class.active]="timeWindowHours === 6" (click)="setTimeWindow(6)">
+          6h
+        </button>
+        <button type="button" class="filter-chip" [class.active]="timeWindowHours === 24" (click)="setTimeWindow(24)">
+          24h
+        </button>
+        <button type="button" class="filter-chip" [class.active]="timeWindowHours === 48" (click)="setTimeWindow(48)">
+          48h
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Type</span>
+        <button type="button" class="filter-chip" [class.active]="eventFilter === 'all'" (click)="setEventFilter('all')">
+          All
+        </button>
+        <button type="button" class="filter-chip" [class.active]="eventFilter === 'pothole'" (click)="setEventFilter('pothole')">
+          Potholes
+        </button>
+        <button type="button" class="filter-chip" [class.active]="eventFilter === 'police'" (click)="setEventFilter('police')">
+          Police
+        </button>
+        <button type="button" class="filter-chip" [class.active]="eventFilter === 'traffic'" (click)="setEventFilter('traffic')">
+          Traffic
+        </button>
+      </div>
+    </div>
+
     <ion-list *ngIf="alerts.length > 0">
       <ion-list-header>
-        <ion-label>Last {{ recentHours }} hours ({{ alerts.length }})</ion-label>
+        <ion-label>Last {{ timeWindowHours }} hours ({{ alerts.length }})</ion-label>
       </ion-list-header>
 
       <ion-item *ngFor="let evt of alerts" button (click)="openOnMap(evt)">
@@ -35,7 +69,7 @@
     </ion-list>
 
     <div class="empty" *ngIf="!isLoading && alerts.length === 0">
-      <p>No alerts in the last {{ recentHours }} hours.</p>
+      <p>No alerts in the last {{ timeWindowHours }} hours.</p>
     </div>
 
     <div class="loading" *ngIf="isLoading">
@@ -43,4 +77,3 @@
     </div>
   </div>
 </ion-content>
-

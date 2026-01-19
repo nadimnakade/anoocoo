@@ -24,13 +24,14 @@
       </ion-item>
       <div class="ion-padding" slot="content">
         <p><strong>The Map:</strong> Shows your current location and nearby alerts (potholes, accidents, police, etc.).</p>
-        <p><strong>View Modes:</strong> Tap the "Map/List" button in the bottom sheet to toggle between:</p>
+        <p><strong>View Modes:</strong> Use the Map / List / Split button in the bottom actions to toggle between:</p>
         <ul>
           <li><strong>Split:</strong> Map on top, alerts list below.</li>
-          <li><strong>Map Only:</strong> Full screen map.</li>
-          <li><strong>List Only:</strong> Full screen list of alerts.</li>
+          <li><strong>Map Only:</strong> Full-screen map (default when you open the app).</li>
+          <li><strong>List Only:</strong> Full-screen list of alerts.</li>
         </ul>
-        <p><strong>Expired Alerts:</strong> Use the "Eye" icon in the top menu to show/hide expired or old alerts.</p>
+        <p><strong>Settings & Tools:</strong> Use the gear icon in the top-left to open an action sheet for Settings and Tools.</p>
+        <p><strong>Alerts Icon:</strong> The bell icon in the top-right opens the alerts list. The badge shows how many active alerts are nearby.</p>
       </div>
     </ion-accordion>
 
@@ -40,15 +41,24 @@
         <ion-label>Reporting Incidents</ion-label>
       </ion-item>
       <div class="ion-padding" slot="content">
-        <p><strong>Voice Reporting:</strong> Tap the microphone button or say "Hey Anooco" (if Hands-free is on). Then say:</p>
+        <p><strong>Voice Reporting:</strong> Tap the Voice button in the bottom actions, the assistant mic on the map, or say a wake word (if Hands-free is on). Then say for example:</p>
         <ul>
           <li>"Report accident"</li>
           <li>"Report pothole"</li>
           <li>"Report traffic"</li>
           <li>"Report police"</li>
         </ul>
+        <p><strong>Wake Words:</strong> With Hands-free on, the app listens in the background for "Hey Anooco", "Hey Scout" or "Hey Echo". Only after a wake word does it fully listen to your command, so normal conversation does not create reports.</p>
         <p><strong>Manual Reporting:</strong> Tap the "Manual" button to select an incident type from the grid.</p>
-        <p><strong>Hands-free Mode:</strong> Tap "Auto On/Off" to enable background listening for "Hey Anooco". Ideal for driving.</p>
+        <p><strong>Hands-free Mode:</strong> Tap "Auto On/Off" to enable background listening for wake words. Ideal for driving.</p>
+        <p><strong>Emergency Beam (Ambulance):</strong> After a wake word (e.g. "Hey Scout"), say something like "Beam emergency ahead" to send an emergency vehicle alert from your current location so other drivers can give way.</p>
+        <p><strong>Quick Start for Ambulance Drivers:</strong></p>
+        <ul>
+          <li>Before moving, turn <strong>Auto On</strong> so the app listens for wake words.</li>
+          <li>On the road, say <strong>"Hey Scout"</strong> or <strong>"Hey Echo"</strong> to wake the assistant.</li>
+          <li>Immediately follow with <strong>"Beam emergency ahead"</strong> to warn nearby drivers.</li>
+          <li>Keep <strong>Emergency Alerts</strong> enabled in Settings so other drivers hear clear voice warnings.</li>
+        </ul>
       </div>
     </ion-accordion>
 
@@ -74,6 +84,8 @@
         <p><strong>Profile:</strong> Update your username and view your Trust Score.</p>
         <p><strong>Mute Settings:</strong> Configure a mute radius (e.g., around your home) or specific streets where you don't want audio alerts.</p>
         <p><strong>Calibration:</strong> Use the Tools menu to calibrate the pothole detection sensitivity for your specific vehicle/mount.</p>
+        <p><strong>Reporting Preferences:</strong> Turn on or off different types of reports (Accident, Pothole, Traffic, Police) according to your needs.</p>
+        <p><strong>Emergency Alerts:</strong> Enable or disable spoken alerts for emergency vehicles reported nearby. If disabled, you will still see them on the map but not hear voice warnings.</p>
       </div>
     </ion-accordion>
 

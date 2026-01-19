@@ -10,8 +10,10 @@ import { ApiService } from 'src/app/services/api.service';
 })
 export class AlertsPage implements OnInit {
   alerts: any[] = [];
+  private rawAlerts: any[] = [];
   isLoading = false;
-  readonly recentHours = 24;
+  timeWindowHours = 24;
+  eventFilter: 'all' | 'pothole' | 'police' | 'traffic' = 'all';
 
   constructor(
     private api: ApiService,
@@ -24,8 +26,6 @@ export class AlertsPage implements OnInit {
 
   loadAlerts(event?: any) {
     this.isLoading = true;
-    const now = Date.now();
-    const cutoffMs = this.recentHours * 60 * 60 * 1000;
 
     this.api.getEvents().subscribe({
       next: (data: any) => {
@@ -38,18 +38,8 @@ export class AlertsPage implements OnInit {
           updatedAt: evt.updatedAt || evt.UpdatedAt
         }));
 
-        this.alerts = normalized
-          .filter(evt => {
-            if (!evt.updatedAt) return false;
-            const t = new Date(evt.updatedAt).getTime();
-            if (!t) return false;
-            return now - t <= cutoffMs;
-          })
-          .sort((a, b) => {
-            const ta = new Date(a.updatedAt).getTime();
-            const tb = new Date(b.updatedAt).getTime();
-            return tb - ta;
-          });
+        this.rawAlerts = normalized;
+        this.applyFilters();
 
         this.isLoading = false;
         if (event && event.target && typeof event.target.complete === 'function') {
@@ -65,12 +55,53 @@ export class AlertsPage implements OnInit {
     });
   }
 
+  setTimeWindow(hours: number) {
+    this.timeWindowHours = hours;
+    this.applyFilters();
+  }
+
+  setEventFilter(filter: 'all' | 'pothole' | 'police' | 'traffic') {
+    this.eventFilter = filter;
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    const now = Date.now();
+    const cutoffMs = this.timeWindowHours * 60 * 60 * 1000;
+
+    this.alerts = this.rawAlerts
+      .filter(evt => {
+        if (!evt.updatedAt) return false;
+        const t = new Date(evt.updatedAt).getTime();
+        if (!t) return false;
+        if (now - t > cutoffMs) return false;
+
+        const type = (evt.eventType || '').toString().toUpperCase();
+        if (this.eventFilter === 'pothole') {
+          return type === 'POTHOLE';
+        }
+        if (this.eventFilter === 'police') {
+          return type === 'POLICE';
+        }
+        if (this.eventFilter === 'traffic') {
+          return type === 'TRAFFIC';
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const ta = new Date(a.updatedAt).getTime();
+        const tb = new Date(b.updatedAt).getTime();
+        return tb - ta;
+      });
+  }
+
   getIcon(type: string) {
     switch (type?.toUpperCase()) {
       case 'POTHOLE': return 'warning';
       case 'ACCIDENT': return 'medkit';
       case 'POLICE': return 'shield';
       case 'TRAFFIC': return 'car';
+      case 'EMERGENCY_VEHICLE': return 'flash';
       default: return 'alert-circle';
     }
   }
@@ -81,6 +112,7 @@ export class AlertsPage implements OnInit {
       case 'ACCIDENT': return '#eb445a';
       case 'POLICE': return '#3880ff';
       case 'TRAFFIC': return '#ffc409';
+      case 'EMERGENCY_VEHICLE': return '#9c27b0';
       default: return '#medium';
     }
   }
@@ -97,4 +129,3 @@ export class AlertsPage implements OnInit {
     });
   }
 }
-

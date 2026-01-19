@@ -127,14 +127,19 @@ namespace Anooco.API.Services
         {
             if (string.IsNullOrEmpty(text)) return "UNKNOWN";
             text = text.ToLower();
-            
+
+            if (text.Contains("ambulance") || text.Contains("emergency vehicle") || text.Contains("emergency services"))
+            {
+                return "EMERGENCY_VEHICLE";
+            }
+
             if (text.Contains("pothole") || text.Contains("bump")) return "POTHOLE";
             if (text.Contains("accident") || text.Contains("crash")) return "ACCIDENT";
             if (text.Contains("police") || text.Contains("cop")) return "POLICE";
             if (text.Contains("traffic") || text.Contains("stuck")) return "TRAFFIC";
             if (text.Contains("park") || text.Contains("parking")) return "PARK";
             if (text.Contains("lift") || text.Contains("ride")) return "LIFT";
-            
+
             return "GENERAL";
         }
     }

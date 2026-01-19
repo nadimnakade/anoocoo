@@ -29,7 +29,7 @@ export class ReportLogicService {
     }
 
     // 2. Warning: Hazards (Potholes, etc)
-    if (/(pothole|bad road|bump|hole)/.test(lowerText)) {
+    if (/(pothole|bad road|bump|hole|roadwork|roadworks|construction|slippery|ice|oil|debris)/.test(lowerText)) {
       return {
         type: 'REPORT_HAZARD',
         category: 'Warning',
@@ -39,7 +39,7 @@ export class ReportLogicService {
     }
 
     // 3. Info: Enforcement
-    if (/(police|camera|trap|cop)/.test(lowerText)) {
+    if (/(police|camera|speed camera|speed cameras|trap|cop|roadblock|road block|checkpoint|speedgun|speed gun|patrol car)/.test(lowerText)) {
       let direction = 'Unknown';
       if (lowerText.includes('ahead')) direction = 'Forward';
 

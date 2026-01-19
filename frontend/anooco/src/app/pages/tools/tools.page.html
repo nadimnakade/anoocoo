@@ -108,6 +108,45 @@
     </ion-card-content>
   </ion-card>
 
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="options-outline" slot="start" class="card-icon"></ion-icon>
+        Reporting Preferences
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item lines="none">
+        <ion-label>Accidents</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="reportAccidents" (ionChange)="updateReportingPreferences()"></ion-toggle>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>Potholes &amp; Hazards</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="reportPotholes" (ionChange)="updateReportingPreferences()"></ion-toggle>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>Traffic</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="reportTraffic" (ionChange)="updateReportingPreferences()"></ion-toggle>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>Enforcement</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="reportEnforcement" (ionChange)="updateReportingPreferences()"></ion-toggle>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>Emergency vehicle alerts</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="emergencyAlerts" (ionChange)="updateReportingPreferences()"></ion-toggle>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>Ask before AI pothole report</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="potholeConfirmMode" (ionChange)="updateReportingPreferences()"></ion-toggle>
+      </ion-item>
+      <ion-item lines="none">
+        <ion-label>Auto save parking when leaving navigation</ion-label>
+        <ion-toggle slot="end" [(ngModel)]="parkingAutoMark" (ionChange)="updateReportingPreferences()"></ion-toggle>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
   <ion-card button (click)="calibratePotholeSensitivity()">
     <ion-card-header>
       <ion-card-title>
@@ -170,6 +209,18 @@
     </ion-card-header>
     <ion-card-content>
       Set Home and Work addresses for quick access.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card button (click)="saveParkingSpotManual()">
+    <ion-card-header>
+      <ion-card-title>
+        <ion-icon name="car-sport-outline" slot="start" class="card-icon"></ion-icon>
+        Save Parking Spot
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      Save your current GPS location as your parked car.
     </ion-card-content>
   </ion-card>
 

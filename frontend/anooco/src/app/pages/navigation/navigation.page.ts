@@ -105,8 +105,13 @@ export class NavigationPage implements OnInit, OnDestroy {
     // Subscribe to Pothole Detection (AI Confirmation Mode)
     this.subscriptions.add(
       this.roadFeatureService.potholeDetected$.subscribe(evt => {
+        if (!this.roadFeatureService.enablePotholeReports || this.roadFeatureService.reportingPaused) {
+          return;
+        }
         if (this.roadFeatureService.potholeConfirmationMode) {
           this.handlePotholeDetected(evt);
+        } else {
+          this.autoReportPothole(evt);
         }
       })
     );
@@ -197,6 +202,9 @@ export class NavigationPage implements OnInit, OnDestroy {
       clearInterval(this.trackingInterval);
       this.trackingInterval = null;
     }
+    if (this.roadFeatureService.enableParkingAutoMark && this.currentLat && this.currentLng) {
+      this.saveParkingSpotFromCoords(this.currentLat, this.currentLng, true);
+    }
   }
 
   checkProximityToEvents() {
@@ -233,12 +241,21 @@ export class NavigationPage implements OnInit, OnDestroy {
   }
 
   speakEvent(evt: any, distKm: number) {
-    const text = `Caution. ${evt.eventType} reported ${distKm.toFixed(1)} kilometers ahead.`;
+    const type = (evt.eventType || '').toString().toUpperCase();
+    let text: string;
 
-    // Use shared speak method
+    if (type === 'EMERGENCY_VEHICLE') {
+      if (!this.roadFeatureService.enableEmergencyAlerts) {
+        return;
+      }
+      const avgSpeedKmh = 40;
+      const etaMinutes = Math.max(1, Math.round((distKm / avgSpeedKmh) * 60));
+      text = `Emergency vehicle approaching your way in ${etaMinutes} minutes.`;
+    } else {
+      text = `Caution. ${evt.eventType} reported ${distKm.toFixed(1)} kilometers ahead.`;
+    }
+
     this.speak(text);
-
-    // Show Confirmation UI (Proactive Confirmation)
     this.presentConfirmationToast(evt, text);
   }
 
@@ -300,6 +317,9 @@ export class NavigationPage implements OnInit, OnDestroy {
   }
 
   async handleTrafficDetected() {
+    if (!this.roadFeatureService.enableTrafficReports || this.roadFeatureService.reportingPaused) {
+      return;
+    }
     const pos = await this.locationService.getCurrentLocation();
     this.api.sendReport('Heavy traffic detected automatically', pos, 'TRAFFIC').subscribe({
       next: () => this.showToast('Heavy traffic auto-reported.'),
@@ -330,6 +350,32 @@ export class NavigationPage implements OnInit, OnDestroy {
       ]
     });
     await alert.present();
+  }
+
+  async autoReportPothole(evt: { severity: number }) {
+    try {
+      const pos = await this.locationService.getCurrentLocation();
+      this.api.sendReport(`Pothole auto-reported via AI (Severity ${evt.severity.toFixed(1)})`, pos, 'POTHOLE').subscribe({
+        next: () => this.showToast('Pothole auto-reported.'),
+        error: () => this.showToast('Failed to auto-report.')
+      });
+    } catch {
+      this.showToast('Location unavailable. Could not auto-report pothole.');
+    }
+  }
+
+  saveParkingSpotFromCoords(lat: number, lng: number, silent = false) {
+    const data = {
+      lat,
+      lng,
+      savedAt: new Date().toISOString(),
+      source: 'navigation'
+    };
+    localStorage.setItem('anooco_parking_spot', JSON.stringify(data));
+    if (!silent) {
+      this.showToast('Parking location saved.');
+      this.speak('Parking location saved.');
+    }
   }
 
   async quickScanSign() {
@@ -569,21 +615,19 @@ export class NavigationPage implements OnInit, OnDestroy {
         if (!available.available) {
           break;
         }
-        // Continuous listening for Wake Word
         const res = await SpeechRecognition.start({
           language: "en-US",
           maxResults: 1,
-          prompt: "Say 'Hey Anooco'",
+          prompt: "Say 'Hey Anooco' or 'Hey Scout'",
           partialResults: false,
           popup: false,
         });
         const raw = (res.matches && res.matches[0]) ? res.matches[0] : "";
         const text = raw.toLowerCase();
-        if (text.includes("anooco") || text.includes("hey anooco")) {
+        const wake = text.includes("hey anooco") || text.includes("hey scout") || text.includes("hey echo");
+        if (wake) {
           this.speak("Listening...");
           await this.listenForCommand();
-        } else if (raw && raw.trim().length > 0) {
-          await this.processVoiceCommand(raw);
         }
       } catch {
         // ignore transient errors
@@ -612,22 +656,152 @@ export class NavigationPage implements OnInit, OnDestroy {
 
   async processVoiceCommand(cmd: string) {
     const lower = cmd.toLowerCase();
+    if (lower.includes('scout') || lower.includes('echo')) {
+      if (lower.includes('on') || lower.includes('start')) {
+        if (!this.handsFreeEnabled) {
+          await this.toggleHandsFree();
+        } else {
+          this.speak('Hands-free already on.');
+        }
+        return;
+      }
+      if (lower.includes('off') || lower.includes('stop')) {
+        if (this.handsFreeEnabled) {
+          await this.toggleHandsFree();
+        } else {
+          this.speak('Hands-free already off.');
+        }
+        return;
+      }
+      if (lower.includes('pause') || lower.includes('mute')) {
+        this.roadFeatureService.setReportingPaused(true);
+        this.speak('Reporting paused.');
+        return;
+      }
+      if (lower.includes('resume') || lower.includes('unpause')) {
+        this.roadFeatureService.setReportingPaused(false);
+        this.speak('Reporting resumed.');
+        return;
+      }
+      if (lower.includes('take me to my car') || lower.includes('my car')) {
+        this.navigateToCar();
+        return;
+      }
+      if (lower.includes('park here') || lower.includes('save parking') || lower.includes('save my car')) {
+        if (this.currentLat && this.currentLng) {
+          this.saveParkingSpotFromCoords(this.currentLat, this.currentLng);
+        } else {
+          try {
+            const pos = await this.locationService.getCurrentLocation();
+            this.saveParkingSpotFromCoords(pos.coords.latitude, pos.coords.longitude);
+          } catch {
+            this.speak('Location unavailable. Could not save parking.');
+          }
+        }
+        return;
+      }
+      if (lower.includes('beam') && lower.includes('emergency')) {
+        await this.handleEmergencyBeamCommand();
+        return;
+      }
+    }
+
+    if (lower.includes('take me to my car') || lower.includes('my car')) {
+      this.navigateToCar();
+      return;
+    }
+
+    if (lower.includes('park here') || lower.includes('save parking') || lower.includes('save my car')) {
+      try {
+        const pos = await this.locationService.getCurrentLocation();
+        this.saveParkingSpotFromCoords(pos.coords.latitude, pos.coords.longitude);
+      } catch {
+        this.speak('Location unavailable. Could not save parking.');
+      }
+      return;
+    }
+
     const pos = await this.locationService.getCurrentLocation();
 
+    if (this.roadFeatureService.reportingPaused) {
+      this.speak('Reporting is currently paused.');
+      return;
+    }
+
     if (lower.includes('pothole')) {
+      if (!this.roadFeatureService.enablePotholeReports) {
+        this.speak('Pothole reporting is disabled in settings.');
+        return;
+      }
       this.api.sendReport('Pothole reported via Voice', pos, 'POTHOLE').subscribe();
       this.speak("Pothole reported.");
     } else if (lower.includes('accident')) {
+      if (!this.roadFeatureService.enableAccidentReports) {
+        this.speak('Accident reporting is disabled in settings.');
+        return;
+      }
       this.api.sendReport('Accident reported via Voice', pos, 'ACCIDENT').subscribe();
       this.speak("Accident reported.");
     } else if (lower.includes('traffic')) {
+      if (!this.roadFeatureService.enableTrafficReports) {
+        this.speak('Traffic reporting is disabled in settings.');
+        return;
+      }
       this.api.sendReport('Traffic reported via Voice', pos, 'TRAFFIC').subscribe();
       this.speak("Traffic reported.");
     } else if (lower.includes('police')) {
+      if (!this.roadFeatureService.enableEnforcementReports) {
+        this.speak('Enforcement reporting is disabled in settings.');
+        return;
+      }
       this.api.sendReport('Police reported via Voice', pos, 'POLICE').subscribe();
       this.speak("Police reported.");
+    } else if (lower.includes('beam') && lower.includes('emergency')) {
+      await this.handleEmergencyBeamCommand();
     } else {
       this.speak("Sorry, I didn't catch that.");
+    }
+  }
+
+  private async handleEmergencyBeamCommand() {
+    if (this.roadFeatureService.reportingPaused) {
+      this.speak('Reporting is currently paused.');
+      return;
+    }
+    try {
+      const location = await this.locationService.getCurrentLocation();
+      const text = 'Ambulance approaching ahead, please give way.';
+      this.api.sendReport(text, location, 'voice').subscribe({
+        next: () => {
+          this.speak('Emergency beam sent.');
+        },
+        error: () => {
+          this.speak('Failed to send emergency beam.');
+        }
+      });
+    } catch {
+      this.speak('Location unavailable. Could not send emergency beam.');
+    }
+  }
+
+  navigateToCar() {
+    const stored = localStorage.getItem('anooco_parking_spot');
+    if (!stored) {
+      this.speak('No parking location saved.');
+      this.showToast('No parking location saved.');
+      return;
+    }
+    try {
+      const data = JSON.parse(stored);
+      if (!data.lat || !data.lng) {
+        this.speak('Parking location is invalid.');
+        return;
+      }
+      const query = encodeURIComponent(`${data.lat},${data.lng}`);
+      this.speak('Opening route to your car.');
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${query}`, '_system');
+    } catch {
+      this.speak('Parking location is invalid.');
     }
   }
 
@@ -1044,6 +1218,7 @@ export class NavigationPage implements OnInit, OnDestroy {
       case 'ACCIDENT': return 'medkit';
       case 'POLICE': return 'shield';
       case 'TRAFFIC': return 'car';
+      case 'EMERGENCY_VEHICLE': return 'flash';
       default: return 'alert-circle';
     }
   }
@@ -1054,6 +1229,7 @@ export class NavigationPage implements OnInit, OnDestroy {
       case 'ACCIDENT': return '#eb445a'; // Danger
       case 'POLICE': return '#3880ff'; // Primary
       case 'TRAFFIC': return '#ffc409';
+      case 'EMERGENCY_VEHICLE': return '#9c27b0';
       default: return '#medium';
     }
   }

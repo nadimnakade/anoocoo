@@ -14,6 +14,14 @@
   z-index: 100; /* Increased to stay above bottom-sheet */
 }
 
+.top-overlay .top-right {
+  position: absolute;
+  right: 20px;
+  top: 0;
+  display: flex;
+  align-items: center;
+}
+
 .menu-button {
   background: var(--ion-item-background);
   width: 45px;
@@ -28,6 +36,25 @@
     font-size: 24px;
     color: var(--ion-text-color);
   }
+}
+
+.alerts-button {
+  position: relative;
+}
+
+.alerts-button .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--ion-color-danger);
+  color: #fff;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Pulse Animation for Voice Button */
@@ -95,8 +122,9 @@
 }
 
 .action-grid {
-  display: flex;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   margin-bottom: 20px;
   flex-shrink: 0;
 }

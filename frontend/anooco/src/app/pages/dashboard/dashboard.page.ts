@@ -47,6 +47,8 @@ export class DashboardPage implements OnInit, OnDestroy {
   pendingFocusEventId: string | null = null;
 
   isReportModalOpen = false;
+  private isPotholeAlertShowing = false;
+  private lastPotholeAlertTime = 0;
   private subscriptions: Subscription = new Subscription();
 
   constructor(
@@ -97,9 +99,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.roadFeatureService.potholeDetected$.subscribe(async evt => {
         console.log('Pothole detected:', evt);
+
+        // Prevent spam: Check if alert is showing or if recently shown (within 10s)
+        const now = Date.now();
+        if (this.isPotholeAlertShowing || (now - this.lastPotholeAlertTime < 10000)) {
+          return;
+        }
+
         if (!this.roadFeatureService.enablePotholeReports || this.roadFeatureService.reportingPaused) {
           return;
         }
+
+        this.isPotholeAlertShowing = true;
+        this.lastPotholeAlertTime = now;
+
         if (this.roadFeatureService.potholeConfirmationMode) {
           this.speak('Possible pothole detected ahead.');
           const alert = await this.alertController.create({
@@ -108,11 +121,15 @@ export class DashboardPage implements OnInit, OnDestroy {
             buttons: [
               {
                 text: 'Ignore',
-                role: 'cancel'
+                role: 'cancel',
+                handler: () => {
+                  this.isPotholeAlertShowing = false;
+                }
               },
               {
                 text: 'Report',
                 handler: async () => {
+                  this.isPotholeAlertShowing = false;
                   try {
                     const pos = await this.locationService.getCurrentLocation();
                     this.apiService.sendReportWithQueue('Pothole detected via gyro', pos, 'ai')
@@ -133,6 +150,8 @@ export class DashboardPage implements OnInit, OnDestroy {
           });
           await alert.present();
         } else {
+          // Auto-report mode - no alert needed, but we still respect the cooldown
+          this.isPotholeAlertShowing = false; // Reset flag immediately since no UI is blocked
           try {
             const pos = await this.locationService.getCurrentLocation();
             this.apiService.sendReportWithQueue('Pothole auto-reported via gyro', pos, 'ai')
@@ -511,6 +530,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         if (!available.available) {
           break;
         }
+        // Continuous listening for wake word or full command
         const res = await SpeechRecognition.start({
           language: "en-US",
           maxResults: 1,
@@ -518,13 +538,35 @@ export class DashboardPage implements OnInit, OnDestroy {
           partialResults: false,
           popup: false,
         });
+
         const raw = (res.matches && res.matches[0]) ? res.matches[0] : "";
         const text = raw.toLowerCase();
-        const wake = text.includes("hey anooco") || text.includes("hey scout") || text.includes("hey echo");
-        if (wake) {
+
+        // Relaxed wake detection: allows "Hey Scout", "Scout", "Echo", etc.
+        const hasWake = text.includes("hey anooco") || text.includes("hey scout") || text.includes("hey echo") ||
+                        text.includes("scout") || text.includes("echo");
+
+        if (hasWake) {
+          // Check if command is embedded in the same phrase
+          // e.g. "Scout beam emergency ahead"
+          if (text.includes("beam") && text.includes("emergency")) {
+             this.handleEmergencyBeamCommand();
+             // Don't break, just continue loop
+             continue;
+          }
+
+          if (text.includes("take me to my car") || text.includes("my car")) {
+             this.navigateToCar();
+             continue;
+          }
+
+          // If no specific command found, trigger full listening
           this.speak("Listening...");
           await this.startListening();
-          break;
+          // We break here because startListening is async and might take time?
+          // Actually startListening sets isListening=true, so next loop iteration will wait.
+          // But startListening also has its own timeout.
+          // Let's just continue, the loop will wait at the top if isListening is true.
         }
       } catch {
         // ignore transient errors
@@ -670,24 +712,20 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
   }
 
-  private async handleEmergencyBeamCommand() {
-    if (this.roadFeatureService.reportingPaused) {
-      this.speak('Reporting is currently paused.');
-      return;
-    }
+  async handleEmergencyBeamCommand() {
+    this.speak("Emergency beam activated. Alerting contacts.");
+    this.showToast('Emergency Beam Activated', 'danger');
+
     try {
-      const location = await this.locationService.getCurrentLocation();
-      const text = 'Ambulance approaching ahead, please give way.';
-      this.apiService.sendReport(text, location, 'voice').subscribe({
-        next: () => {
-          this.speak('Emergency beam sent.');
-        },
-        error: () => {
-          this.speak('Failed to send emergency beam.');
-        }
-      });
-    } catch {
-      this.speak('Location unavailable. Could not send emergency beam.');
+        const pos = await this.locationService.getCurrentLocation();
+        this.apiService.sendReportWithQueue('EMERGENCY BEAM ACTIVATED', pos, 'emergency')
+          .subscribe({
+            next: () => this.showToast('Emergency alert sent.'),
+            error: () => this.showToast('Failed to send emergency alert.', 'danger')
+          });
+    } catch (e) {
+        console.error(e);
+        this.showToast('Could not get location for emergency.', 'danger');
     }
   }
 
@@ -1266,4 +1304,6 @@ export class DashboardPage implements OnInit, OnDestroy {
         };
     }
   }
+
+
 }

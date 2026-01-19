@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Customization</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <!-- Live Preview -->
+  <div class="preview-container ion-text-center ion-padding">
+    <h3>Preview</h3>
+    <div class="map-preview" [class.night-mode]="settings.mapMode === 'night'">
+      <div class="road"></div>
+      <div class="car-marker">
+        <ion-icon [name]="getCarIconName()" [color]="getCarIconColor()" size="large"></ion-icon>
+      </div>
+    </div>
+  </div>
+
+  <ion-list>
+    <ion-list-header>
+      <ion-label>Map Display</ion-label>
+    </ion-list-header>
+    <ion-item>
+      <ion-label>Mode</ion-label>
+      <ion-select [(ngModel)]="settings.mapMode" (ionChange)="settingChanged('mapMode', $event)" interface="popover">
+        <ion-select-option value="auto">Auto</ion-select-option>
+        <ion-select-option value="day">Day</ion-select-option>
+        <ion-select-option value="night">Night</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-label>Car Icon</ion-label>
+      <ion-select [(ngModel)]="settings.carIcon" (ionChange)="settingChanged('carIcon', $event)" interface="popover">
+        <ion-select-option value="arrow">Blue Arrow</ion-select-option>
+        <ion-select-option value="racecar">Race Car</ion-select-option>
+        <ion-select-option value="truck">Truck</ion-select-option>
+        <ion-select-option value="cat">Cat</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-list-header>
+      <ion-label>Voice & Sound</ion-label>
+    </ion-list-header>
+    <ion-item>
+      <ion-label>Voice Directions</ion-label>
+      <ion-select [(ngModel)]="settings.voice" (ionChange)="settingChanged('voice', $event)" interface="popover">
+        <ion-select-option value="scout">Scout (Default)</ion-select-option>
+        <ion-select-option value="echo">Echo</ion-select-option>
+        <ion-select-option value="robot">Robot</ion-select-option>
+      </ion-select>
+    </ion-item>
+  </ion-list>
+</ion-content>

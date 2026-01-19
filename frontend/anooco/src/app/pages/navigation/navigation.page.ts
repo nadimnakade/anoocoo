@@ -615,6 +615,7 @@ export class NavigationPage implements OnInit, OnDestroy {
         if (!available.available) {
           break;
         }
+        // Continuous listening for wake word or full command
         const res = await SpeechRecognition.start({
           language: "en-US",
           maxResults: 1,
@@ -622,10 +623,25 @@ export class NavigationPage implements OnInit, OnDestroy {
           partialResults: false,
           popup: false,
         });
+
         const raw = (res.matches && res.matches[0]) ? res.matches[0] : "";
         const text = raw.toLowerCase();
-        const wake = text.includes("hey anooco") || text.includes("hey scout") || text.includes("hey echo");
-        if (wake) {
+
+        // Relaxed wake detection: allows "Hey Scout", "Scout", "Echo", etc.
+        const hasWake = text.includes("hey anooco") || text.includes("hey scout") || text.includes("hey echo") ||
+                        text.includes("scout") || text.includes("echo");
+
+        if (hasWake) {
+           // Check for embedded commands in wake phrase
+           if (text.includes("beam") && text.includes("emergency")) {
+               this.handleEmergencyBeamCommand();
+               continue;
+           }
+           if (text.includes("take me to my car") || text.includes("my car")) {
+               this.navigateToCar();
+               continue;
+           }
+
           this.speak("Listening...");
           await this.listenForCommand();
         }
@@ -764,23 +780,19 @@ export class NavigationPage implements OnInit, OnDestroy {
   }
 
   private async handleEmergencyBeamCommand() {
-    if (this.roadFeatureService.reportingPaused) {
-      this.speak('Reporting is currently paused.');
-      return;
-    }
+    this.speak("Emergency beam activated. Alerting contacts.");
+    this.showToast('Emergency Beam Activated');
+
     try {
-      const location = await this.locationService.getCurrentLocation();
-      const text = 'Ambulance approaching ahead, please give way.';
-      this.api.sendReport(text, location, 'voice').subscribe({
-        next: () => {
-          this.speak('Emergency beam sent.');
-        },
-        error: () => {
-          this.speak('Failed to send emergency beam.');
-        }
-      });
-    } catch {
-      this.speak('Location unavailable. Could not send emergency beam.');
+        const pos = await this.locationService.getCurrentLocation();
+        this.api.sendReportWithQueue('EMERGENCY BEAM ACTIVATED', pos, 'emergency')
+          .subscribe({
+            next: () => this.showToast('Emergency alert sent.'),
+            error: () => this.showToast('Failed to send emergency alert.')
+          });
+    } catch (e) {
+        console.error(e);
+        this.showToast('Could not get location for emergency.');
     }
   }
 

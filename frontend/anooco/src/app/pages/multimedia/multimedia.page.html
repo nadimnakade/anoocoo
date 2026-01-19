@@ -1,0 +1,85 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Multimedia</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <!-- Mini Player (Shows only when connected) -->
+  <ion-card *ngIf="connectedApp && currentTrack" class="music-player">
+    <ion-card-content>
+      <div class="player-info">
+        <ion-icon 
+          [name]="connectedApp === 'spotify' ? 'musical-notes' : (connectedApp === 'youtube' ? 'logo-youtube' : 'book')" 
+          size="large" 
+          [color]="connectedApp === 'spotify' ? 'success' : (connectedApp === 'youtube' ? 'danger' : 'warning')">
+        </ion-icon>
+        <div class="track-details">
+          <h3>{{ currentTrack.title }}</h3>
+          <p>{{ currentTrack.artist }}</p>
+        </div>
+      </div>
+
+      <div class="player-controls">
+        <ion-button fill="clear" (click)="prevTrack()">
+          <ion-icon slot="icon-only" name="play-skip-back"></ion-icon>
+        </ion-button>
+        
+        <ion-button fill="solid" shape="round" (click)="togglePlayback()">
+          <ion-icon slot="icon-only" [name]="currentTrack.isPlaying ? 'pause' : 'play'"></ion-icon>
+        </ion-button>
+        
+        <ion-button fill="clear" (click)="nextTrack()">
+          <ion-icon slot="icon-only" name="play-skip-forward"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-list>
+    <ion-list-header>
+      <ion-label>Connected Apps</ion-label>
+    </ion-list-header>
+
+    <ion-item button detail (click)="toggleConnection('spotify')">
+      <ion-icon slot="start" name="musical-note-outline" color="success"></ion-icon>
+      <ion-label>Spotify</ion-label>
+      <ion-button slot="end" [fill]="connectedApp === 'spotify' ? 'solid' : 'outline'" size="small" pointer-events="none">
+        {{ connectedApp === 'spotify' ? 'Disconnect' : 'Connect' }}
+      </ion-button>
+    </ion-item>
+
+    <ion-item button detail (click)="toggleConnection('youtube')">
+      <ion-icon slot="start" name="logo-youtube" color="danger"></ion-icon>
+      <ion-label>YouTube Music</ion-label>
+      <ion-button slot="end" [fill]="connectedApp === 'youtube' ? 'solid' : 'outline'" size="small" pointer-events="none">
+        {{ connectedApp === 'youtube' ? 'Disconnect' : 'Connect' }}
+      </ion-button>
+    </ion-item>
+
+    <ion-item button detail (click)="toggleConnection('audible')">
+      <ion-icon slot="start" name="book-outline" color="warning"></ion-icon>
+      <ion-label>Audible</ion-label>
+      <ion-button slot="end" [fill]="connectedApp === 'audible' ? 'solid' : 'outline'" size="small" pointer-events="none">
+        {{ connectedApp === 'audible' ? 'Disconnect' : 'Connect' }}
+      </ion-button>
+    </ion-item>
+
+    <ion-list-header>
+      <ion-label>Settings</ion-label>
+    </ion-list-header>
+    <ion-item>
+      <ion-label>Show Audio Player</ion-label>
+      <ion-toggle slot="end" checked="true"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-label>Next Track Notification</ion-label>
+      <ion-toggle slot="end" checked="true"></ion-toggle>
+    </ion-item>
+
+  </ion-list>
+</ion-content>

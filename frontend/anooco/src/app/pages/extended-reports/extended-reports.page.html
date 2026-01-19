@@ -1,0 +1,42 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Extended Reports</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <div class="ion-text-center ion-margin-bottom">
+    <p>Help us improve the map by reporting issues.</p>
+  </div>
+
+  <ion-grid>
+    <ion-row>
+      <ion-col size="6" *ngFor="let type of reportTypes">
+        <ion-card button (click)="submitReport(type.name)" class="report-card">
+          <ion-card-content class="ion-text-center">
+            <ion-icon [name]="type.icon" [color]="type.color" size="large"></ion-icon>
+            <h3>{{ type.name }}</h3>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <ion-list>
+    <ion-list-header>
+      <ion-label>My Recent Reports</ion-label>
+    </ion-list-header>
+    <ion-item>
+      <ion-icon slot="start" name="map-outline" color="primary"></ion-icon>
+      <ion-label>
+        <h2>Map Issue</h2>
+        <p>Pending Review • Yesterday</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+</ion-content>

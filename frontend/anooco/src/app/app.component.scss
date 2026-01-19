@@ -2,11 +2,24 @@ ion-menu {
   --width: 280px;
 }
 
-.menu-header {
-  background: var(--ion-color-step-50, black);
-  color: white;
-  padding: 40px 20px 20px;
-  
+.menu-header-toolbar {
+  --background: var(--ion-color-step-50, black);
+  --color: white;
+  --min-height: 160px; /* Ensure sufficient height for profile info */
+  --border-width: 0;
+
+  /* Ionic toolbar handles safe area automatically,
+     but we ensure content has some breathing room */
+
+  .menu-header-content {
+    padding: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align content to bottom of toolbar */
+    height: 100%;
+  }
+
   .user-info {
     .avatar-circle {
       width: 60px;
@@ -17,19 +30,20 @@ ion-menu {
       align-items: center;
       justify-content: center;
       margin-bottom: 15px;
-      
+
       ion-icon {
         font-size: 30px;
         color: #fff;
       }
     }
-    
+
     h2 {
       margin: 0;
       font-size: 24px;
       font-weight: 500;
+      color: white;
     }
-    
+
     p {
       margin: 5px 0 0;
       color: #ccc;
@@ -38,18 +52,32 @@ ion-menu {
 }
 
 ion-list {
-  padding-top: 20px;
+  padding-top: 10px; /* Reduced padding since header is separate */
   background: transparent;
-  
+
   ion-item {
     --background: transparent;
     --color: var(--ion-text-color);
     font-size: 16px;
     font-weight: 500;
-    
+
     ion-icon {
       margin-right: 15px;
       color: var(--ion-text-color);
+    }
+  }
+
+  ion-item-divider {
+    --background: transparent;
+    --color: var(--ion-color-medium);
+    margin-top: 10px;
+    margin-bottom: 5px;
+
+    ion-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
   }
 }
@@ -59,7 +87,7 @@ ion-list {
   bottom: 20px;
   width: 100%;
   border-top: 1px solid var(--ion-color-light-shade);
-  
+
   ion-item {
     --background: transparent;
     --color: var(--ion-text-color);

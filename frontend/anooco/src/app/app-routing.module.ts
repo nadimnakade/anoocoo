@@ -55,6 +55,34 @@ const routes: Routes = [
     path: 'navigation',
     loadChildren: () => import('./pages/navigation/navigation.module').then(m => m.NavigationPageModule)
   },
+  {
+    path: 'plan-drive',
+    loadChildren: () => import('./pages/plan-drive/plan-drive.module').then( m => m.PlanDrivePageModule)
+  },
+  {
+    path: 'vehicle-services',
+    loadChildren: () => import('./pages/vehicle-services/vehicle-services.module').then( m => m.VehicleServicesPageModule)
+  },
+  {
+    path: 'multimedia',
+    loadChildren: () => import('./pages/multimedia/multimedia.module').then( m => m.MultimediaPageModule)
+  },
+  {
+    path: 'social',
+    loadChildren: () => import('./pages/social/social.module').then( m => m.SocialPageModule)
+  },
+  {
+    path: 'customization',
+    loadChildren: () => import('./pages/customization/customization.module').then( m => m.CustomizationPageModule)
+  },
+  {
+    path: 'extended-reports',
+    loadChildren: () => import('./pages/extended-reports/extended-reports.module').then( m => m.ExtendedReportsPageModule)
+  },
+  {
+    path: 'dashboard-v2',
+    loadChildren: () => import('./pages/dashboard-v2/dashboard-v2.module').then( m => m.DashboardV2PageModule)
+  },
 ];
 
 @NgModule({

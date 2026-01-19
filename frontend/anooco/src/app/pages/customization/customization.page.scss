@@ -1,0 +1,52 @@
+.preview-container {
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin-top: 0;
+    color: var(--ion-color-dark);
+  }
+}
+
+.map-preview {
+  width: 100%;
+  height: 150px;
+  background: #e0e0e0; /* Default Day Mode map color */
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease;
+
+  &.night-mode {
+    background: #2c2c2c; /* Night Mode map color */
+    
+    .road {
+      background: #4a4a4a;
+    }
+  }
+
+  .road {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background: #ffffff;
+    transform: translateY(-50%);
+    border-top: 2px solid #ccc;
+    border-bottom: 2px solid #ccc;
+  }
+
+  .car-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    ion-icon {
+      font-size: 48px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+  }
+}

@@ -1,0 +1,60 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Vehicle Services</ion-title>
+  </ion-toolbar>
+  <ion-toolbar color="primary">
+    <ion-segment [value]="segmentValue" (ionChange)="segmentChanged($event)">
+      <ion-segment-button value="gas">
+        <ion-label>Gas</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="parking">
+        <ion-label>Parking</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="ev">
+        <ion-label>EV</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner></ion-spinner>
+    <p>Finding nearby {{ segmentValue }}...</p>
+  </div>
+
+  <ion-list *ngIf="!isLoading">
+    <ion-item>
+      <ion-label class="ion-text-wrap">
+        <h2>Find Nearby Services</h2>
+        <p>Locating services around you (5km radius).</p>
+      </ion-label>
+    </ion-item>
+    
+    <ion-item-divider>
+      <ion-label>Nearby Results ({{ services.length }})</ion-label>
+    </ion-item-divider>
+
+    <ion-item *ngFor="let service of services" button detail>
+      <ion-icon slot="start" 
+        [name]="segmentValue === 'gas' ? 'color-fill-outline' : (segmentValue === 'parking' ? 'car-outline' : 'battery-charging-outline')" 
+        [color]="segmentValue === 'gas' ? 'warning' : (segmentValue === 'parking' ? 'medium' : 'success')">
+      </ion-icon>
+      
+      <ion-label>
+        <h2>{{ service.name }}</h2>
+        <p *ngIf="service.details">{{ service.details }}</p>
+      </ion-label>
+      
+      <ion-badge slot="end" color="light">Go</ion-badge>
+    </ion-item>
+
+    <div *ngIf="services.length === 0" class="ion-text-center ion-padding">
+      <p>No services found in this area.</p>
+    </div>
+  </ion-list>
+</ion-content>

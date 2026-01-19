@@ -1,0 +1,82 @@
+<ion-content [fullscreen]="true" class="map-bg">
+  <!-- Fake Map Background (Placeholder) -->
+  <div class="fake-map">
+    <div class="map-placeholder-text">Waze-like Map View</div>
+    <div class="my-location-arrow">
+      <ion-icon name="navigate" style="transform: rotate(-45deg); font-size: 32px; color: #3880ff;"></ion-icon>
+    </div>
+  </div>
+
+  <!-- Bottom Sheet / Search Bar -->
+  <div class="bottom-bar">
+    <div class="search-bar">
+      <ion-icon name="search" slot="start"></ion-icon>
+      <input type="text" placeholder="Where to?" />
+      <ion-icon name="mic" slot="end"></ion-icon>
+    </div>
+  </div>
+
+  <!-- Waze-style Menu Button (Bottom Left) -->
+  <div class="menu-fab" (click)="toggleMenu()">
+    <ion-icon name="menu"></ion-icon>
+  </div>
+
+  <!-- Report Button (Bottom Right) -->
+  <div class="report-fab" (click)="navigateTo('/extended-reports')">
+    <ion-icon name="warning" color="warning"></ion-icon>
+  </div>
+
+  <!-- Side Menu Overlay -->
+  <div class="side-menu-overlay" [class.open]="isMenuOpen" (click)="toggleMenu()"></div>
+  
+  <div class="side-menu" [class.open]="isMenuOpen">
+    <div class="menu-header">
+      <div class="user-profile">
+        <div class="avatar">
+          <ion-icon name="person"></ion-icon>
+        </div>
+        <div class="user-details">
+          <h2>Wazer Name</h2>
+          <p>View Profile</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-items">
+      <div class="menu-item" (click)="navigateTo('/plan-drive')">
+        <ion-icon name="calendar-outline"></ion-icon>
+        <span>Plan a drive</span>
+      </div>
+      
+      <div class="menu-item" (click)="navigateTo('/social')">
+        <ion-icon name="people-outline"></ion-icon>
+        <span>Inbox</span>
+      </div>
+
+      <div class="menu-section-title">Drive</div>
+
+      <div class="menu-item" (click)="navigateTo('/vehicle-services')">
+        <ion-icon name="color-fill-outline"></ion-icon>
+        <span>Gas & Parking</span>
+      </div>
+
+      <div class="menu-item" (click)="navigateTo('/multimedia')">
+        <ion-icon name="musical-notes-outline"></ion-icon>
+        <span>Music</span>
+      </div>
+
+      <div class="menu-section-title">Settings</div>
+
+      <div class="menu-item" (click)="navigateTo('/customization')">
+        <ion-icon name="brush-outline"></ion-icon>
+        <span>Customize</span>
+      </div>
+
+      <div class="menu-item" (click)="navigateTo('/settings')">
+        <ion-icon name="settings-outline"></ion-icon>
+        <span>Settings</span>
+      </div>
+    </div>
+  </div>
+
+</ion-content>

@@ -1,0 +1,19 @@
+.report-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 5px;
+
+  ion-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 0.9em;
+    font-weight: 500;
+  }
+}

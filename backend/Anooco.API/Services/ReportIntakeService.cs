@@ -38,7 +38,7 @@ namespace Anooco.API.Services
                 using var conn = await _dbService.CreateConnectionAsync();
                 
                 // 1. Save Report
-                using var cmd = new NpgsqlCommand("SELECT * FROM sp_create_report(@userId, @type, @desc, @loc, @heading, @speed, @conf, @source)", conn);
+                using var cmd = new NpgsqlCommand("SELECT * FROM sp_create_report(@userId, @type, @desc, @loc, @heading, @speed, @conf, @source, @image)", conn);
                 var userParam = cmd.Parameters.Add("userId", NpgsqlDbType.Uuid);
                 userParam.Value = DBNull.Value;
                 cmd.Parameters.AddWithValue("type", reportType);
@@ -48,6 +48,28 @@ namespace Anooco.API.Services
                 cmd.Parameters.AddWithValue("speed", reportDto.Speed ?? 0);
                 cmd.Parameters.AddWithValue("conf", 0.0);
                 cmd.Parameters.AddWithValue("source", reportDto.Source ?? "manual");
+
+                byte[]? imageData = null;
+                if (!string.IsNullOrEmpty(reportDto.Image))
+                {
+                    try
+                    {
+                        // Remove data:image/jpeg;base64, prefix if present
+                        var base64 = reportDto.Image;
+                        if (base64.Contains(","))
+                        {
+                            base64 = base64.Split(',')[1];
+                        }
+                        imageData = Convert.FromBase64String(base64);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to decode report image");
+                    }
+                }
+                
+                var imgParam = cmd.Parameters.Add("image", NpgsqlDbType.Bytea);
+                imgParam.Value = imageData ?? (object)DBNull.Value;
 
                 var result = await cmd.ExecuteScalarAsync();
                 if (result == null) throw new Exception("Failed to create report");

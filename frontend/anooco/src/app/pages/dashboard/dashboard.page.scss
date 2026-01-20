@@ -23,7 +23,7 @@
 }
 
 .menu-button {
-  background: var(--ion-item-background);
+  background: var(--ion-card-background, #ffffff);
   width: 45px;
   height: 45px;
   border-radius: 50%;
@@ -31,10 +31,15 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: background-color 0.2s;
 
   ion-icon {
     font-size: 24px;
     color: var(--ion-text-color);
+  }
+
+  &:active {
+    background: var(--ion-color-light);
   }
 }
 
@@ -59,15 +64,15 @@
 
 /* Pulse Animation for Voice Button */
 @keyframes pulse-ring {
-  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(0, 0, 0, 0); }
-  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(var(--ion-color-primary-rgb), 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(var(--ion-color-primary-rgb), 0); }
+  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(var(--ion-color-primary-rgb), 0); }
 }
 
 .listening-mode {
   .icon-circle {
     animation: pulse-ring 2s infinite;
-    background: #ff3b30 !important; /* Red for recording */
+    background: var(--ion-color-danger) !important; /* Red for recording */
 
     ion-icon {
       color: white !important;
@@ -80,7 +85,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
+  background: var(--ion-background-color);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   padding: 16px 20px 0 20px;
@@ -107,10 +112,11 @@
 .sheet-handle {
   width: 40px;
   height: 4px;
-  background: var(--ion-color-primary-tint);
+  background: var(--ion-color-medium-tint);
   border-radius: 2px;
   margin: 0 auto 20px auto;
   flex-shrink: 0;
+  opacity: 0.5;
 }
 
 .greeting h2 {
@@ -131,7 +137,7 @@
 
 .action-card {
   flex: 1;
-  background: #ffffff;
+  background: var(--ion-card-background, #ffffff);
   border-radius: 12px;
   padding: 8px; /* Reduced from 16px */
   display: flex;
@@ -172,7 +178,7 @@
   }
 
   &.gray {
-    background: var(--ion-color-light-shade);
+    background: var(--ion-color-light);
     color: var(--ion-text-color);
   }
 
@@ -183,22 +189,25 @@
 
 .recent-list {
   flex: 1;
-  overflow-y: auto; /* Allow scrolling within the list part */
+  overflow-y: auto;
   padding-bottom: 20px;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: var(--ion-card-background, #ffffff);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  border: 1px solid rgba(var(--ion-color-medium-rgb), 0.05);
 
   .list-header {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 12px;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 16px;
     color: var(--ion-text-color);
     position: sticky;
     top: 0;
-    background: #ffffff;
+    background: var(--ion-card-background, #ffffff);
     padding-bottom: 8px;
+    z-index: 5;
+    letter-spacing: -0.3px;
   }
 }
 
@@ -212,29 +221,34 @@
   flex: 0 0 auto;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border: 1px solid var(--ion-color-light-shade);
+  background: var(--ion-color-light);
   font-size: 11px;
   font-weight: 500;
-  color: #374151;
+  color: var(--ion-text-color);
+  transition: all 0.2s;
 }
 
 .filter-chip.active {
   background: var(--ion-color-primary);
   border-color: var(--ion-color-primary);
-  color: #ffffff;
+  color: var(--ion-color-primary-contrast);
 }
 
 .list-item {
   display: flex;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #eeeeee;
+  border-bottom: 1px solid var(--ion-color-light-shade);
   cursor: pointer;
   transition: background-color 0.2s;
 
   &:active {
     background-color: var(--ion-color-light);
+  }
+
+  &:last-child {
+    border-bottom: none;
   }
 
   .item-icon {
@@ -253,6 +267,8 @@
   }
 
   .item-details {
+    flex: 1;
+
     h3 {
       font-size: 16px;
       font-weight: 500;
@@ -272,7 +288,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid var(--ion-background-color);
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
   color: white;
   font-size: 18px;
@@ -283,12 +299,12 @@
 }
 
 ::ng-deep .event-label {
-  background: rgba(255, 255, 255, 0.9);
-  color: #222;
+  background: var(--ion-card-background);
+  color: var(--ion-text-color);
   border-radius: 6px;
   padding: 2px 6px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid var(--ion-color-light-shade);
   font-size: 12px;
 }
 
@@ -345,7 +361,7 @@
   justify-content: center;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   color: white;
-  border: 3px solid white;
+  border: 3px solid var(--ion-background-color);
 }
 
 .assistant-fab {
@@ -356,12 +372,17 @@
   height: 56px;
   border-radius: 50%;
   background: var(--ion-color-primary);
-  color: white;
+  color: var(--ion-color-primary-contrast);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
   z-index: 8;
+  transition: transform 0.2s;
+
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 .assistant-fab.pulse {
@@ -377,12 +398,15 @@
   top: 50px;
   right: 20px;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .speed-circle {
   width: 60px;
   height: 60px;
-  background: white;
+  background: var(--ion-card-background, #ffffff);
   border-radius: 50%;
   border: 4px solid var(--ion-color-success);
   display: flex;
@@ -390,7 +414,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  color: #333;
+  color: var(--ion-text-color);
 
   &.speeding {
     border-color: var(--ion-color-danger);
@@ -406,12 +430,13 @@
   .speed-unit {
     font-size: 10px;
     font-weight: 600;
+    opacity: 0.7;
   }
 }
 
 .speed-limit-chip {
   margin-top: 8px;
-  background: rgba(255,255,255,0.9);
+  background: var(--ion-card-background, #ffffff);
   border-radius: 999px;
   padding: 4px 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -420,7 +445,8 @@
   justify-content: center;
   font-weight: 600;
   font-size: 11px;
-  color: #111827;
+  color: var(--ion-text-color);
+  border: 1px solid var(--ion-color-light-shade);
 }
 
 .speed-limit-chip .limit-value {

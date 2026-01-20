@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastController, LoadingController } from '@ionic/angular';
+import { ToastController, LoadingController, ModalController } from '@ionic/angular';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-extended-reports',
@@ -18,12 +19,37 @@ export class ExtendedReportsPage implements OnInit {
     { name: 'General Error', icon: 'bug-outline', color: 'dark' }
   ];
 
+  recentReports: any[] = [];
+
   constructor(
     private toastCtrl: ToastController,
-    private loadingCtrl: LoadingController
+    private loadingCtrl: LoadingController,
+    private api: ApiService,
+    private modalCtrl: ModalController
   ) { }
 
   ngOnInit() {
+    this.loadReports();
+  }
+
+  ionViewWillEnter() {
+    this.loadReports();
+  }
+
+  loadReports() {
+    this.api.getRecentReports().subscribe({
+      next: (data) => {
+        this.recentReports = data;
+      },
+      error: (err) => {
+        console.error('Failed to load reports', err);
+      }
+    });
+  }
+
+  getImageUrl(report: any) {
+    if (!report.hasImage) return null;
+    return this.api.getReportImageUrl(report.id);
   }
 
   async submitReport(type: string) {

@@ -81,8 +81,9 @@ export class AppComponent {
     if (userStr) {
       this.currentUser = JSON.parse(userStr);
       // Refresh profile to get latest TrustScore
-      if (this.currentUser.UserId) {
-        this.api.getUserProfile(this.currentUser.UserId).subscribe({
+      const uid = this.currentUser.userId || this.currentUser.UserId;
+      if (uid) {
+        this.api.getUserProfile(uid).subscribe({
           next: (profile: any) => {
             // Merge profile data
             this.currentUser = { ...this.currentUser, ...profile };
@@ -93,7 +94,7 @@ export class AppComponent {
       }
     } else {
       // Fallback or redirect? For now, just keep null
-      this.currentUser = { Username: 'Guest', TrustScore: 0 };
+      this.currentUser = { username: 'Guest', trustScore: 0 };
     }
   }
 

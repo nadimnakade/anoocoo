@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { RoadFeatureService } from '../../services/road-feature.service';
 
 @Component({
   selector: 'app-settings',
@@ -8,9 +9,16 @@ import { Component, OnInit } from '@angular/core';
 })
 export class SettingsPage implements OnInit {
 
-  constructor() { }
+  constructor(public roadFeatureService: RoadFeatureService) { }
 
   ngOnInit() {
   }
 
+  toggleVoice(event: any) {
+    this.roadFeatureService.updateVoicePreference(event.detail.checked);
+  }
+
+  toggleGeolocation(event: any) {
+    this.roadFeatureService.updateGeolocationPreference(event.detail.checked);
+  }
 }

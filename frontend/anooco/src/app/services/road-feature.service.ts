@@ -1,6 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Subject } from 'rxjs';
 import { LocationService } from './location.service';
+import { VoiceService } from './voice.service';
 
 @Injectable({
   providedIn: 'root'
@@ -35,6 +36,8 @@ export class RoadFeatureService {
   public enableEmergencyAlerts = true;
   public enableParkingAutoMark = false;
   public reportingPaused = false;
+  public enableVoice = true;
+  public enableGeolocation = true;
 
   private lastSpeedCheck = 0;
   private lastPotholeSpike: { severity: number, timestamp: number } | null = null;
@@ -45,7 +48,8 @@ export class RoadFeatureService {
 
   constructor(
     private locationService: LocationService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private voiceService: VoiceService
   ) {
     this.loadConfig();
   }
@@ -108,6 +112,18 @@ export class RoadFeatureService {
     if (parkAuto !== null) this.enableParkingAutoMark = parkAuto === '1';
     const paused = localStorage.getItem('anooco_reporting_paused');
     if (paused !== null) this.reportingPaused = paused === '1';
+
+    const voice = localStorage.getItem('anooco_enable_voice');
+    if (voice !== null) {
+      this.enableVoice = voice === '1';
+    }
+    this.voiceService.setMuted(!this.enableVoice);
+
+    const geo = localStorage.getItem('anooco_enable_geolocation');
+    if (geo !== null) {
+      this.enableGeolocation = geo === '1';
+    }
+    this.locationService.setEnabled(this.enableGeolocation);
   }
 
   updateConfig(speedLimit: number, potholeSensitivity: number) {
@@ -214,6 +230,18 @@ export class RoadFeatureService {
     localStorage.setItem('anooco_speed_limit', this.speedLimitKmh.toString());
     localStorage.setItem('anooco_speed_context', this.speedContext);
     localStorage.setItem('anooco_speed_source', this.speedLimitSource);
+  }
+
+  updateVoicePreference(enabled: boolean) {
+    this.enableVoice = enabled;
+    localStorage.setItem('anooco_enable_voice', enabled ? '1' : '0');
+    this.voiceService.setMuted(!enabled);
+  }
+
+  updateGeolocationPreference(enabled: boolean) {
+    this.enableGeolocation = enabled;
+    localStorage.setItem('anooco_enable_geolocation', enabled ? '1' : '0');
+    this.locationService.setEnabled(enabled);
   }
 
   startMonitoring() {

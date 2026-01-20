@@ -39,7 +39,7 @@
       <ion-label>Nearby Results ({{ services.length }})</ion-label>
     </ion-item-divider>
 
-    <ion-item *ngFor="let service of services" button detail>
+    <ion-item *ngFor="let service of services" button detail (click)="navigateToService(service)">
       <ion-icon slot="start" 
         [name]="segmentValue === 'gas' ? 'color-fill-outline' : (segmentValue === 'parking' ? 'car-outline' : 'battery-charging-outline')" 
         [color]="segmentValue === 'gas' ? 'warning' : (segmentValue === 'parking' ? 'medium' : 'success')">

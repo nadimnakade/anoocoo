@@ -11,6 +11,7 @@ import { Subscription, forkJoin } from 'rxjs';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import { OcrService } from 'src/app/services/ocr.service';
 import { PotholeAiService } from 'src/app/services/pothole-ai.service';
+import { ActivatedRoute } from '@angular/router';
 
 // Fix for Leaflet icons
 const iconRetinaUrl = 'assets/marker-icon-2x.png';
@@ -69,6 +70,7 @@ export class NavigationPage implements OnInit, OnDestroy {
   public handsFreeEnabled = false;
   private isListening = false;
   private abortWake = false;
+  private destinationCoords: L.LatLng | null = null;
 
   constructor(
     private api: ApiService,
@@ -81,10 +83,27 @@ export class NavigationPage implements OnInit, OnDestroy {
     private alertCtrl: AlertController,
     private cdr: ChangeDetectorRef,
     private ocrService: OcrService,
-    private potholeAiService: PotholeAiService
+    private potholeAiService: PotholeAiService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit() {
+    this.subscriptions.add(
+      this.route.queryParams.subscribe(params => {
+        if (params['destLat'] && params['destLon']) {
+          const lat = parseFloat(params['destLat']);
+          const lon = parseFloat(params['destLon']);
+          this.destinationCoords = L.latLng(lat, lon);
+          this.endLocation = params['destName'] || 'Selected Destination';
+
+          // Trigger route finding if map is already initialized
+          if (this.map) {
+            this.findRoute();
+          }
+        }
+      })
+    );
+
     this.alertRadius = this.roadFeatureService.alertRadiusKm;
 
     this.subscriptions.add(
@@ -127,9 +146,15 @@ export class NavigationPage implements OnInit, OnDestroy {
     );
   }
 
-  ionViewDidEnter() {
-    this.initMap();
+  async ionViewDidEnter() {
+    await this.initMap();
     this.startTracking();
+    if (this.destinationCoords) {
+      // Small delay to ensure map view is ready
+      setTimeout(() => {
+        this.findRoute();
+      }, 100);
+    }
   }
 
   ionViewWillLeave() {
@@ -504,6 +529,42 @@ export class NavigationPage implements OnInit, OnDestroy {
     return candidates[0];
   }
 
+  recenterMap() {
+    this.getCurrentLocation();
+    this.map?.setView([this.currentLat, this.currentLng], 17);
+    this.showToast('Recentered');
+  }
+
+  async reportEvent(type: string) {
+    try {
+      const pos = await this.locationService.getCurrentLocation();
+      const reportText = `Manual report: ${type}`;
+      
+      this.api.sendReport(reportText, pos, type).subscribe({
+        next: () => {
+          this.showToast(`${type} reported successfully!`);
+          this.speak(`${type} reported.`);
+          
+          // Optimistically add marker
+          if (this.map && pos.coords) {
+             const marker = L.circleMarker([pos.coords.latitude, pos.coords.longitude], {
+                radius: 8,
+                fillColor: this.getColor(type),
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+             }).bindPopup(`<b>${type}</b><br>Just reported`).addTo(this.map);
+             this.eventMarkers.push(marker);
+          }
+        },
+        error: () => this.showToast('Failed to report event.')
+      });
+    } catch (e) {
+      this.showToast('Location unavailable for report.');
+    }
+  }
+
   async initMap() {
     if (this.map) return;
 
@@ -820,6 +881,10 @@ export class NavigationPage implements OnInit, OnDestroy {
   onSearchInput(event: any, type: 'start' | 'end') {
     const query = event.detail.value;
 
+    if (type === 'end') {
+      this.destinationCoords = null;
+    }
+
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
 
     // Reset loading on clear or new input (will be re-enabled in timeout if valid)
@@ -924,13 +989,17 @@ export class NavigationPage implements OnInit, OnDestroy {
         if (res) startCoords = res;
       }
 
-      const endRes = await this.geocode(this.endLocation);
-      if (endRes) {
-        endCoords = endRes;
+      if (this.destinationCoords) {
+        endCoords = this.destinationCoords;
       } else {
-        this.showToast('Destination not found.');
-        this.isLoading = false;
-        return;
+        const endRes = await this.geocode(this.endLocation);
+        if (endRes) {
+          endCoords = endRes;
+        } else {
+          this.showToast('Destination not found.');
+          this.isLoading = false;
+          return;
+        }
       }
 
       this.routingControl = (L as any).Routing.control({

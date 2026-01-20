@@ -30,6 +30,22 @@ export class MultimediaPage implements OnInit {
 
   async toggleConnection(app: string) {
     const appName = app as MusicApp;
+    
+    // For this prototype, we treat "Connect" as "Open App"
+    if (app === 'youtube') {
+      window.open('https://music.youtube.com', '_system');
+      this.musicService.connectApp('youtube');
+      this.showToast('Opening YouTube Music...');
+      return;
+    }
+
+    if (app === 'spotify') {
+       window.open('https://open.spotify.com', '_system');
+       this.musicService.connectApp('spotify');
+       this.showToast('Opening Spotify...');
+       return;
+    }
+
     if (this.connectedApp === appName) {
       this.musicService.disconnect();
       this.showToast(`Disconnected from ${this.formatName(appName)}`);

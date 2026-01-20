@@ -9,6 +9,18 @@ namespace Anooco.API.Models
         public double? Heading { get; set; }
         public double? Speed { get; set; }
         public DateTime Timestamp { get; set; }
+        public string? Image { get; set; } // Base64 string
+    }
+
+    public class ReportDto
+    {
+        public Guid Id { get; set; }
+        public string ReportType { get; set; } = string.Empty;
+        public string? RawText { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool HasImage { get; set; }
     }
 
     public class EventDto

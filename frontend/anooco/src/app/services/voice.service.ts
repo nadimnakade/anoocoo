@@ -8,8 +8,13 @@ import { Platform } from '@ionic/angular';
 })
 export class VoiceService {
   isListening = false;
+  private isMuted = false;
 
   constructor(private platform: Platform) { }
+
+  setMuted(muted: boolean) {
+    this.isMuted = muted;
+  }
 
   async startListening(): Promise<string> {
     this.isListening = true;
@@ -51,7 +56,7 @@ export class VoiceService {
   private listenWeb(): Promise<string> {
     return new Promise((resolve, reject) => {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      
+
       if (!SpeechRecognition) {
         this.isListening = false;
         reject("Browser does not support Speech Recognition");
@@ -79,6 +84,8 @@ export class VoiceService {
   }
 
   async speak(text: string) {
+    if (this.isMuted) return;
+
     if (this.platform.is('hybrid')) {
       try {
         await TextToSpeech.speak({

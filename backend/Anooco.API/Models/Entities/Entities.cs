@@ -35,6 +35,7 @@ namespace Anooco.API.Models.Entities
         public double ConfidenceScore { get; set; }
         public bool Processed { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public byte[]? Image { get; set; }
     }
 
     [Table("events")]

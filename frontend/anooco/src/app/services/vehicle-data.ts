@@ -46,25 +46,34 @@ export class VehicleDataService {
   }
 
   private buildOverpassQuery(lat: number, lon: number, radius: number, type: string): string {
-    let nodeFilter = '';
+    let filter = '';
     
     switch (type) {
       case 'gas':
-        nodeFilter = 'node["amenity"="fuel"](around:' + radius + ',' + lat + ',' + lon + ');';
+        filter = `
+          node["amenity"="fuel"](around:${radius},${lat},${lon});
+          way["amenity"="fuel"](around:${radius},${lat},${lon});
+        `;
         break;
       case 'parking':
-        nodeFilter = 'node["amenity"="parking"](around:' + radius + ',' + lat + ',' + lon + ');';
+        filter = `
+          node["amenity"="parking"](around:${radius},${lat},${lon});
+          way["amenity"="parking"](around:${radius},${lat},${lon});
+        `;
         break;
       case 'ev':
-        nodeFilter = 'node["amenity"="charging_station"](around:' + radius + ',' + lat + ',' + lon + ');';
+        filter = `
+          node["amenity"="charging_station"](around:${radius},${lat},${lon});
+          way["amenity"="charging_station"](around:${radius},${lat},${lon});
+        `;
         break;
     }
 
-    return `[out:json];
+    return `[out:json][timeout:25];
       (
-        ${nodeFilter}
+        ${filter}
       );
-      out body;
+      out center;
       >;
       out skel qt;`;
   }
@@ -73,15 +82,21 @@ export class VehicleDataService {
     if (!data || !data.elements) return [];
 
     return data.elements
-      .filter((el: any) => el.type === 'node' && el.tags)
-      .map((el: any) => ({
-        id: el.id,
-        lat: el.lat,
-        lon: el.lon,
-        name: el.tags.name || el.tags.operator || `Unknown ${type === 'gas' ? 'Station' : type === 'parking' ? 'Parking' : 'Charger'}`,
-        type: type,
-        details: this.getDetails(el.tags, type)
-      }));
+      .filter((el: any) => (el.type === 'node' || el.type === 'way') && el.tags)
+      .map((el: any) => {
+        const lat = el.lat || (el.center ? el.center.lat : 0);
+        const lon = el.lon || (el.center ? el.center.lon : 0);
+        
+        return {
+          id: el.id,
+          lat: lat,
+          lon: lon,
+          name: el.tags.name || el.tags.operator || `Unknown ${type === 'gas' ? 'Station' : type === 'parking' ? 'Parking' : 'Charger'}`,
+          type: type,
+          details: this.getDetails(el.tags, type)
+        };
+      })
+      .filter((el: any) => el.lat !== 0 && el.lon !== 0); // Filter out invalid locations
   }
 
   private getDetails(tags: any, type: string): string {

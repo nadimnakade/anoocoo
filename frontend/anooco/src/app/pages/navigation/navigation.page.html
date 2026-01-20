@@ -119,21 +119,30 @@
     <div id="nav-map"></div>
   </div>
 
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="margin-bottom: 20px; margin-right: 10px;">
-    <ion-fab-button [color]="handsFreeEnabled ? 'success' : 'light'">
-      <ion-icon [name]="handsFreeEnabled ? 'mic' : 'mic-off'"></ion-icon>
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="ion-margin-bottom">
+    <ion-fab-button color="warning" id="report-fab-trigger">
+      <ion-icon name="alert-circle"></ion-icon>
     </ion-fab-button>
     <ion-fab-list side="top">
-      <ion-fab-button (click)="toggleHandsFree()">
-        <ion-icon name="radio"></ion-icon>
+      <ion-fab-button color="danger" (click)="reportEvent('ACCIDENT')">
+        <ion-icon name="medkit"></ion-icon>
       </ion-fab-button>
-      <ion-fab-button (click)="quickScanSign()">
-        <ion-icon name="scan-outline"></ion-icon>
+      <ion-fab-button color="warning" (click)="reportEvent('POTHOLE')">
+        <ion-icon name="warning"></ion-icon>
       </ion-fab-button>
-      <ion-fab-button (click)="quickScanPotholeAi()">
-        <ion-icon name="analytics-outline"></ion-icon>
+      <ion-fab-button color="primary" (click)="reportEvent('POLICE')">
+        <ion-icon name="shield"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-button color="tertiary" (click)="reportEvent('TRAFFIC')">
+        <ion-icon name="car"></ion-icon>
       </ion-fab-button>
     </ion-fab-list>
+  </ion-fab>
+
+  <ion-fab vertical="bottom" horizontal="start" slot="fixed" class="ion-margin-bottom">
+    <ion-fab-button color="light" (click)="recenterMap()">
+      <ion-icon name="navigate"></ion-icon>
+    </ion-fab-button>
   </ion-fab>
 
   <div class="events-list" *ngIf="routeEvents.length > 0">

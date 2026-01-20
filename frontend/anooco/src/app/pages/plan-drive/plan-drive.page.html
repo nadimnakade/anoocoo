@@ -5,10 +5,24 @@
     </ion-buttons>
     <ion-title>Plan a Drive</ion-title>
   </ion-toolbar>
+  <ion-toolbar color="primary">
+    <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="onSearch($event)" placeholder="Where to?"></ion-searchbar>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-list>
+  
+  <ion-list *ngIf="searchResults.length > 0">
+    <ion-item button *ngFor="let result of searchResults" (click)="selectDestination(result)">
+      <ion-icon slot="start" name="location-outline"></ion-icon>
+      <ion-label>
+        <h2>{{ result.display_name.split(',')[0] }}</h2>
+        <p>{{ result.display_name }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-list *ngIf="searchResults.length === 0">
     <ion-list-header>
       <ion-label>Calendar</ion-label>
     </ion-list-header>
@@ -21,15 +35,9 @@
     </ion-item>
   </ion-list>
 
-  <div class="empty-state" style="text-align: center; margin-top: 50px; color: #666;">
-    <ion-icon name="time-outline" style="font-size: 48px;"></ion-icon>
-    <h3>No planned drives</h3>
-    <p>Tap + to plan a future trip</p>
+  <div *ngIf="searchResults.length === 0 && !searchQuery" class="empty-state" style="text-align: center; margin-top: 50px; color: #666;">
+    <ion-icon name="map-outline" style="font-size: 48px;"></ion-icon>
+    <h3>Ready to go?</h3>
+    <p>Search for a destination above to start navigation.</p>
   </div>
-
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button>
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 </ion-content>

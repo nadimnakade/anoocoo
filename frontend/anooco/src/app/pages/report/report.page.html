@@ -1,18 +1,23 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Report</ion-title>
+    <ion-buttons slot="start" *ngIf="selectedType">
+      <ion-button (click)="cancelSelection()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ selectedType ? selectedType.label : 'Report' }}</ion-title>
   </ion-toolbar>
   <ion-progress-bar *ngIf="submitting" type="indeterminate"></ion-progress-bar>
 </ion-header>
 
 <ion-content>
-  <div class="container">
+  <div class="container" *ngIf="!selectedType">
     <h2>Select a type</h2>
     <div class="report-grid">
       <div
         class="report-item"
         *ngFor="let t of types"
-        (click)="submit(t.key)"
+        (click)="selectType(t)"
       >
         <div class="item-icon" [style.backgroundColor]="t.color">
           <ion-icon [name]="t.icon"></ion-icon>
@@ -22,5 +27,31 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="container ion-padding" *ngIf="selectedType">
+    <div class="ion-text-center ion-margin-bottom">
+      <div class="item-icon-large" [style.backgroundColor]="selectedType.color" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+        <ion-icon [name]="selectedType.icon" style="font-size: 40px; color: white;"></ion-icon>
+      </div>
+      <h2>{{ selectedType.label }}</h2>
+      <p>Attach a photo to help us verify this report.</p>
+    </div>
+
+    <div *ngIf="capturedImage" class="ion-margin-bottom" style="position: relative;">
+      <img [src]="capturedImage" style="width: 100%; border-radius: 8px; max-height: 300px; object-fit: cover;" />
+      <ion-button fill="solid" color="danger" size="small" (click)="capturedImage = undefined" style="position: absolute; top: 10px; right: 10px;">
+        <ion-icon slot="icon-only" name="trash"></ion-icon>
+      </ion-button>
+    </div>
+
+    <ion-button expand="block" (click)="takePicture()" class="ion-margin-bottom" fill="outline">
+      <ion-icon slot="start" name="camera"></ion-icon>
+      {{ capturedImage ? 'Retake Photo' : 'Add Photo' }}
+    </ion-button>
+
+    <ion-button expand="block" (click)="submit()" [disabled]="submitting" color="primary">
+      Submit Report
+    </ion-button>
   </div>
 </ion-content>

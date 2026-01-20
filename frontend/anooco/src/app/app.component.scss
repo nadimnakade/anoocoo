@@ -3,8 +3,8 @@ ion-menu {
 }
 
 .menu-header-toolbar {
-  --background: var(--ion-color-step-50, black);
-  --color: white;
+  --background: var(--ion-color-primary, #3880ff);
+  --color: var(--ion-color-primary-contrast, white);
   --min-height: 160px; /* Ensure sufficient height for profile info */
   --border-width: 0;
 
@@ -24,7 +24,7 @@ ion-menu {
     .avatar-circle {
       width: 60px;
       height: 60px;
-      background: #333;
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -33,7 +33,7 @@ ion-menu {
 
       ion-icon {
         font-size: 30px;
-        color: #fff;
+        color: white;
       }
     }
 
@@ -46,7 +46,7 @@ ion-menu {
 
     p {
       margin: 5px 0 0;
-      color: #ccc;
+      color: rgba(255, 255, 255, 0.8);
     }
   }
 }
@@ -60,10 +60,35 @@ ion-list {
     --color: var(--ion-text-color);
     font-size: 16px;
     font-weight: 500;
+    --min-height: 52px; /* Slightly taller for better touch targets */
 
     ion-icon {
       margin-right: 15px;
-      color: var(--ion-text-color);
+      color: var(--ion-color-medium); /* Default icon color */
+    }
+
+    /* Active State Styling */
+    &.selected {
+      --color: var(--ion-color-primary);
+      --background: rgba(var(--ion-color-primary-rgb), 0.08);
+      font-weight: 600;
+
+      ion-icon {
+        color: var(--ion-color-primary);
+      }
+      
+      /* Add a visual indicator */
+      position: relative;
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--ion-color-primary);
+        z-index: 10;
+      }
     }
   }
 
@@ -86,7 +111,7 @@ ion-list {
   position: absolute;
   bottom: 20px;
   width: 100%;
-  border-top: 1px solid var(--ion-color-light-shade);
+  border-top: 1px solid rgba(var(--ion-text-color-rgb), 0.1);
 
   ion-item {
     --background: transparent;

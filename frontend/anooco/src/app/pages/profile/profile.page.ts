@@ -24,7 +24,7 @@ export class ProfilePage implements OnInit {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       const user = JSON.parse(userStr);
-      this.userId = user.UserId;
+      this.userId = user.userId || user.UserId;
       this.loadProfile();
     }
   }

@@ -95,7 +95,8 @@ CREATE OR REPLACE FUNCTION sp_create_report(
     p_heading double precision,
     p_speed double precision,
     p_confidence_score double precision,
-    p_source text
+    p_source text,
+    p_image bytea DEFAULT NULL
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -105,11 +106,11 @@ DECLARE
 BEGIN
     INSERT INTO reports (
         "Id", "UserId", "ReportType", "Description", "Location", 
-        "Heading", "Speed", "ConfidenceScore", "Processed", "Source", "CreatedAt"
+        "Heading", "Speed", "ConfidenceScore", "Processed", "Source", "CreatedAt", "Image"
     )
     VALUES (
         gen_random_uuid(), p_user_id, p_report_type, p_description, p_location, 
-        p_heading, p_speed, p_confidence_score, false, p_source, NOW()
+        p_heading, p_speed, p_confidence_score, false, p_source, NOW(), p_image
     )
     RETURNING reports."Id" INTO v_report_id;
     

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { LoadingController, ToastController, NavController } from '@ionic/angular';
 import { VehicleDataService, VehicleServiceLocation } from '../../services/vehicle-data';
 import { Geolocation } from '@capacitor/geolocation';
 
@@ -20,7 +20,8 @@ export class VehicleServicesPage implements OnInit {
   constructor(
     private vehicleDataService: VehicleDataService,
     private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
@@ -73,6 +74,16 @@ export class VehicleServicesPage implements OnInit {
           this.showToast('Failed to load services.');
         }
       });
+  }
+
+  navigateToService(service: VehicleServiceLocation) {
+    this.navCtrl.navigateForward('/navigation', {
+      queryParams: {
+        destLat: service.lat,
+        destLon: service.lon,
+        destName: service.name
+      }
+    });
   }
 
   async showToast(msg: string) {

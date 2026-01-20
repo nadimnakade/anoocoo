@@ -57,7 +57,7 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/user/update`, { userId, ...data });
   }
 
-  sendReport(text: string, location: any, reportType: string = 'manual') {
+  sendReport(text: string, location: any, reportType: string = 'manual', image?: string) {
     const payload = {
       rawText: text,
       reportType,
@@ -65,13 +65,14 @@ export class ApiService {
       longitude: location.coords.longitude,
       heading: location.coords.heading,
       speed: location.coords.speed,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      image
     };
     return this.http.post(`${this.apiUrl}/reports`, payload);
   }
 
-  sendReportWithQueue(text: string, location: any, reportType: string = 'manual'): Observable<any> {
-    const obs = this.sendReport(text, location, reportType).pipe(
+  sendReportWithQueue(text: string, location: any, reportType: string = 'manual', image?: string): Observable<any> {
+    const obs = this.sendReport(text, location, reportType, image).pipe(
       catchError(err => {
         try {
           const payload = {
@@ -81,7 +82,8 @@ export class ApiService {
             longitude: location.coords.longitude,
             heading: location.coords.heading,
             speed: location.coords.speed,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            image
           };
           const key = 'anooco_offline_reports';
           const existing = localStorage.getItem(key);
@@ -139,6 +141,14 @@ export class ApiService {
 
   reportFalseEvent(eventId: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/events/${eventId}/false`, {});
+  }
+
+  getRecentReports(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/reports/recent`);
+  }
+
+  getReportImageUrl(reportId: string): string {
+    return `${this.apiUrl}/reports/${reportId}/image`;
   }
 
   seedData() {

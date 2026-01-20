@@ -7,8 +7,8 @@
             <div class="avatar-circle">
               <ion-icon name="person"></ion-icon>
             </div>
-            <h2>{{ currentUser?.Username || 'Guest' }}</h2>
-            <p>{{ (currentUser?.TrustScore || 0) | number:'1.1-1' }} ★</p>
+            <h2>{{ currentUser?.username || currentUser?.Username || 'Guest' }}</h2>
+            <p>{{ (currentUser?.trustScore || currentUser?.TrustScore || 0) | number:'1.1-1' }} ★</p>
           </div>
         </div>
       </ion-toolbar>
@@ -17,14 +17,14 @@
     <ion-content>
       <ion-list lines="none">
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/dashboard" routerDirection="root">
+          <ion-item routerLink="/dashboard" routerDirection="root" routerLinkActive="selected">
             <ion-icon slot="start" name="map-outline"></ion-icon>
             <ion-label>Map (V1)</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/dashboard-v2" routerDirection="root">
+          <ion-item routerLink="/dashboard-v2" routerDirection="root" routerLinkActive="selected">
             <ion-icon slot="start" name="planet-outline"></ion-icon>
             <ion-label>Dashboard V2 (Waze Mode)</ion-label>
           </ion-item>
@@ -35,42 +35,42 @@
         </ion-item-divider>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/plan-drive">
+          <ion-item routerLink="/plan-drive" routerLinkActive="selected">
             <ion-icon slot="start" name="car-sport-outline"></ion-icon>
             <ion-label>Plan a Drive</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/vehicle-services">
+          <ion-item routerLink="/vehicle-services" routerLinkActive="selected">
             <ion-icon slot="start" name="color-fill-outline"></ion-icon>
             <ion-label>Vehicle Services</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/multimedia">
+          <ion-item routerLink="/multimedia" routerLinkActive="selected">
             <ion-icon slot="start" name="musical-notes-outline"></ion-icon>
             <ion-label>Multimedia</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/social">
+          <ion-item routerLink="/social" routerLinkActive="selected">
             <ion-icon slot="start" name="people-outline"></ion-icon>
             <ion-label>Community & Social</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/extended-reports">
+          <ion-item routerLink="/extended-reports" routerLinkActive="selected">
             <ion-icon slot="start" name="warning-outline"></ion-icon>
             <ion-label>Extended Reports</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/customization">
+          <ion-item routerLink="/customization" routerLinkActive="selected">
             <ion-icon slot="start" name="brush-outline"></ion-icon>
             <ion-label>Customization</ion-label>
           </ion-item>
@@ -81,42 +81,42 @@
         </ion-item-divider>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/alerts">
+          <ion-item routerLink="/alerts" routerLinkActive="selected">
             <ion-icon slot="start" name="alert-circle-outline"></ion-icon>
             <ion-label>Recent Alerts</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/navigation">
+          <ion-item routerLink="/navigation" routerLinkActive="selected">
             <ion-icon slot="start" name="navigate-outline"></ion-icon>
             <ion-label>Navigation</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/profile">
+          <ion-item routerLink="/profile" routerLinkActive="selected">
             <ion-icon slot="start" name="person-outline"></ion-icon>
             <ion-label>Profile</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item routerLink="/activity">
+          <ion-item routerLink="/activity" routerLinkActive="selected">
             <ion-icon slot="start" name="time-outline"></ion-icon>
             <ion-label>Activity</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item button routerLink="/settings">
+          <ion-item button routerLink="/settings" routerLinkActive="selected">
             <ion-icon slot="start" name="settings-outline"></ion-icon>
             <ion-label>Settings</ion-label>
           </ion-item>
         </ion-menu-toggle>
 
         <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item button routerLink="/guide">
+          <ion-item button routerLink="/guide" routerLinkActive="selected">
             <ion-icon slot="start" name="book-outline"></ion-icon>
             <ion-label>User Guide</ion-label>
           </ion-item>
@@ -127,15 +127,12 @@
           <ion-label>Dark Mode</ion-label>
           <ion-toggle slot="end" [checked]="isDarkMode" (ionChange)="toggleTheme($event)"></ion-toggle>
         </ion-item>
-      </ion-list>
 
-      <div class="menu-footer">
-        <ion-menu-toggle menu="main-menu" auto-hide="false">
-          <ion-item lines="none" button routerLink="/signup" routerDirection="root">
-            <ion-label>Log out</ion-label>
-          </ion-item>
-        </ion-menu-toggle>
-      </div>
+        <ion-item lines="none" button routerLink="/signup" routerDirection="root">
+          <ion-icon slot="start" name="log-out-outline"></ion-icon>
+          <ion-label>Log out</ion-label>
+        </ion-item>
+      </ion-list>
     </ion-content>
   </ion-menu>
 

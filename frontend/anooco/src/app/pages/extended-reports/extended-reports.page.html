@@ -28,15 +28,27 @@
 
   <ion-list>
     <ion-list-header>
-      <ion-label>My Recent Reports</ion-label>
+      <ion-label>Recent Reports</ion-label>
     </ion-list-header>
-    <ion-item>
-      <ion-icon slot="start" name="map-outline" color="primary"></ion-icon>
-      <ion-label>
-        <h2>Map Issue</h2>
-        <p>Pending Review • Yesterday</p>
+    
+    <ion-item *ngIf="recentReports.length === 0">
+      <ion-label class="ion-text-center">
+        <p>No reports found.</p>
       </ion-label>
     </ion-item>
+
+    <ion-card *ngFor="let report of recentReports" class="ion-margin-bottom">
+      <ion-card-header>
+        <ion-card-subtitle>{{ report.createdAt | date:'medium' }}</ion-card-subtitle>
+        <ion-card-title>{{ report.reportType }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p *ngIf="report.rawText">{{ report.rawText }}</p>
+        <div *ngIf="report.hasImage" class="ion-margin-top">
+          <img [src]="getImageUrl(report)" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;" />
+        </div>
+      </ion-card-content>
+    </ion-card>
   </ion-list>
 
 </ion-content>

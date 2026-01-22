@@ -16,7 +16,7 @@ export class VoiceService {
     this.isMuted = muted;
   }
 
-  async startListening(): Promise<string> {
+  async startListening(showPopup: boolean = true): Promise<string> {
     this.isListening = true;
 
     // 1. Web Fallback (for development in browser)
@@ -36,7 +36,7 @@ export class VoiceService {
         maxResults: 1,
         prompt: "Say 'Report accident' or 'Report traffic'",
         partialResults: false,
-        popup: true,
+        popup: showPopup,
       });
 
       this.isListening = false;

@@ -1,3 +1,14 @@
+<!-- <ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button color="dark"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Maps</ion-title>
+  </ion-toolbar>
+</ion-header> -->
+
+
+
 <ion-content [fullscreen]="true">
   <!-- Map Background -->
   <div id="map" class="full-screen-map" [class.hidden]="viewMode === 'list'"></div>
@@ -50,206 +61,218 @@
   </div>
 
   <!-- Bottom Sheet / Card -->
-  <div class="bottom-sheet" [class.hidden]="viewMode === 'map'" [class.full-screen]="viewMode === 'list'">
-    <div class="sheet-handle"></div>
-
-    <div class="greeting">
-      <h2>Report Incident</h2>
-    </div>
-
-    <div class="action-grid">
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="Start voice command"
-        (click)="startListening()"
-        (keyup.enter)="startListening()">
-        <div class="icon-circle black" [class.listening]="isListening">
-          <ion-icon name="mic" *ngIf="!isListening"></ion-icon>
-          <ion-spinner name="dots" *ngIf="isListening" color="light"></ion-spinner>
+  <!-- Swipeable Bottom Sheet -->
+  <ion-modal
+    [isOpen]="true"
+    [breakpoints]="[0.1, 0.3, 1]"
+    [initialBreakpoint]="0.3"
+    [backdropDismiss]="false"
+    [showBackdrop]="false"
+    class="dashboard-modal"
+    handle="true">
+    <ng-template>
+      <ion-content>
+        <div class="greeting ion-padding-horizontal ion-padding-top">
+          <h2>Report Incident</h2>
         </div>
-        <span>{{ isListening ? 'Listening...' : 'Voice' }}</span>
-        <div *ngIf="isListening" style="position: absolute; top: -40px; background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap;">
-          Say "Accident", "Pothole"...
-        </div>
-      </div>
 
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="Open manual report options"
-        (click)="onManualReport()"
-        (keyup.enter)="onManualReport()">
-        <div class="icon-circle gray">
-          <ion-icon name="warning"></ion-icon>
-        </div>
-        <span>Manual</span>
-      </div>
+        <div class="action-grid">
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="Start voice command"
+            (click)="startListening()"
+            (keyup.enter)="startListening()">
+            <div class="icon-circle black" [class.listening]="isListening">
+              <ion-icon name="mic" *ngIf="!isListening"></ion-icon>
+              <ion-spinner name="dots" *ngIf="isListening" color="light"></ion-spinner>
+            </div>
+            <span>{{ isListening ? 'Listening...' : 'Voice' }}</span>
+            <div *ngIf="isListening" style="position: absolute; top: -40px; background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap;">
+              Say "Accident", "Pothole"...
+            </div>
+          </div>
 
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="Scan road sign"
-        (click)="quickScanSign()"
-        (keyup.enter)="quickScanSign()">
-        <div class="icon-circle gray">
-          <ion-icon name="scan-outline"></ion-icon>
-        </div>
-        <span>Scan Sign</span>
-      </div>
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="Open manual report options"
+            (click)="onManualReport()"
+            (keyup.enter)="onManualReport()">
+            <div class="icon-circle gray">
+              <ion-icon name="warning"></ion-icon>
+            </div>
+            <span>Manual</span>
+          </div>
 
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="AI pothole scan"
-        (click)="quickScanPotholeAi()"
-        (keyup.enter)="quickScanPotholeAi()">
-        <div class="icon-circle gray">
-          <ion-icon name="analytics-outline"></ion-icon>
-        </div>
-        <span>AI Pothole</span>
-      </div>
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="Scan road sign"
+            (click)="quickScanSign()"
+            (keyup.enter)="quickScanSign()">
+            <div class="icon-circle gray">
+              <ion-icon name="scan-outline"></ion-icon>
+            </div>
+            <span>Scan Sign</span>
+          </div>
 
-      <div
-        class="action-card"
-        *ngIf="isListening"
-        role="button"
-        tabindex="0"
-        aria-label="Stop listening"
-        (click)="stopListening(true)"
-        (keyup.enter)="stopListening(true)">
-        <div class="icon-circle gray">
-          <ion-icon name="stop-circle"></ion-icon>
-        </div>
-        <span>Stop</span>
-      </div>
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="AI pothole scan"
+            (click)="quickScanPotholeAi()"
+            (keyup.enter)="quickScanPotholeAi()">
+            <div class="icon-circle gray">
+              <ion-icon name="analytics-outline"></ion-icon>
+            </div>
+            <span>AI Pothole</span>
+          </div>
 
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="Toggle hands-free auto mode"
-        (click)="toggleHandsFree()"
-        (keyup.enter)="toggleHandsFree()">
-        <div class="icon-circle gray" [class.listening]="handsFreeEnabled">
-          <ion-icon [name]="handsFreeEnabled ? 'radio' : 'ellipse-outline'"></ion-icon>
-        </div>
-        <span>{{ handsFreeEnabled ? 'Auto On' : 'Auto Off' }}</span>
-      </div>
+          <div
+            class="action-card"
+            *ngIf="isListening"
+            role="button"
+            tabindex="0"
+            aria-label="Stop listening"
+            (click)="stopListening(true)"
+            (keyup.enter)="stopListening(true)">
+            <div class="icon-circle gray">
+              <ion-icon name="stop-circle"></ion-icon>
+            </div>
+            <span>Stop</span>
+          </div>
 
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="Change view mode"
-        (click)="toggleViewMode()"
-        (keyup.enter)="toggleViewMode()">
-        <div class="icon-circle gray">
-          <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
-        </div>
-        <span>{{ viewMode === 'split' ? 'Map' : (viewMode === 'map' ? 'List' : 'Split') }}</span>
-      </div>
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="Toggle hands-free auto mode"
+            (click)="toggleHandsFree()"
+            (keyup.enter)="toggleHandsFree()">
+            <div class="icon-circle gray" [class.listening]="handsFreeEnabled">
+              <ion-icon [name]="handsFreeEnabled ? 'radio' : 'ellipse-outline'"></ion-icon>
+            </div>
+            <span>{{ handsFreeEnabled ? 'Auto On' : 'Auto Off' }}</span>
+          </div>
 
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="Navigate home"
-        (click)="navigateTo('HOME')"
-        (keyup.enter)="navigateTo('HOME')">
-        <div class="icon-circle gray">
-          <ion-icon name="home"></ion-icon>
-        </div>
-        <span>Home</span>
-      </div>
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="Change view mode"
+            (click)="toggleViewMode()"
+            (keyup.enter)="toggleViewMode()">
+            <div class="icon-circle gray">
+              <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
+            </div>
+            <span>{{ viewMode === 'split' ? 'Map' : (viewMode === 'map' ? 'List' : 'Split') }}</span>
+          </div>
 
-      <div
-        class="action-card"
-        role="button"
-        tabindex="0"
-        aria-label="Navigate to work"
-        (click)="navigateTo('WORK')"
-        (keyup.enter)="navigateTo('WORK')">
-        <div class="icon-circle gray">
-          <ion-icon name="briefcase"></ion-icon>
-        </div>
-        <span>Work</span>
-      </div>
-    </div>
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="Navigate home"
+            (click)="navigateTo('HOME')"
+            (keyup.enter)="navigateTo('HOME')">
+            <div class="icon-circle gray">
+              <ion-icon name="home"></ion-icon>
+            </div>
+            <span>Home</span>
+          </div>
 
-    <!-- Recent Activity / List -->
-    <div class="recent-list">
-      <div class="list-header">
-        {{ getFilteredEvents().length > 0 ? 'Nearby Alerts' : (isEventsLoading ? 'Loading Alerts' : 'Recent Alerts') }}
-        ({{ getFilteredEvents().length > 0 ? getFilteredEvents().length : (isEventsLoading ? 3 : recentEvents.length) }})
-      </div>
-
-      <div class="filter-row">
-        <button type="button" class="filter-chip" [class.active]="eventFilter === 'all'" (click)="setEventFilter('all')">
-          All
-        </button>
-        <button type="button" class="filter-chip" [class.active]="eventFilter === 'pothole'" (click)="setEventFilter('pothole')">
-          Potholes
-        </button>
-      </div>
-
-      <div class="list-item" *ngFor="let evt of getFilteredEvents()" (click)="openEventActions(evt)">
-        <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
-          <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
-        </div>
-        <div class="item-details">
-          <h3>{{ evt.eventType }}</h3>
-          <p *ngIf="evt.address || evt.Address" style="font-size: 0.85em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
-            <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
-            {{ evt.address || evt.Address }}
-          </p>
-          <p>
-            <ion-icon [name]="evt.reportType === 'voice' ? 'mic' : (evt.reportType === 'ai' ? 'eye' : 'hand-left')"
-                      style="font-size: 0.9em; margin-right: 4px; vertical-align: middle; color: #666;"
-                      [title]="evt.reportType || 'manual'">
-            </ion-icon>
-            Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}
-          </p>
-        </div>
-      </div>
-
-      <ng-container *ngIf="isEventsLoading && events.length === 0">
-        <div class="list-item" *ngFor="let item of [1,2,3]">
-          <ion-skeleton-text animated style="width: 40px; height: 40px; border-radius: 50%;"></ion-skeleton-text>
-          <div class="item-details" style="width: 100%;">
-            <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
-            <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+          <div
+            class="action-card"
+            role="button"
+            tabindex="0"
+            aria-label="Navigate to work"
+            (click)="navigateTo('WORK')"
+            (keyup.enter)="navigateTo('WORK')">
+            <div class="icon-circle gray">
+              <ion-icon name="briefcase"></ion-icon>
+            </div>
+            <span>Work</span>
           </div>
         </div>
-      </ng-container>
 
-      <ng-container *ngIf="!isEventsLoading && events.length === 0">
-        <div class="list-item" *ngFor="let evt of recentEvents" (click)="openEventActions(evt)">
-          <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
-            <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
+        <!-- Recent Activity / List -->
+        <div class="recent-list ion-padding-horizontal">
+          <div class="list-header">
+            {{ getFilteredEvents().length > 0 ? 'Nearby Alerts' : (isEventsLoading ? 'Loading Alerts' : 'Recent Alerts') }}
+            ({{ getFilteredEvents().length > 0 ? getFilteredEvents().length : (isEventsLoading ? 3 : recentEvents.length) }})
           </div>
-          <div class="item-details">
-            <h3>{{ evt.eventType }}</h3>
-            <p *ngIf="evt.address || evt.Address" style="font-size: 0.85em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
-              <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
-              {{ evt.address || evt.Address }}
-            </p>
-            <p>
-              <ion-icon [name]="evt.reportType === 'voice' ? 'mic' : (evt.reportType === 'ai' ? 'eye' : 'hand-left')"
-                        style="font-size: 0.9em; margin-right: 4px; vertical-align: middle; color: #666;"
-                        [title]="evt.reportType || 'manual'">
-              </ion-icon>
-              Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}
-            </p>
+
+          <div class="filter-row">
+            <button type="button" class="filter-chip" [class.active]="eventFilter === 'all'" (click)="setEventFilter('all')">
+              All
+            </button>
+            <button type="button" class="filter-chip" [class.active]="eventFilter === 'pothole'" (click)="setEventFilter('pothole')">
+              Potholes
+            </button>
           </div>
+
+          <div class="list-item" *ngFor="let evt of getFilteredEvents()" (click)="openEventActions(evt)">
+            <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
+              <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
+            </div>
+            <div class="item-details">
+              <h3>{{ evt.eventType }}</h3>
+              <p *ngIf="evt.address || evt.Address" style="font-size: 0.85em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+                <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
+                {{ evt.address || evt.Address }}
+              </p>
+              <p>
+                <ion-icon [name]="evt.reportType === 'voice' ? 'mic' : (evt.reportType === 'ai' ? 'eye' : 'hand-left')"
+                          style="font-size: 0.9em; margin-right: 4px; vertical-align: middle; color: #666;"
+                          [title]="evt.reportType || 'manual'">
+                </ion-icon>
+                Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}
+              </p>
+            </div>
+          </div>
+
+          <ng-container *ngIf="isEventsLoading && events.length === 0">
+            <div class="list-item" *ngFor="let item of [1,2,3]">
+              <ion-skeleton-text animated style="width: 40px; height: 40px; border-radius: 50%;"></ion-skeleton-text>
+              <div class="item-details" style="width: 100%;">
+                <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
+                <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="!isEventsLoading && events.length === 0">
+            <div class="list-item" *ngFor="let evt of recentEvents" (click)="openEventActions(evt)">
+              <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
+                <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
+              </div>
+              <div class="item-details">
+                <h3>{{ evt.eventType }}</h3>
+                <p *ngIf="evt.address || evt.Address" style="font-size: 0.85em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+                  <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
+                  {{ evt.address || evt.Address }}
+                </p>
+                <p>
+                  <ion-icon [name]="evt.reportType === 'voice' ? 'mic' : (evt.reportType === 'ai' ? 'eye' : 'hand-left')"
+                            style="font-size: 0.9em; margin-right: 4px; vertical-align: middle; color: #666;"
+                            [title]="evt.reportType || 'manual'">
+                  </ion-icon>
+                  Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}
+                </p>
+              </div>
+            </div>
+          </ng-container>
         </div>
-      </ng-container>
-    </div>
-  </div>
+
+
+</ion-content>
+    </ng-template>
+  </ion-modal>
 
   <ion-modal [isOpen]="isReportModalOpen" (didDismiss)="setOpen(false)" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
     <ng-template>
@@ -323,5 +346,32 @@
     [class.hidden]="viewMode !== 'map'">
     <ion-icon name="mic"></ion-icon>
   </div>
+
+  <!-- Location Blocked Modal -->
+  <ion-modal [isOpen]="isLocationBlocked" [backdropDismiss]="false" class="location-blocked-modal">
+    <ng-template>
+      <ion-content class="ion-padding">
+        <div class="blocked-container">
+           <ion-icon name="location-off-outline" color="danger"></ion-icon>
+           <h1>Location Required</h1>
+           <p>This app requires location services to function.</p>
+           <p class="reason-text" *ngIf="locationBlockReason === 'permission'">
+             Please grant location permissions in your device settings.
+           </p>
+           <p class="reason-text" *ngIf="locationBlockReason === 'disabled'">
+             Please turn on GPS/Location services.
+           </p>
+
+           <ion-button expand="block" (click)="openDeviceSettings()" class="ion-margin-top" color="tertiary">
+             Open Settings
+           </ion-button>
+
+           <ion-button expand="block" (click)="checkLocationStatus()" class="ion-margin-top" fill="outline">
+             Check Again
+           </ion-button>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 
 </ion-content>

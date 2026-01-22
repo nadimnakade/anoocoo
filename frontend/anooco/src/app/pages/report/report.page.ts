@@ -62,7 +62,7 @@ export class ReportPage {
     if (this.submitting || !this.selectedType) return;
     this.submitting = true;
     const type = this.selectedType.key;
-    
+
     const loading = await this.loadingCtrl.create({
       message: 'Submitting...',
       spinner: 'crescent'
@@ -72,7 +72,7 @@ export class ReportPage {
       const position = await this.location.getCurrentLocation();
       const text = `Manual report: ${type}`;
       await new Promise<void>((resolve, reject) => {
-        this.api.sendReport(text, position, 'manual', this.capturedImage).subscribe({
+        this.api.sendReport(text, position, type, this.capturedImage).subscribe({
           next: () => resolve(),
           error: (err) => reject(err)
         });

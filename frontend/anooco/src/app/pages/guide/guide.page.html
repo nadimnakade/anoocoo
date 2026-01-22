@@ -41,23 +41,45 @@
         <ion-label>Reporting Incidents</ion-label>
       </ion-item>
       <div class="ion-padding" slot="content">
-        <p><strong>Voice Reporting:</strong> Tap the Voice button in the bottom actions, the assistant mic on the map, or say a wake word (if Hands-free is on). Then say for example:</p>
+        <p><strong>Voice Reporting:</strong> Tap the Voice button or say a wake word (if Auto On). Then say:</p>
         <ul>
           <li>"Report accident"</li>
           <li>"Report pothole"</li>
           <li>"Report traffic"</li>
           <li>"Report police"</li>
         </ul>
-        <p><strong>Wake Words:</strong> With Hands-free on, the app listens in the background for "Hey Anooco", "Hey Scout" or "Hey Echo". Only after a wake word does it fully listen to your command, so normal conversation does not create reports.</p>
-        <p><strong>Manual Reporting:</strong> Tap the "Manual" button to select an incident type from the grid.</p>
-        <p><strong>Hands-free Mode:</strong> Tap "Auto On/Off" to enable background listening for wake words. Ideal for driving.</p>
-        <p><strong>Emergency Beam (Ambulance):</strong> After a wake word (e.g. "Hey Scout"), say something like "Beam emergency ahead" to send an emergency vehicle alert from your current location so other drivers can give way.</p>
-        <p><strong>Quick Start for Ambulance Drivers:</strong></p>
+        <p><strong>Wake Words:</strong> With Hands-free (Auto) on, say <strong>"Hey Scout"</strong> or <strong>"Hey Beam"</strong> to wake the assistant.</p>
+        <p><strong>Manual Reporting:</strong> Tap "Manual" to select an incident type.</p>
+        <p><strong>Emergency Beam:</strong> Say <strong>"Hey Scout, Beam emergency ahead"</strong> to warn nearby drivers.</p>
+      </div>
+    </ion-accordion>
+
+    <ion-accordion value="voice">
+      <ion-item slot="header" color="light">
+        <ion-icon name="mic-circle-outline" slot="start"></ion-icon>
+        <ion-label>Voice Assistant & Commands</ion-label>
+      </ion-item>
+      <div class="ion-padding" slot="content">
+        <p><strong>Wake Words:</strong> Enable "Auto On" and say <strong>"Hey Scout"</strong> or <strong>"Hey Beam"</strong>.</p>
+        
+        <p><strong>Reporting Commands:</strong></p>
         <ul>
-          <li>Before moving, turn <strong>Auto On</strong> so the app listens for wake words.</li>
-          <li>On the road, say <strong>"Hey Scout"</strong> or <strong>"Hey Echo"</strong> to wake the assistant.</li>
-          <li>Immediately follow with <strong>"Beam emergency ahead"</strong> to warn nearby drivers.</li>
-          <li>Keep <strong>Emergency Alerts</strong> enabled in Settings so other drivers hear clear voice warnings.</li>
+          <li><strong>Accidents:</strong> "Accident", "Crash", "Collision"</li>
+          <li><strong>Hazards:</strong> "Pothole", "Bad road", "Roadwork", "Debris", "Slippery"</li>
+          <li><strong>Police:</strong> "Police", "Speed camera", "Roadblock"</li>
+          <li><strong>Traffic:</strong> "Traffic jam", "Stuck", "Slow"</li>
+        </ul>
+
+        <p><strong>Parking & Navigation:</strong></p>
+        <ul>
+          <li>"Park here" or "Save my car" (Saves location)</li>
+          <li>"Take me to my car" (Navigates to saved spot)</li>
+        </ul>
+
+        <p><strong>App Control:</strong></p>
+        <ul>
+          <li>"Scout pause" (Pause alerts)</li>
+          <li>"Scout resume" (Resume alerts)</li>
         </ul>
       </div>
     </ion-accordion>

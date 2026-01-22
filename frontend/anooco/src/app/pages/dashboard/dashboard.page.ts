@@ -2,7 +2,9 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { MenuController, ModalController, LoadingController, Platform, ToastController, AlertController, ActionSheetController, NavController } from '@ionic/angular';
 import * as L from 'leaflet';
 import { Geolocation } from '@capacitor/geolocation';
+import { App } from '@capacitor/app';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
+import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
 import { ApiService } from '../../services/api.service';
 import { SignalrService } from '../../services/signalr.service';
 import { Subscription } from 'rxjs';
@@ -50,6 +52,9 @@ export class DashboardPage implements OnInit, OnDestroy {
   private isPotholeAlertShowing = false;
   private lastPotholeAlertTime = 0;
   private subscriptions: Subscription = new Subscription();
+
+  isLocationBlocked = false;
+  locationBlockReason: 'permission' | 'disabled' | 'unknown' = 'unknown';
 
   constructor(
     private menuCtrl: MenuController,
@@ -197,6 +202,68 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     // Request speech permissions early
     this.requestSpeechPermissions();
+
+    // Check location status
+    this.checkLocationStatus();
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        this.checkLocationStatus();
+      }
+    });
+  }
+
+  async checkLocationStatus() {
+    try {
+      // 1. Check Permissions
+      const permissionStatus = await Geolocation.checkPermissions();
+
+      if (permissionStatus.location !== 'granted') {
+        // If not granted, try to request
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          this.isLocationBlocked = true;
+          this.locationBlockReason = 'permission';
+          this.cdr.detectChanges();
+          return;
+        }
+      }
+
+      // 2. Check if Service is Enabled (by trying to get position)
+      try {
+        // Short timeout to verify we can get location
+        await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 4000,
+          maximumAge: 0
+        });
+        this.isLocationBlocked = false;
+      } catch (e) {
+        console.warn('Location service check failed (GPS likely off)', e);
+        this.isLocationBlocked = true;
+        this.locationBlockReason = 'disabled';
+      }
+
+    } catch (e) {
+      console.error('Location check error', e);
+      // Fallback: if we can't determine, we might block to be safe, or assume ok.
+      // Given user requirement "app should not work", we block on error.
+      this.isLocationBlocked = true;
+      this.locationBlockReason = 'unknown';
+    }
+    this.cdr.detectChanges();
+  }
+
+  async openDeviceSettings() {
+    try {
+      await NativeSettings.open({
+        optionAndroid: AndroidSettings.Location,
+        optionIOS: IOSSettings.App
+      });
+    } catch (e) {
+      console.error('Error opening settings', e);
+      // Fallback if plugin fails
+      this.showToast('Could not open settings. Please open manually.', 'danger');
+    }
   }
 
   async openSettings() {
@@ -507,8 +574,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     if (this.handsFreeEnabled) {
-      this.showToast('Hands-free on. Say "Hey Anooco" or a report command.', 'tertiary');
-      this.speak('Hands-free mode on. You can say Hey Anooco or directly say a report like report accident.');
+      this.showToast('Hands-free on. Say "Hey Scout" or "Hey Beam".', 'tertiary');
+      this.speak('Hands-free mode on. You can say Hey Scout or Hey Beam.');
       this.startWakeLoop();
     } else {
       this.abortWake = true;
@@ -526,51 +593,26 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
 
       try {
-        const available = await SpeechRecognition.available();
-        if (!available.available) {
-          break;
-        }
-        // Continuous listening for wake word or full command
-        const res = await SpeechRecognition.start({
-          language: "en-US",
-          maxResults: 1,
-          prompt: "Say 'Hey Anooco' or 'Hey Scout'",
-          partialResults: false,
-          popup: false,
-        });
+        // Continuous listening for wake word (no popup)
+        const heardText = await this.voiceService.startListening(false);
+        const text = heardText.toLowerCase();
 
-        const raw = (res.matches && res.matches[0]) ? res.matches[0] : "";
-        const text = raw.toLowerCase();
-
-        // Relaxed wake detection: allows "Hey Scout", "Scout", "Echo", etc.
-        const hasWake = text.includes("hey anooco") || text.includes("hey scout") || text.includes("hey echo") ||
-                        text.includes("scout") || text.includes("echo");
+        // Strict wake detection: "Hey Scout" or "Hey Beam"
+        const hasWake = text.includes("hey scout") || text.includes("hey beam");
 
         if (hasWake) {
-          // Check if command is embedded in the same phrase
-          // e.g. "Scout beam emergency ahead"
-          if (text.includes("beam") && text.includes("emergency")) {
-             this.handleEmergencyBeamCommand();
-             // Don't break, just continue loop
-             continue;
-          }
-
-          if (text.includes("take me to my car") || text.includes("my car")) {
-             this.navigateToCar();
-             continue;
-          }
-
-          // If no specific command found, trigger full listening
           this.speak("Listening...");
+          // Wait a moment for the user to start speaking their command
+          await new Promise(r => setTimeout(r, 500));
+
+          // Now listen for the actual command (with popup or visual feedback if desired, or silent)
+          // We'll use the normal startListening which sets isListening=true
           await this.startListening();
-          // We break here because startListening is async and might take time?
-          // Actually startListening sets isListening=true, so next loop iteration will wait.
-          // But startListening also has its own timeout.
-          // Let's just continue, the loop will wait at the top if isListening is true.
         }
       } catch {
         // ignore transient errors
       }
+      // Short pause before restarting loop
       await new Promise(r => setTimeout(r, 500));
     }
   }

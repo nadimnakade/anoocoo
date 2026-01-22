@@ -24,15 +24,14 @@ export class SignalrService {
       .withAutomaticReconnect()
       .build();
 
-    this.hubConnection
-      .start()
+    this.hubConnection.start()
       .then(() => {
-        console.log('Connection started');
+        // Connection started
         this.connectionStatus$.next('connected');
         this.addListeners();
       })
       .catch(err => {
-        console.log('Error while starting connection: ' + err);
+        // Error starting connection
         this.connectionStatus$.next('error');
         // Retry after 5s
         setTimeout(() => this.startConnection(), 5000);

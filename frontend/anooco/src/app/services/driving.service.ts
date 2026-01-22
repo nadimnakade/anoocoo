@@ -100,4 +100,10 @@ export class DrivingService {
   stopMonitoring() {
     if (this.checkInterval) clearInterval(this.checkInterval);
   }
+
+  private analyzeSpeed(speed: number) {
+    if (speed > 130) { // ~80 mph
+      // High speed detected
+    }
+  }
 }

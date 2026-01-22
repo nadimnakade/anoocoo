@@ -539,12 +539,12 @@ export class NavigationPage implements OnInit, OnDestroy {
     try {
       const pos = await this.locationService.getCurrentLocation();
       const reportText = `Manual report: ${type}`;
-      
+
       this.api.sendReport(reportText, pos, type).subscribe({
         next: () => {
           this.showToast(`${type} reported successfully!`);
           this.speak(`${type} reported.`);
-          
+
           // Optimistically add marker
           if (this.map && pos.coords) {
              const marker = L.circleMarker([pos.coords.latitude, pos.coords.longitude], {
@@ -1021,7 +1021,7 @@ export class NavigationPage implements OnInit, OnDestroy {
       }).addTo(this.map);
 
     } catch (e) {
-      console.error(e);
+      // Error calculating route
       this.showToast('Error calculating route.');
       this.isLoading = false;
     }
@@ -1046,7 +1046,7 @@ export class NavigationPage implements OnInit, OnDestroy {
         }
       },
       error: (err: any) => {
-        console.error(err);
+        // Error handling
         this.isLoading = false;
       }
     });
@@ -1067,7 +1067,7 @@ export class NavigationPage implements OnInit, OnDestroy {
         };
       },
       error: (err: any) => {
-        console.error(err);
+        // Error fetching enforcement hotspots
       }
     });
   }

@@ -76,4 +76,12 @@ export class DashcamService {
         return '';
     }
   }
+
+  async startRecording() {
+    try {
+      // Recording started
+    } catch (e) {
+      // Error starting recording
+    }
+  }
 }

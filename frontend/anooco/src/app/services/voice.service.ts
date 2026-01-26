@@ -16,7 +16,7 @@ export class VoiceService {
     this.isMuted = muted;
   }
 
-  async startListening(showPopup: boolean = true): Promise<string> {
+  async startListening(showPopup: boolean = true, promptMsg: string = ""): Promise<string> {
     this.isListening = true;
 
     // 1. Web Fallback (for development in browser)
@@ -31,10 +31,16 @@ export class VoiceService {
         await SpeechRecognition.requestPermissions();
       }
 
+      // Use provided prompt, or default if showing popup and no prompt provided
+      let finalPrompt = promptMsg;
+      if (showPopup && !finalPrompt) {
+        finalPrompt = "Say 'Report accident' or 'Report traffic'";
+      }
+
       const matches = await SpeechRecognition.start({
         language: "en-US",
         maxResults: 1,
-        prompt: "Say 'Report accident' or 'Report traffic'",
+        prompt: finalPrompt,
         partialResults: false,
         popup: showPopup,
       });
@@ -47,6 +53,11 @@ export class VoiceService {
 
     } catch (e) {
       this.isListening = false;
+      // Suppress annoying error logs for speech recognizer busy/no match
+      if (JSON.stringify(e).includes('203') || JSON.stringify(e).includes('Speech recognition already started')) {
+          // 203 is often "No match" on Android
+          return "";
+      }
       console.error("Voice Error:", e);
       throw e;
     }

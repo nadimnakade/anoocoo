@@ -4,6 +4,15 @@ const config: CapacitorConfig = {
   appId: 'com.anooco.app',
   appName: 'Anooco',
   webDir: 'www',
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 3000,
+      launchAutoHide: true,
+      backgroundColor: "#ffffffff",
+      androidSplashResourceName: "splash",
+      showSpinner: true,
+    },
+  },
   cordova: {
     preferences: {
       ScrollEnabled: 'false',

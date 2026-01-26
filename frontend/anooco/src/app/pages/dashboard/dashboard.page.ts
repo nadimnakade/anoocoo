@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { MenuController, ModalController, LoadingController, Platform, ToastController, AlertController, ActionSheetController, NavController } from '@ionic/angular';
+import { MenuController, ModalController, LoadingController, Platform, ToastController, AlertController, ActionSheetController, NavController, ViewWillEnter, ViewWillLeave } from '@ionic/angular';
 import * as L from 'leaflet';
 import { Geolocation } from '@capacitor/geolocation';
 import { App } from '@capacitor/app';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
 import { ApiService } from '../../services/api.service';
 import { SignalrService } from '../../services/signalr.service';
@@ -24,14 +25,18 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./dashboard.page.scss'],
   standalone: false
 })
-export class DashboardPage implements OnInit, OnDestroy {
+export class DashboardPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave {
   map: L.Map | undefined;
   events: any[] = [];
   recentEvents: any[] = [];
   isEventsLoading = false;
   watchId: string | null = null;
   userMarker: L.Marker | undefined;
-  spokenEvents: Set<string> = new Set(); // Track announced events to avoid spam
+  // Track announced events: ID -> { count, lastTime }
+  // count 0: Not alerted
+  // count 1: Alerted at distance (First warning)
+  // count 2: Alerted near (Reminder)
+  private alertTracker: Map<string, { count: number, lastAlertTime: number }> = new Map();
   private lastReconfirm: Map<string, number> = new Map();
   isListening = false;
   handsFreeEnabled = false;
@@ -51,10 +56,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   isReportModalOpen = false;
   private isPotholeAlertShowing = false;
   private lastPotholeAlertTime = 0;
-  private subscriptions: Subscription = new Subscription();
-
+  subscriptions: Subscription = new Subscription();
   isLocationBlocked = false;
   locationBlockReason: 'permission' | 'disabled' | 'unknown' = 'unknown';
+  isBottomSheetOpen = false;
 
   constructor(
     private menuCtrl: MenuController,
@@ -78,6 +83,24 @@ export class DashboardPage implements OnInit, OnDestroy {
     private locationService: LocationService,
     private route: ActivatedRoute
   ) { }
+
+  async ionViewWillEnter() {
+    this.isBottomSheetOpen = true;
+    this.cdr.detectChanges();
+    try {
+      await KeepAwake.keepAwake();
+    } catch {}
+  }
+
+  async ionViewWillLeave() {
+    this.isBottomSheetOpen = false;
+    this.cdr.detectChanges();
+    try {
+      await KeepAwake.allowSleep();
+    } catch {}
+  }
+
+
 
   ngOnInit() {
     this.subscriptions.add(
@@ -105,9 +128,9 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.roadFeatureService.potholeDetected$.subscribe(async evt => {
         console.log('Pothole detected:', evt);
 
-        // Prevent spam: Check if alert is showing or if recently shown (within 10s)
+        // Prevent spam: Check if alert is showing or if recently shown (within 30s)
         const now = Date.now();
-        if (this.isPotholeAlertShowing || (now - this.lastPotholeAlertTime < 10000)) {
+        if (this.isPotholeAlertShowing || (now - this.lastPotholeAlertTime < 30000)) {
           return;
         }
 
@@ -574,46 +597,84 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     if (this.handsFreeEnabled) {
-      this.showToast('Hands-free on. Say "Hey Scout" or "Hey Beam".', 'tertiary');
-      this.speak('Hands-free mode on. You can say Hey Scout or Hey Beam.');
+      // Silent enable as requested (visual feedback only)
+      this.showToast('Hands-free active. Say "Scout" to command.', 'tertiary');
       this.startWakeLoop();
     } else {
       this.abortWake = true;
+      this.isListening = false; // Reset listening state to prevent stuck loops
       try { await SpeechRecognition.stop(); } catch {}
-      this.showToast('Hands-free mode turned off.');
+      this.showToast('Hands-free mode off.');
     }
   }
 
   private async startWakeLoop() {
     this.abortWake = false;
+    let consecutiveErrors = 0;
+
     while (this.handsFreeEnabled && !this.abortWake) {
       if (this.isListening) {
+         // If already actively listening (for command), wait
          await new Promise(r => setTimeout(r, 1000));
          continue;
       }
 
       try {
-        // Continuous listening for wake word (no popup)
-        const heardText = await this.voiceService.startListening(false);
-        const text = heardText.toLowerCase();
+        // Continuous listening for wake word (no popup, empty prompt)
+        // This attempts to be as silent as possible
+        // Note: Continuous calls to start() may cause audio ducking on some devices (Bluetooth fading)
+        const heardText = await this.voiceService.startListening(false, "");
+        const text = heardText.toLowerCase().trim();
 
-        // Strict wake detection: "Hey Scout" or "Hey Beam"
-        const hasWake = text.includes("hey scout") || text.includes("hey beam");
+        consecutiveErrors = 0; // Reset error count on success (even if no match but valid return)
 
-        if (hasWake) {
-          this.speak("Listening...");
-          // Wait a moment for the user to start speaking their command
-          await new Promise(r => setTimeout(r, 500));
+        // Check if user said the trigger word
+        if (text.includes('scout') || text.includes('hey scout') || text.includes('hey beam')) {
 
-          // Now listen for the actual command (with popup or visual feedback if desired, or silent)
-          // We'll use the normal startListening which sets isListening=true
-          await this.startListening();
+          // Check for "Stop" command immediately (e.g. "Scout Stop")
+          if (text.includes('stop') || text.includes('off')) {
+             this.toggleHandsFree();
+             return;
+          }
+
+          // Parse command if present (e.g. "Scout Traffic")
+          // Remove the trigger words to isolate the command
+          let command = text.replace('hey scout', '').replace('hey beam', '').replace('scout', '').trim();
+
+          if (command.length > 0) {
+             // User said "Scout [Command]" - process immediately
+             this.processVoiceCommand(command);
+          } else {
+             // User said just "Scout" - Trigger active listening for the command
+             // We start a focused listening session with visual feedback (popup)
+             this.isListening = true;
+             this.cdr.detectChanges();
+
+             try {
+                // Use a short timeout for the command listening
+                const cmd = await this.voiceService.startListening(true, "Listening...");
+                if (cmd && cmd.length > 0) {
+                    this.processVoiceCommand(cmd);
+                }
+             } catch (err) {
+                // ignore command listen error
+             } finally {
+                this.isListening = false;
+                this.cdr.detectChanges();
+             }
+          }
         }
-      } catch {
-        // ignore transient errors
+      } catch (e) {
+        // ignore transient errors to keep loop alive
+        consecutiveErrors++;
+        // If we hit multiple errors in a row, back off a bit more
+        const delay = consecutiveErrors > 3 ? 2000 : 500;
+        await new Promise(r => setTimeout(r, delay));
       }
-      // Short pause before restarting loop
-      await new Promise(r => setTimeout(r, 500));
+
+      // Short pause before restarting loop to allow other audio to breathe
+      // and prevent tight looping if recognizer returns immediately
+      await new Promise(r => setTimeout(r, 300));
     }
   }
 
@@ -673,6 +734,23 @@ export class DashboardPage implements OnInit, OnDestroy {
       return;
     }
 
+    // Direct mapping for common commands if logic service fails
+    if (lower.includes('report accident') || lower.includes('accident')) {
+      this.reportEvent('ACCIDENT');
+      this.speak('Reporting accident.');
+      return;
+    }
+    if (lower.includes('report traffic') || lower.includes('traffic')) {
+      this.reportEvent('TRAFFIC');
+      this.speak('Reporting traffic.');
+      return;
+    }
+    if (lower.includes('report hazard') || lower.includes('pothole') || lower.includes('hazard')) {
+      this.reportEvent('POTHOLE');
+      this.speak('Reporting hazard.');
+      return;
+    }
+
     const intent = this.reportLogicService.parseVoiceCommand(text);
 
     if (intent) {
@@ -704,6 +782,11 @@ export class DashboardPage implements OnInit, OnDestroy {
     } else {
       this.speak("I didn't catch that. Please try again.");
     }
+  }
+
+  async reportEvent(eventType: string) {
+    const rawText = `Report ${eventType.toLowerCase()}`;
+    await this.submitReportInternal(`REPORT_${eventType}`, rawText, 'voice');
   }
 
   async showToast(msg: string, color: string = 'primary') {
@@ -743,11 +826,31 @@ export class DashboardPage implements OnInit, OnDestroy {
       return;
     }
 
+    // Optimistic Update: Show marker immediately
+    const eventTypeRaw = type.replace(/^REPORT_/, ''); // Remove REPORT_ prefix if present
+    const tempEvent = {
+      id: `temp-${Date.now()}`,
+      eventType: eventTypeRaw,
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      reportType: reportType,
+      confirmationsCount: 1,
+      updatedAt: new Date().toISOString(),
+      address: 'Locating...',
+      status: 'Active',
+      isTemp: true
+    };
+    this.events.push(tempEvent);
+    this.plotEvents();
+
     this.apiService.sendReport(rawText, location, reportType).subscribe({
       next: () => {
         setTimeout(() => this.loadEvents(), 1000);
       },
       error: () => {
+        // Remove temp event on error
+        this.events = this.events.filter(e => e.id !== tempEvent.id);
+        this.plotEvents();
         this.showToast('Failed to send report.', 'danger');
         this.speak("Failed to send report.");
       }
@@ -881,6 +984,8 @@ export class DashboardPage implements OnInit, OnDestroy {
       const dist = this.calculateDistance(userPos.lat, userPos.lng, evt.latitude, evt.longitude);
       if (dist < 2000) { // 2km radius for new alerts
         this.speakEvent(evt, dist);
+        // Mark as alerted (count 1)
+        this.alertTracker.set(evt.id, { count: 1, lastAlertTime: Date.now() });
       }
     }
   }
@@ -932,11 +1037,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.startTracking();
   }
 
-  ionViewWillLeave() {
-    if (this.watchId) {
-      Geolocation.clearWatch({ id: this.watchId });
-    }
-  }
+
 
   openMenu() {
     this.menuCtrl.open();
@@ -1015,6 +1116,9 @@ export class DashboardPage implements OnInit, OnDestroy {
 
       this.userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(this.map);
 
+      // Plot events if they are already loaded
+      this.plotEvents();
+
     } catch (e) {
       console.error("Error loading map", e);
     }
@@ -1051,24 +1155,49 @@ export class DashboardPage implements OnInit, OnDestroy {
   checkNearbyEvents(userLat: number, userLng: number) {
     if (!this.events.length) return;
 
+    const now = Date.now();
+
     this.events.forEach(evt => {
+      const id = evt.id || evt.Id;
+      if (!id) return;
+
       const distance = this.calculateDistance(userLat, userLng, evt.latitude, evt.longitude);
       if (this.isMutedForEvent(evt, userLat, userLng, distance)) {
         return;
       }
 
-      // If event is within 500m and hasn't been spoken yet
-      if (distance < 500 && !this.spokenEvents.has(evt.id)) {
-        this.speakEvent(evt, distance);
-        this.spokenEvents.add(evt.id);
+      // Initialize tracker if missing
+      if (!this.alertTracker.has(id)) {
+        this.alertTracker.set(id, { count: 0, lastAlertTime: 0 });
       }
+      const tracker = this.alertTracker.get(id)!;
+
+      // 1. First Warning (within 2km)
+      // If we haven't alerted yet (count 0) and we are within range
+      if (distance < 2000 && tracker.count === 0) {
+         this.speakEvent(evt, distance);
+         tracker.count = 1;
+         tracker.lastAlertTime = now;
+         return;
+      }
+
+      // 2. Reminder (within 500m)
+      // If we alerted once (count 1), are closer now, and enough time has passed
+      if (distance < 500 && tracker.count === 1) {
+         // Throttle reminders: must be at least 60s after first alert
+         if (now - tracker.lastAlertTime > 60000) {
+            this.speakEvent(evt, distance);
+            tracker.count = 2; // Final state
+            tracker.lastAlertTime = now;
+         }
+      }
+
       // Reconfirm proximity to extend server TTL (throttled)
       if (distance < 300) {
-        const last = this.lastReconfirm.get(evt.id) || 0;
-        const now = Date.now();
+        const last = this.lastReconfirm.get(id) || 0;
         if (now - last > 10 * 60 * 1000) {
           this.reconfirmEvent(evt, distance);
-          this.lastReconfirm.set(evt.id, now);
+          this.lastReconfirm.set(id, now);
         }
       }
     });
@@ -1205,6 +1334,10 @@ export class DashboardPage implements OnInit, OnDestroy {
       const status = (evt.status || evt.Status || '').toString().toLowerCase();
       const expired = status === 'expired' || status === 'inactive' || evt.isExpired === true;
 
+      const lat = parseFloat(evt.latitude);
+      const lng = parseFloat(evt.longitude);
+      if (isNaN(lat) || isNaN(lng)) return;
+
       const customIcon = L.divIcon({
         className: 'custom-event-marker-container', // Wrapper class if needed, or empty
         html: `
@@ -1228,7 +1361,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         popupAnchor: [0, -16]
       });
 
-      const marker = L.marker([evt.latitude, evt.longitude], { icon: customIcon })
+      const marker = L.marker([lat, lng], { icon: customIcon })
         .bindPopup(`
           <div style="text-align: center;">
             <h3 style="margin: 0; color: ${config.color};">${evt.eventType}</h3>
@@ -1255,7 +1388,7 @@ export class DashboardPage implements OnInit, OnDestroy {
         // or we calculate actual distance. Let's calculate actual distance.
         if (this.userMarker) {
            const userPos = this.userMarker.getLatLng();
-           const dist = this.calculateDistance(userPos.lat, userPos.lng, evt.latitude, evt.longitude);
+           const dist = this.calculateDistance(userPos.lat, userPos.lng, lat, lng);
            this.speakEvent(evt, dist);
            this.reconfirmEvent(evt);
         } else {

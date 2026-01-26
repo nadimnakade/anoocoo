@@ -8,16 +8,21 @@
 }
 
 .top-overlay {
-  // position: absolute;
-  top: 50px;
+  position: absolute;
+  top: max(60px, env(safe-area-inset-top) + 20px);
   left: 20px;
-  z-index: 100; /* Increased to stay above bottom-sheet */
+  right: 20px;
+  z-index: 1000; /* Ensure it is above map and other elements */
+  display: flex;
+  pointer-events: none; /* Let clicks pass through empty space */
+}
+
+.top-overlay > * {
+  pointer-events: auto; /* Re-enable clicks on buttons */
 }
 
 .top-overlay .top-right {
-  position: absolute;
-  right: 20px;
-  top: 18px;
+  margin-left: auto; /* Push to right */
   display: flex;
   align-items: center;
 }
@@ -93,6 +98,19 @@ ion-modal.dashboard-modal {
   }
 }
 
+/* Report Modal */
+ion-modal.report-modal {
+  --border-radius: 20px 20px 0 0;
+  --box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  --background: var(--ion-background-color);
+
+  /* Allow clicks to pass through the backdrop area to the map */
+  &::part(backdrop) {
+    display: none;
+    pointer-events: none;
+  }
+}
+
 .greeting h2 {
   font-size: 20px;
   font-weight: 700;
@@ -136,6 +154,28 @@ ion-modal.dashboard-modal {
 
     &.listening {
       background: var(--ion-color-danger);
+    }
+  }
+
+  /* Dark Mode Override for Buttons */
+  /* Support both system preference and manual class */
+  @media (prefers-color-scheme: dark) {
+    .icon-circle:not(.black):not(.listening) {
+      background: #2a2a2a !important; /* Force dark background */
+      ion-icon { color: #ffffff !important; }
+    }
+    span {
+      color: #ffffff;
+    }
+  }
+
+  :host-context(body.dark) {
+    .icon-circle:not(.black):not(.listening) {
+      background: #2a2a2a !important;
+      ion-icon { color: #ffffff !important; }
+    }
+    span {
+      color: #ffffff;
     }
   }
 
@@ -297,7 +337,7 @@ ion-modal.dashboard-modal {
 
 .speedometer-container {
   position: absolute;
-  top: 110px;
+  top: max(120px, env(safe-area-inset-top) + 80px);
   left: 20px;
   z-index: 90;
   display: flex;

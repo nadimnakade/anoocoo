@@ -1,18 +1,8 @@
-<!-- <ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button color="dark"></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Maps</ion-title>
-  </ion-toolbar>
-</ion-header> -->
-
-
-
 <ion-content [fullscreen]="true">
   <!-- Map Background -->
   <div id="map" class="full-screen-map" [class.hidden]="viewMode === 'list'"></div>
 
+  <!-- Top Overlay Buttons (Restored) -->
   <div class="top-overlay">
     <div
       class="menu-button"
@@ -63,7 +53,7 @@
   <!-- Bottom Sheet / Card -->
   <!-- Swipeable Bottom Sheet -->
   <ion-modal
-    [isOpen]="true"
+    [isOpen]="isBottomSheetOpen"
     [breakpoints]="[0.1, 0.3, 1]"
     [initialBreakpoint]="0.3"
     [backdropDismiss]="false"
@@ -274,7 +264,7 @@
     </ng-template>
   </ion-modal>
 
-  <ion-modal [isOpen]="isReportModalOpen" (didDismiss)="setOpen(false)" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]">
+  <ion-modal [isOpen]="isReportModalOpen" (didDismiss)="setOpen(false)" [initialBreakpoint]="0.5" [breakpoints]="[0, 0.5]" [showBackdrop]="false" class="report-modal">
     <ng-template>
       <div class="report-modal-content">
         <div class="modal-header">

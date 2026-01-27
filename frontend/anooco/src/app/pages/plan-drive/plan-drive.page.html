@@ -1,13 +1,13 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-menu-button color="primary"></ion-menu-button>
+      <ion-menu-button></ion-menu-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  
+
   <div class="header-section">
     <h1>Plan a Drive</h1>
   </div>
@@ -15,7 +15,7 @@
   <div class="search-wrapper">
     <ion-searchbar [(ngModel)]="searchQuery" (ionInput)="onSearch($event)" placeholder="Where to?" mode="ios"></ion-searchbar>
   </div>
-  
+
   <ion-list *ngIf="searchResults.length > 0">
     <ion-item button lines="none" *ngFor="let result of searchResults" (click)="selectDestination(result)">
       <ion-icon slot="start" name="location-outline"></ion-icon>
@@ -30,7 +30,7 @@
     <ion-list-header>
       <ion-label>Suggestions</ion-label>
     </ion-list-header>
-    
+
     <ion-item button lines="none" detail="false">
       <ion-icon slot="start" name="calendar-outline"></ion-icon>
       <ion-label>

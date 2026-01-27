@@ -27,4 +27,8 @@ export class DashboardV2Page implements OnInit {
     this.navCtrl.navigateForward(path);
     this.isMenuOpen = false;
   }
+
+  goBack() {
+    this.navCtrl.back();
+  }
 }

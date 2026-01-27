@@ -1,13 +1,11 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/dashboard"></ion-back-button>
-    </ion-buttons>
-    <ion-title>User Guide</ion-title>
-  </ion-toolbar>
-</ion-header>
+<div class="floating-header">
+  <div class="back-btn" (click)="goBack()">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+  </div>
+  <div class="header-title">User Guide</div>
+</div>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding content-with-floating-header">
 
   <div class="guide-intro">
     <img src="assets/icon/icon.png" alt="Anooco Logo" class="guide-logo" onerror="this.style.display='none'">
@@ -100,22 +98,20 @@
     <ion-accordion value="settings">
       <ion-item slot="header" color="light">
         <ion-icon name="settings-outline" slot="start"></ion-icon>
-        <ion-label>Settings & Customization</ion-label>
+        <ion-label>Settings</ion-label>
       </ion-item>
       <div class="ion-padding" slot="content">
-        <p><strong>Profile:</strong> Update your username and view your Trust Score.</p>
-        <p><strong>Mute Settings:</strong> Configure a mute radius (e.g., around your home) or specific streets where you don't want audio alerts.</p>
-        <p><strong>Calibration:</strong> Use the Tools menu to calibrate the pothole detection sensitivity for your specific vehicle/mount.</p>
-        <p><strong>Reporting Preferences:</strong> Turn on or off different types of reports (Accident, Pothole, Traffic, Police) according to your needs.</p>
-        <p><strong>Emergency Alerts:</strong> Enable or disable spoken alerts for emergency vehicles reported nearby. If disabled, you will still see them on the map but not hear voice warnings.</p>
+        <p><strong>Map Style:</strong> Choose between Satellite, Dark, Light, or Outdoors map styles.</p>
+        <p><strong>Units:</strong> Toggle between Metric (km) and Imperial (mi).</p>
+        <p><strong>Notifications:</strong> Customize which alerts you want to receive and their distance radius.</p>
+        <p><strong>Profile:</strong> Update your profile picture and vehicle details.</p>
       </div>
     </ion-accordion>
 
   </ion-accordion-group>
 
   <div class="footer-note">
-    <p>Drive Safely!</p>
-    <p>v0.0.1</p>
+    <p>Anooco v1.0.0 &copy; 2025</p>
   </div>
 
 </ion-content>

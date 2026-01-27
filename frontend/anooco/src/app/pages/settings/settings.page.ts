@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RoadFeatureService } from '../../services/road-feature.service';
+import { NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-settings',
@@ -9,9 +10,16 @@ import { RoadFeatureService } from '../../services/road-feature.service';
 })
 export class SettingsPage implements OnInit {
 
-  constructor(public roadFeatureService: RoadFeatureService) { }
+  constructor(
+    public roadFeatureService: RoadFeatureService,
+    private navCtrl: NavController
+  ) { }
 
   ngOnInit() {
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   toggleVoice(event: any) {

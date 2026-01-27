@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
-import { AlertController, LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +19,8 @@ export class LoginPage implements OnInit {
     private apiService: ApiService,
     private router: Router,
     private alertController: AlertController,
-    private loadingController: LoadingController
+    private loadingController: LoadingController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
@@ -28,6 +29,10 @@ export class LoginPage implements OnInit {
     if (userStr) {
       this.router.navigate(['/dashboard'], { replaceUrl: true });
     }
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   async onLogin() {

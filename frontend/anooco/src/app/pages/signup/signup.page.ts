@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
-import { AlertController, LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-signup',
@@ -20,10 +20,15 @@ export class SignupPage implements OnInit {
     private apiService: ApiService,
     private router: Router,
     private alertController: AlertController,
-    private loadingController: LoadingController
+    private loadingController: LoadingController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   async onSignup() {

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastController, AlertController } from '@ionic/angular';
+import { ToastController, AlertController, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-social',
@@ -18,10 +18,15 @@ export class SocialPage implements OnInit {
 
   constructor(
     private toastCtrl: ToastController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   async sendBeep(friendName: string) {

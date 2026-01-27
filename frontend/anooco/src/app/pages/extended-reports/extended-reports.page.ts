@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastController, LoadingController, ModalController } from '@ionic/angular';
+import { ToastController, LoadingController, ModalController, NavController } from '@ionic/angular';
 import { ApiService } from '../../services/api.service';
 
 @Component({
@@ -25,11 +25,16 @@ export class ExtendedReportsPage implements OnInit {
     private toastCtrl: ToastController,
     private loadingCtrl: LoadingController,
     private api: ApiService,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
     this.loadReports();
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   ionViewWillEnter() {
@@ -60,7 +65,7 @@ export class ExtendedReportsPage implements OnInit {
     await loading.present();
 
     await loading.onDidDismiss();
-    
+
     const toast = await this.toastCtrl.create({
       message: `Thanks! ${type} report submitted.`,
       duration: 2000,

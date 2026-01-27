@@ -47,6 +47,43 @@ export class ToolsPage implements OnInit {
     this.parkingAutoMark = this.roadFeatureService.enableParkingAutoMark;
   }
 
+  toggleAccidentReports(ev?: any) {
+    this.roadFeatureService.enableAccidentReports = this.reportAccidents;
+    this.updateReportingPreferences();
+  }
+
+  togglePotholeReports(ev?: any) {
+    this.roadFeatureService.enablePotholeReports = this.reportPotholes;
+    this.updateReportingPreferences();
+  }
+
+  togglePotholeConfirm(ev?: any) {
+    this.roadFeatureService.potholeConfirmationMode = this.potholeConfirmMode;
+    this.updateReportingPreferences();
+  }
+
+  toggleTrafficReports(ev?: any) {
+    this.roadFeatureService.enableTrafficReports = this.reportTraffic;
+    this.updateReportingPreferences();
+  }
+
+  toggleEnforcementReports(ev?: any) {
+    this.roadFeatureService.enableEnforcementReports = this.reportEnforcement;
+    this.updateReportingPreferences();
+  }
+
+  toggleEmergencyAlerts(ev?: any) {
+    this.roadFeatureService.enableEmergencyAlerts = this.emergencyAlerts;
+    this.updateReportingPreferences();
+  }
+
+  toggleParkingAutoMark(ev?: any) {
+    this.roadFeatureService.enableParkingAutoMark = this.parkingAutoMark;
+    this.updateReportingPreferences();
+  }
+
+
+
 
   async scanPotholeAi() {
     if (!this.roadFeatureService.enablePotholeReports || this.roadFeatureService.reportingPaused) {

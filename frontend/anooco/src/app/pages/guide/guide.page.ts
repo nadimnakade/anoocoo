@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-guide',
@@ -8,9 +9,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class GuidePage implements OnInit {
 
-  constructor() { }
+  constructor(private navCtrl: NavController) { }
 
   ngOnInit() {
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
 }

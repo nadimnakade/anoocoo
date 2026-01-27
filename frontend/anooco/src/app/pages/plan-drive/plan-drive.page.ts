@@ -18,6 +18,10 @@ export class PlanDrivePage implements OnInit {
   ngOnInit() {
   }
 
+  goBack() {
+    this.navCtrl.back();
+  }
+
   onSearch(event: any) {
     const query = event.detail.value;
     if (!query || query.length < 3) {

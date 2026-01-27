@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
-import { ModalController, LoadingController } from '@ionic/angular';
+import { ModalController, LoadingController, NavController } from '@ionic/angular';
 import { EditProfileModalComponent } from './edit-profile-modal/edit-profile-modal.component';
 
 @Component({
@@ -17,7 +17,8 @@ export class ProfilePage implements OnInit {
   constructor(
     private api: ApiService,
     private modalCtrl: ModalController,
-    private loadingCtrl: LoadingController
+    private loadingCtrl: LoadingController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
@@ -27,6 +28,10 @@ export class ProfilePage implements OnInit {
       this.userId = user.userId || user.UserId;
       this.loadProfile();
     }
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   async loadProfile() {

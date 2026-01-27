@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MusicControllerService, MusicApp, MusicTrack } from '../../services/music-controller.service';
-import { ToastController } from '@ionic/angular';
+import { ToastController, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-multimedia',
@@ -15,7 +15,8 @@ export class MultimediaPage implements OnInit {
 
   constructor(
     private musicService: MusicControllerService,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
@@ -26,6 +27,10 @@ export class MultimediaPage implements OnInit {
     this.musicService.currentTrack$.subscribe(track => {
       this.currentTrack = track;
     });
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   async toggleConnection(app: string) {

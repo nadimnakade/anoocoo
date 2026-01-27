@@ -2,104 +2,185 @@ ion-content {
   --background: var(--ion-background-color);
 }
 
-ion-toolbar {
-  --background: transparent;
-  --border-width: 0;
-  
-  ion-title {
-    font-weight: 700;
-    font-size: 20px;
-    letter-spacing: -0.5px;
-  }
-}
+.floating-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
 
-ion-segment {
-  background: rgba(var(--ion-color-primary-rgb), 0.08);
-  border-radius: 12px;
-  padding: 4px;
-  margin: 0 16px 10px;
-  width: auto;
-
-  ion-segment-button {
-    --indicator-color: #ffffff;
-    --indicator-box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    --border-radius: 8px;
-    --color: var(--ion-color-medium);
-    --color-checked: var(--ion-color-primary);
-    font-weight: 600;
-    min-height: 40px;
-  }
-}
-
-.service-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 0;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-  overflow: hidden;
-
-  ion-item {
-    --background: transparent;
-    --padding-start: 16px;
-    --inner-padding-end: 16px;
-    --min-height: 70px;
-    
-    ion-label {
-      margin-top: 12px;
-      margin-bottom: 12px;
-    }
-
-    h2 {
-      font-weight: 700;
-      font-size: 16px;
-      margin-bottom: 4px;
-      color: var(--ion-text-color);
-    }
-    
-    p {
-      font-size: 13px;
-      color: var(--ion-color-medium);
-      font-weight: 500;
-    }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    pointer-events: auto;
   }
 
-  .icon-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+  .header-right {
+    pointer-events: auto;
+  }
+
+  .back-btn, .action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 16px;
-    
-    ion-icon {
-      font-size: 24px;
-    }
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-size: 20px;
+    color: var(--ion-color-dark);
+    cursor: pointer;
+  }
 
-    &.gas {
-      background: rgba(var(--ion-color-warning-rgb), 0.1);
-      color: var(--ion-color-warning);
+  .header-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ion-color-dark);
+    text-shadow: 0 2px 8px rgba(255,255,255,0.5);
+  }
+}
+
+.content-container {
+  padding: 80px 20px 20px;
+}
+
+.floating-segment {
+  margin-bottom: 24px;
+  
+  ion-segment {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+    ion-segment-button {
+      --indicator-color: var(--ion-color-primary);
+      --color: var(--ion-color-medium);
+      --color-checked: #ffffff;
+      --border-radius: 20px;
+      min-height: 40px;
+      font-weight: 600;
     }
-    &.parking {
-      background: rgba(var(--ion-color-medium-rgb), 0.1);
-      color: var(--ion-color-medium);
-    }
-    &.ev {
-      background: rgba(var(--ion-color-success-rgb), 0.1);
-      color: var(--ion-color-success);
+  }
+}
+
+.info-card {
+  margin-bottom: 24px;
+  
+  .info-item {
+    --background: #ffffff;
+    border-radius: 24px; // 24px
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+
+    ion-label {
+      h2 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      p {
+        font-size: 13px;
+        color: var(--ion-color-medium);
+      }
     }
   }
 }
 
 .results-header {
-  padding: 0 16px;
   margin-bottom: 12px;
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--ion-color-medium);
+  padding-left: 8px;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.service-card {
+  background: #ffffff;
+  border-radius: 24px; // 24px
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow: hidden;
+  transition: transform 0.2s ease;
+  
+  &:active {
+    transform: scale(0.98);
+  }
+
+  .service-content {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .service-info {
+    flex: 1;
+    
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 4px;
+      color: var(--ion-text-color);
+    }
+    
+    p {
+      font-size: 13px;
+      color: var(--ion-color-medium);
+      margin: 0;
+    }
+  }
+
+  .go-btn {
+    background: var(--ion-color-primary);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(var(--ion-color-primary-rgb), 0.3);
+  }
+}
+
+.icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  
+  &.gas {
+    background: rgba(var(--ion-color-warning-rgb), 0.1);
+    color: var(--ion-color-warning);
+  }
+  &.parking {
+    background: rgba(var(--ion-color-medium-rgb), 0.1);
+    color: var(--ion-color-medium);
+  }
+  &.ev {
+    background: rgba(var(--ion-color-success-rgb), 0.1);
+    color: var(--ion-color-success);
+  }
 }
 
 .empty-state {
@@ -109,5 +190,64 @@ ion-segment {
   p {
     color: var(--ion-color-medium);
     font-size: 15px;
+  }
+}
+
+// Dark mode overrides
+@media (prefers-color-scheme: dark) {
+  .floating-header {
+    .back-btn, .action-btn {
+      background: rgba(30, 30, 30, 0.8);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .header-title {
+      color: #ffffff;
+      text-shadow: none;
+    }
+  }
+
+  .floating-segment ion-segment {
+    background: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    
+    ion-segment-button {
+      --color-checked: #ffffff;
+    }
+  }
+
+  .info-card .info-item, .service-card {
+    background: #1e1e1e;
+    --background: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+}
+
+body.dark {
+  .floating-header {
+    .back-btn, .action-btn {
+      background: rgba(30, 30, 30, 0.8);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .header-title {
+      color: #ffffff;
+      text-shadow: none;
+    }
+  }
+
+  .floating-segment ion-segment {
+    background: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    
+    ion-segment-button {
+      --color-checked: #ffffff;
+    }
+  }
+
+  .info-card .info-item, .service-card {
+    background: #1e1e1e;
+    --background: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
 }

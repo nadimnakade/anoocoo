@@ -54,6 +54,7 @@ export class DashboardPage implements OnInit, OnDestroy, ViewWillEnter, ViewWill
   pendingFocusEventId: string | null = null;
 
   isReportModalOpen = false;
+  showReportModal = false; // New Glass Modal State
   private isPotholeAlertShowing = false;
   private lastPotholeAlertTime = 0;
   subscriptions: Subscription = new Subscription();
@@ -276,6 +277,77 @@ export class DashboardPage implements OnInit, OnDestroy, ViewWillEnter, ViewWill
     this.cdr.detectChanges();
   }
 
+  async openMenu() {
+    await this.menuCtrl.open('main-menu');
+  }
+
+  async openSettingsMenu() {
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Menu',
+      buttons: [
+        {
+          text: 'Profile',
+          icon: 'person-circle-outline',
+          handler: () => {
+            this.navCtrl.navigateForward('/profile');
+          }
+        },
+        {
+          text: 'Settings',
+          icon: 'settings-outline',
+          handler: () => {
+            this.navCtrl.navigateForward('/settings');
+          }
+        },
+        {
+          text: 'Tools',
+          icon: 'construct-outline',
+          handler: () => {
+            this.navCtrl.navigateForward('/tools');
+          }
+        },
+        {
+          text: 'Cancel',
+          icon: 'close',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async openAlerts() {
+    this.navCtrl.navigateForward('/alerts');
+  }
+
+  navigateTo(place: string) {
+    if (place === 'HOME') {
+      const home = localStorage.getItem('anooco_home_address');
+      if (home) {
+        this.openSearch(home);
+      } else {
+        this.showToast('Home address not set. Please set it in Tools.', 'warning');
+      }
+    } else if (place === 'WORK') {
+      const work = localStorage.getItem('anooco_work_address');
+      if (work) {
+        this.openSearch(work);
+      } else {
+        this.showToast('Work address not set. Please set it in Tools.', 'warning');
+      }
+    }
+  }
+
+  async openSearch(query?: string) {
+    if (query) {
+      this.speak('Navigating to ' + query);
+      this.showToast('Navigation to ' + query + ' started (Simulation)', 'success');
+      // In a real app, this would trigger the routing/navigation service
+    } else {
+      this.showToast('Search feature coming soon', 'medium');
+    }
+  }
+
   async openDeviceSettings() {
     try {
       await NativeSettings.open({
@@ -297,31 +369,6 @@ export class DashboardPage implements OnInit, OnDestroy, ViewWillEnter, ViewWill
     this.navCtrl.navigateForward('/tools');
   }
 
-  async openSettingsMenu() {
-    const sheet = await this.actionSheetController.create({
-      header: 'Settings',
-      buttons: [
-        {
-          text: 'Settings',
-          handler: () => this.openSettings()
-        },
-        {
-          text: 'Tools',
-          handler: () => this.openTools()
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        }
-      ]
-    });
-    await sheet.present();
-  }
-
-  openAlerts() {
-    this.viewMode = 'list';
-    this.cdr.detectChanges();
-  }
 
   async openEventActions(evt: any) {
     const type = (evt.eventType || '').toUpperCase();
@@ -874,6 +921,23 @@ export class DashboardPage implements OnInit, OnDestroy, ViewWillEnter, ViewWill
     }
   }
 
+  toggleReportModal() {
+    this.showReportModal = !this.showReportModal;
+    this.cdr.detectChanges();
+  }
+
+  closeReportModal() {
+    this.showReportModal = false;
+    this.cdr.detectChanges();
+  }
+
+  reportIncident(type: string) {
+    this.submitReport(type);
+    this.closeReportModal();
+  }
+
+
+
   async submitReport(type: string) {
     this.setOpen(false);
     if (this.roadFeatureService.reportingPaused) {
@@ -1039,9 +1103,6 @@ export class DashboardPage implements OnInit, OnDestroy, ViewWillEnter, ViewWill
 
 
 
-  openMenu() {
-    this.menuCtrl.open();
-  }
 
   toggleExpiredVisibility() {
     this.showExpired = !this.showExpired;
@@ -1419,20 +1480,7 @@ export class DashboardPage implements OnInit, OnDestroy, ViewWillEnter, ViewWill
     this.setOpen(true);
   }
 
-  async navigateTo(type: 'HOME' | 'WORK') {
-    const key = type === 'HOME' ? 'anooco_home_address' : 'anooco_work_address';
-    const address = localStorage.getItem(key);
 
-    if (!address) {
-      this.showToast(`No ${type.toLowerCase()} address saved. Go to Tools > Navigation to set it.`);
-      return;
-    }
-
-    this.speak(`Navigating to ${type.toLowerCase()}`);
-    // Open Google Maps
-    const query = encodeURIComponent(address);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_system');
-  }
 
   getMarkerConfig(type: string) {
     // Return SVG strings directly to avoid Web Component issues in Leaflet

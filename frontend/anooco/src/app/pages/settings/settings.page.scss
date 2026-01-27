@@ -1,3 +1,54 @@
+
+// Floating Header
+.floating-header {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top) + 10px);
+  left: 20px;
+  right: 20px;
+  height: 50px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+
+  .back-btn {
+    pointer-events: auto;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    color: #333;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin-right: 15px;
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .header-title {
+    pointer-events: auto;
+    background: #ffffff;
+    padding: 8px 20px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+}
+
+.content-with-floating-header {
+  --padding-top: max(80px, env(safe-area-inset-top) + 70px);
+  --background: var(--ion-background-color);
+}
+
 ion-list-header {
   font-size: 14px;
   font-weight: 700;
@@ -14,12 +65,14 @@ ion-list {
   padding: 0;
 }
 
-ion-item {
+.setting-item {
   --background: #ffffff;
   margin-bottom: 12px;
-  border-radius: 16px;
+  border-radius: 24px; // Updated to 24px
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   --border-width: 0;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
 
   ion-icon {
     margin-right: 15px;
@@ -31,6 +84,27 @@ ion-item {
     --background: #fff5f5;
     ion-icon {
       color: var(--ion-color-danger);
+    }
+  }
+}
+
+// Dark Mode Overrides
+@media (prefers-color-scheme: dark) {
+  body.dark {
+    .floating-header {
+      .back-btn, .header-title {
+        background: #1e1e1e;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      }
+    }
+    
+    .setting-item {
+      --background: #1e1e1e;
+      
+      &.logout-item {
+        --background: #2c1515;
+      }
     }
   }
 }

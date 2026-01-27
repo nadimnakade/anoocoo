@@ -1,16 +1,13 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start" *ngIf="selectedType">
-      <ion-button (click)="cancelSelection()">
-        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-    <ion-title>{{ selectedType ? selectedType.label : 'Report' }}</ion-title>
-  </ion-toolbar>
-  <ion-progress-bar *ngIf="submitting" type="indeterminate"></ion-progress-bar>
-</ion-header>
+<div class="floating-header">
+  <div class="back-btn" (click)="selectedType ? cancelSelection() : goBack()">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+  </div>
+  <div class="header-title">{{ selectedType ? selectedType.label : 'Report' }}</div>
+</div>
 
-<ion-content>
+<ion-progress-bar *ngIf="submitting" type="indeterminate" class="floating-progress"></ion-progress-bar>
+
+<ion-content class="content-with-floating-header">
   <div class="container" *ngIf="!selectedType">
     <h2>Select a type</h2>
     <div class="report-grid">
@@ -31,26 +28,26 @@
 
   <div class="container ion-padding" *ngIf="selectedType">
     <div class="ion-text-center ion-margin-bottom">
-      <div class="item-icon-large" [style.backgroundColor]="selectedType.color" style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+      <div class="item-icon-large" [style.backgroundColor]="selectedType.color" style="width: 80px; height: 80px; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
         <ion-icon [name]="selectedType.icon" style="font-size: 40px; color: white;"></ion-icon>
       </div>
-      <h2>{{ selectedType.label }}</h2>
+      <h2 style="margin-top: 15px;">{{ selectedType.label }}</h2>
       <p>Attach a photo to help us verify this report.</p>
     </div>
 
     <div *ngIf="capturedImage" class="ion-margin-bottom" style="position: relative;">
-      <img [src]="capturedImage" style="width: 100%; border-radius: 8px; max-height: 300px; object-fit: cover;" />
-      <ion-button fill="solid" color="danger" size="small" (click)="capturedImage = undefined" style="position: absolute; top: 10px; right: 10px;">
+      <img [src]="capturedImage" style="width: 100%; border-radius: 16px; max-height: 300px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+      <ion-button fill="solid" color="danger" size="small" (click)="capturedImage = undefined" style="position: absolute; top: 10px; right: 10px; --border-radius: 50%; width: 32px; height: 32px; --padding-start: 0; --padding-end: 0;">
         <ion-icon slot="icon-only" name="trash"></ion-icon>
       </ion-button>
     </div>
 
-    <ion-button expand="block" (click)="takePicture()" class="ion-margin-bottom" fill="outline">
+    <ion-button expand="block" (click)="takePicture()" class="ion-margin-bottom action-btn" fill="outline">
       <ion-icon slot="start" name="camera"></ion-icon>
       {{ capturedImage ? 'Retake Photo' : 'Add Photo' }}
     </ion-button>
 
-    <ion-button expand="block" (click)="submit()" [disabled]="submitting" color="primary">
+    <ion-button expand="block" (click)="submit()" [disabled]="submitting" color="primary" class="action-btn">
       Submit Report
     </ion-button>
   </div>

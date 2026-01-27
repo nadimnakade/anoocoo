@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ToastController } from '@ionic/angular';
+import { ToastController, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-customization',
@@ -15,10 +15,17 @@ export class CustomizationPage implements OnInit {
     voice: 'scout'
   };
 
-  constructor(private toastCtrl: ToastController) { }
+  constructor(
+    private toastCtrl: ToastController,
+    private navCtrl: NavController
+  ) { }
 
   ngOnInit() {
     // Load settings from storage if implemented
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   settingChanged(setting: string, event: any) {

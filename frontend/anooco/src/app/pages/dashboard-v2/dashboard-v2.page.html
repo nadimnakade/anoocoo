@@ -1,18 +1,34 @@
 <ion-content [fullscreen]="true" class="map-bg">
+  <!-- Floating Header (Only for sub-pages or if needed, but here we have a Waze-like layout) -->
+  <!-- However, to standardize, we can add a subtle top bar or just rely on the bottom/side controls as intended for a map view. -->
+  <!-- Let's keep the map view clean but ensure elements have the floating styling. -->
+
   <!-- Fake Map Background (Placeholder) -->
   <div class="fake-map">
     <div class="map-placeholder-text">Waze-like Map View</div>
     <div class="my-location-arrow">
-      <ion-icon name="navigate" style="transform: rotate(-45deg); font-size: 32px; color: #3880ff;"></ion-icon>
+      <ion-icon name="navigate" style="transform: rotate(-45deg); font-size: 32px; color: var(--ion-color-primary);"></ion-icon>
+    </div>
+  </div>
+
+  <!-- Top Floating Bar (optional, for notifications or status) -->
+  <div class="top-floating-bar">
+    <div class="status-chip">
+      <ion-icon name="cloud-done"></ion-icon>
+      <span>Online</span>
     </div>
   </div>
 
   <!-- Bottom Sheet / Search Bar -->
-  <div class="bottom-bar">
-    <div class="search-bar">
-      <ion-icon name="search" slot="start"></ion-icon>
-      <input type="text" placeholder="Where to?" />
-      <ion-icon name="mic" slot="end"></ion-icon>
+  <div class="bottom-floating-panel">
+    <div class="search-bar-wrapper">
+      <div class="search-icon">
+        <ion-icon name="search"></ion-icon>
+      </div>
+      <input type="text" placeholder="Where to?" class="search-input" />
+      <div class="mic-icon">
+        <ion-icon name="mic"></ion-icon>
+      </div>
     </div>
   </div>
 
@@ -40,40 +56,55 @@
           <p>View Profile</p>
         </div>
       </div>
+      <div class="close-menu-btn" (click)="toggleMenu()">
+        <ion-icon name="close"></ion-icon>
+      </div>
     </div>
 
     <div class="menu-items">
       <div class="menu-item" (click)="navigateTo('/plan-drive')">
-        <ion-icon name="calendar-outline"></ion-icon>
+        <div class="menu-icon-box">
+          <ion-icon name="calendar-outline"></ion-icon>
+        </div>
         <span>Plan a drive</span>
       </div>
       
       <div class="menu-item" (click)="navigateTo('/social')">
-        <ion-icon name="people-outline"></ion-icon>
+        <div class="menu-icon-box">
+          <ion-icon name="people-outline"></ion-icon>
+        </div>
         <span>Inbox</span>
       </div>
 
       <div class="menu-section-title">Drive</div>
 
       <div class="menu-item" (click)="navigateTo('/vehicle-services')">
-        <ion-icon name="color-fill-outline"></ion-icon>
+        <div class="menu-icon-box">
+          <ion-icon name="color-fill-outline"></ion-icon>
+        </div>
         <span>Gas & Parking</span>
       </div>
 
       <div class="menu-item" (click)="navigateTo('/multimedia')">
-        <ion-icon name="musical-notes-outline"></ion-icon>
+        <div class="menu-icon-box">
+          <ion-icon name="musical-notes-outline"></ion-icon>
+        </div>
         <span>Music</span>
       </div>
 
       <div class="menu-section-title">Settings</div>
 
       <div class="menu-item" (click)="navigateTo('/customization')">
-        <ion-icon name="brush-outline"></ion-icon>
+        <div class="menu-icon-box">
+          <ion-icon name="brush-outline"></ion-icon>
+        </div>
         <span>Customize</span>
       </div>
 
       <div class="menu-item" (click)="navigateTo('/settings')">
-        <ion-icon name="settings-outline"></ion-icon>
+        <div class="menu-icon-box">
+          <ion-icon name="settings-outline"></ion-icon>
+        </div>
         <span>Settings</span>
       </div>
     </div>

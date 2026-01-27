@@ -1,13 +1,11 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/dashboard"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Driver Tools & Settings</ion-title>
-  </ion-toolbar>
-</ion-header>
+<div class="floating-header">
+  <div class="back-btn" (click)="goBack()">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+  </div>
+  <div class="header-title">Driver Tools</div>
+</div>
 
-<ion-content class="ion-padding">
+<ion-content class="content-with-floating-header ion-padding">
 
   <!-- Section: Intelligent Vision -->
   <ion-list-header>
@@ -17,7 +15,9 @@
   <ion-card button (click)="scanSign()">
     <ion-card-header>
       <ion-card-title>
-        <ion-icon name="scan-outline" slot="start" class="card-icon"></ion-icon>
+        <div class="icon-box">
+          <ion-icon name="scan-outline"></ion-icon>
+        </div>
         OCR Street Sign
       </ion-card-title>
     </ion-card-header>
@@ -34,7 +34,9 @@
   <ion-card button (click)="connectDashcam()">
     <ion-card-header>
       <ion-card-title>
-        <ion-icon name="wifi-outline" slot="start" class="card-icon"></ion-icon>
+        <div class="icon-box">
+          <ion-icon name="wifi-outline"></ion-icon>
+        </div>
         Connect WiFi
       </ion-card-title>
     </ion-card-header>
@@ -46,182 +48,59 @@
   <ion-card button (click)="viewDashcamRecordings()">
     <ion-card-header>
       <ion-card-title>
-        <ion-icon name="videocam-outline" slot="start" class="card-icon"></ion-icon>
+        <div class="icon-box">
+          <ion-icon name="videocam-outline"></ion-icon>
+        </div>
         View Recordings
       </ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      Browse files on the connected dashcam.
+      Browse and download videos from dashcam.
     </ion-card-content>
   </ion-card>
 
-  <!-- Section: Safety & Alerts -->
+  <!-- Section: Reporting Preferences -->
   <ion-list-header>
-    <ion-label>Safety & Alerts</ion-label>
+    <ion-label>Reporting Preferences</ion-label>
   </ion-list-header>
 
-  <ion-card button (click)="scanPotholeAi()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="analytics-outline" slot="start" class="card-icon"></ion-icon>
-        AI Pothole Detection
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Capture and analyze road surface using on-device AI.
-    </ion-card-content>
-  </ion-card>
+  <div class="toggles-container">
+    <ion-item lines="none" class="toggle-item">
+      <ion-label>
+        <h2>Accidents</h2>
+        <p>Report nearby accidents</p>
+      </ion-label>
+      <ion-toggle slot="end" [(ngModel)]="reportAccidents" (ionChange)="toggleAccidentReports($event)"></ion-toggle>
+    </ion-item>
 
-  <ion-card button (click)="configureAlerts()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="speedometer-outline" slot="start" class="card-icon"></ion-icon>
-        Alert Thresholds
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Configure speed limits and pothole sensitivity.
-    </ion-card-content>
-  </ion-card>
+    <ion-item lines="none" class="toggle-item">
+      <ion-label>
+        <h2>Potholes</h2>
+        <p>Report road hazards</p>
+      </ion-label>
+      <ion-toggle slot="end" [(ngModel)]="reportPotholes" (ionChange)="togglePotholeReports($event)"></ion-toggle>
+    </ion-item>
 
-  <ion-card button (click)="configureVoiceAlerts()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="megaphone-outline" slot="start" class="card-icon"></ion-icon>
-        Voice Alert Radius
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Set proximity radius for voice alerts.
-    </ion-card-content>
-  </ion-card>
+    <ion-item lines="none" class="toggle-item">
+      <ion-label>
+        <h2>Confirm Potholes</h2>
+        <p>Ask before reporting AI potholes</p>
+      </ion-label>
+      <ion-toggle slot="end" [(ngModel)]="potholeConfirmMode" (ionChange)="togglePotholeConfirm($event)"></ion-toggle>
+    </ion-item>
 
-  <ion-card button (click)="configureTrafficDetection()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="car-outline" slot="start" class="card-icon"></ion-icon>
-        Traffic Detection
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Configure slow traffic thresholds and cooldowns.
-    </ion-card-content>
-  </ion-card>
+    <ion-item lines="none" class="toggle-item">
+      <ion-label>
+        <h2>Traffic</h2>
+        <p>Report congestion</p>
+      </ion-label>
+      <ion-toggle slot="end" [(ngModel)]="reportTraffic" (ionChange)="toggleTrafficReports($event)"></ion-toggle>
+    </ion-item>
+  </div>
 
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="options-outline" slot="start" class="card-icon"></ion-icon>
-        Reporting Preferences
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item lines="none">
-        <ion-label>Accidents</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="reportAccidents" (ionChange)="updateReportingPreferences()"></ion-toggle>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label>Potholes &amp; Hazards</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="reportPotholes" (ionChange)="updateReportingPreferences()"></ion-toggle>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label>Traffic</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="reportTraffic" (ionChange)="updateReportingPreferences()"></ion-toggle>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label>Enforcement</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="reportEnforcement" (ionChange)="updateReportingPreferences()"></ion-toggle>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label>Emergency vehicle alerts</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="emergencyAlerts" (ionChange)="updateReportingPreferences()"></ion-toggle>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label>Ask before AI pothole report</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="potholeConfirmMode" (ionChange)="updateReportingPreferences()"></ion-toggle>
-      </ion-item>
-      <ion-item lines="none">
-        <ion-label>Auto save parking when leaving navigation</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="parkingAutoMark" (ionChange)="updateReportingPreferences()"></ion-toggle>
-      </ion-item>
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card button (click)="calibratePotholeSensitivity()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="pulse-outline" slot="start" class="card-icon"></ion-icon>
-        Calibrate Pothole Sensitivity
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Measure device motion to auto-set sensitivity.
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card button (click)="configureMuteSettings()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="volume-mute-outline" slot="start" class="card-icon"></ion-icon>
-        Mute Settings
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Set mute radius and muted streets to reduce alerts.
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card button (click)="configureSpeedContext()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="chatbox-ellipses-outline" slot="start" class="card-icon"></ion-icon>
-        Speed Alert Context
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Add contextual voice like “School zone ahead”.
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card button (click)="configureAutoStart()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="bluetooth-outline" slot="start" class="card-icon"></ion-icon>
-        Auto-Start (Bluetooth)
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Automatically start driving mode when connected to car.
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Section: Navigation -->
-  <ion-list-header>
-    <ion-label>Navigation</ion-label>
-  </ion-list-header>
-
-  <ion-card button (click)="manageSavedPlaces()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="location-outline" slot="start" class="card-icon"></ion-icon>
-        Saved Places
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Set Home and Work addresses for quick access.
-    </ion-card-content>
-  </ion-card>
-
-  <ion-card button (click)="saveParkingSpotManual()">
-    <ion-card-header>
-      <ion-card-title>
-        <ion-icon name="car-sport-outline" slot="start" class="card-icon"></ion-icon>
-        Save Parking Spot
-      </ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      Save your current GPS location as your parked car.
-    </ion-card-content>
-  </ion-card>
+  <ion-button expand="block" fill="outline" class="action-btn" (click)="scanPotholeAi()">
+    <ion-icon slot="start" name="camera-outline"></ion-icon>
+    Test Pothole AI (Camera)
+  </ion-button>
 
 </ion-content>

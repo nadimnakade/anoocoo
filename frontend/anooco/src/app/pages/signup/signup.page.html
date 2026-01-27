@@ -1,4 +1,10 @@
-<ion-content class="auth-content">
+<ion-content class="auth-content" [fullscreen]="true">
+  <div class="floating-header">
+    <div class="back-btn" (click)="goBack()">
+      <ion-icon name="chevron-back-outline"></ion-icon>
+    </div>
+  </div>
+
   <div class="auth-container">
     <div class="header-section">
       <h1>Anooco</h1>

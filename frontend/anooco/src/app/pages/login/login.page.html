@@ -1,4 +1,14 @@
-<ion-content class="auth-content">
+<ion-content class="auth-content" [fullscreen]="true">
+  <div class="floating-header">
+    <!-- Optional back button if needed, but for login often it's root. 
+         We'll include it hidden or visible depending on navigation stack usually, 
+         but here we'll just put the title or leave it clean. 
+         Let's put a simple back button just in case they want to go back to a landing page. -->
+    <div class="back-btn" (click)="goBack()">
+      <ion-icon name="chevron-back-outline"></ion-icon>
+    </div>
+  </div>
+
   <div class="auth-container">
     <div class="header-section">
       <h1>Welcome Back</h1>

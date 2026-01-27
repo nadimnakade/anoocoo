@@ -4,7 +4,7 @@ import { LocationService } from 'src/app/services/location.service';
 import { RoadFeatureService } from 'src/app/services/road-feature.service';
 import { DrivingService } from 'src/app/services/driving.service';
 import { VoiceService } from 'src/app/services/voice.service';
-import { LoadingController, ToastController, AlertController } from '@ionic/angular';
+import { LoadingController, ToastController, AlertController, NavController } from '@ionic/angular';
 import * as L from 'leaflet';
 import 'leaflet-routing-machine';
 import { Subscription, forkJoin } from 'rxjs';
@@ -81,11 +81,16 @@ export class NavigationPage implements OnInit, OnDestroy {
     private loadingCtrl: LoadingController,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
+    private navCtrl: NavController,
     private cdr: ChangeDetectorRef,
     private ocrService: OcrService,
     private potholeAiService: PotholeAiService,
     private route: ActivatedRoute
   ) { }
+
+  goBack() {
+    this.navCtrl.back();
+  }
 
   ngOnInit() {
     this.subscriptions.add(

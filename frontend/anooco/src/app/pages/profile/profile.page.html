@@ -1,13 +1,11 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-menu-button color="dark"></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Profile</ion-title>
-  </ion-toolbar>
-</ion-header>
+<div class="floating-header">
+  <div class="back-btn" (click)="goBack()">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+  </div>
+  <div class="header-title">Profile</div>
+</div>
 
-<ion-content class="ion-padding">
+<ion-content class="content-with-floating-header ion-padding">
   <div class="profile-header">
     <div class="avatar-large">
       <img [src]="profile?.avatarUrl || profile?.AvatarUrl || 'assets/placeholder-user.png'" onerror="this.src='https://ionicframework.com/docs/img/demos/avatar.svg'">
@@ -32,15 +30,18 @@
 
   <ion-list class="settings-list">
     <ion-list-header>Settings</ion-list-header>
-    <ion-item lines="full" button (click)="openEditProfile()">
+    <ion-item lines="none" button (click)="openEditProfile()" class="setting-item">
+      <ion-icon slot="start" name="person-outline"></ion-icon>
       <ion-label>Edit Profile</ion-label>
       <ion-icon slot="end" name="chevron-forward"></ion-icon>
     </ion-item>
-    <ion-item lines="full">
+    <ion-item lines="none" class="setting-item">
+      <ion-icon slot="start" name="home-outline"></ion-icon>
       <ion-label>Home Address</ion-label>
       <ion-icon slot="end" name="chevron-forward"></ion-icon>
     </ion-item>
-    <ion-item lines="full">
+    <ion-item lines="none" class="setting-item">
+      <ion-icon slot="start" name="briefcase-outline"></ion-icon>
       <ion-label>Work Address</ion-label>
       <ion-icon slot="end" name="chevron-forward"></ion-icon>
     </ion-item>

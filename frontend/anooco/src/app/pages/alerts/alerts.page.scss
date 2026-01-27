@@ -1,9 +1,60 @@
+
+// Floating Header
+.floating-header {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top) + 10px);
+  left: 20px;
+  right: 20px;
+  height: 50px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+
+  .back-btn {
+    pointer-events: auto;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    color: #333;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin-right: 15px;
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .header-title {
+    pointer-events: auto;
+    background: #ffffff;
+    padding: 8px 20px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+}
+
+.content-with-floating-header {
+  --padding-top: max(80px, env(safe-area-inset-top) + 70px);
+  --background: var(--ion-background-color);
+}
+
 .alerts-container {
   padding: 16px;
 }
 
 .filters {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .filter-group {
@@ -25,15 +76,19 @@
 
 .filter-chip {
   flex: 0 0 auto;
-  padding: 6px 14px;
-  border-radius: 12px;
+  padding: 8px 16px;
+  border-radius: 20px; // Updated to 20px
   border: none;
   background: #ffffff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ion-color-medium);
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 .filter-chip.active {
@@ -47,49 +102,110 @@ ion-list {
   padding: 0;
 }
 
-ion-list-header {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ion-color-medium);
-  margin-top: 10px;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding-left: 5px;
-}
-
-ion-item {
+.alert-item {
   --background: #ffffff;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  border-radius: 24px; // Updated to 24px
   margin-bottom: 12px;
-  border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  --border-width: 0;
-  --inner-padding-end: 10px;
   
-  ion-icon {
+  .alert-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px; // Rounded square
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-right: 16px;
+    background: var(--ion-color-light);
+    color: var(--ion-color-medium);
+    
+    &.pothole { background: #ffebee; color: #d32f2f; }
+    &.police { background: #e3f2fd; color: #1976d2; }
+    &.traffic { background: #fffde7; color: #fbc02d; }
+    
+    ion-icon {
+      font-size: 24px;
+    }
   }
-}
-
-.meta {
-  font-size: 12px;
-  color: var(--ion-color-medium);
-  margin-top: 4px;
-}
-
-.empty {
-  text-align: center;
-  padding: 60px 16px;
-  color: var(--ion-color-medium);
+  
+  h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--ion-text-color);
+  }
   
   p {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 13px;
+    color: var(--ion-color-medium);
+    margin-bottom: 6px;
+  }
+  
+  .alert-meta {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ion-color-medium);
+    
+    .status {
+      margin-left: 10px;
+      padding: 2px 8px;
+      background: rgba(var(--ion-color-success-rgb), 0.1);
+      color: var(--ion-color-success);
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
   }
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  padding: 24px 0;
+.empty-state {
+  text-align: center;
+  margin-top: 60px;
+  color: var(--ion-color-medium);
+  
+  ion-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: var(--ion-color-success);
+    opacity: 0.5;
+  }
+  
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+}
+
+// Dark Mode Overrides
+@media (prefers-color-scheme: dark) {
+  body.dark {
+    .floating-header {
+      .back-btn, .header-title {
+        background: #1e1e1e;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      }
+    }
+    
+    .filter-chip {
+      background: #2c2c2c;
+      color: #aaaaaa;
+      
+      &.active {
+        background: var(--ion-color-primary);
+        color: #ffffff;
+      }
+    }
+    
+    .alert-item {
+      --background: #1e1e1e;
+    }
+  }
 }

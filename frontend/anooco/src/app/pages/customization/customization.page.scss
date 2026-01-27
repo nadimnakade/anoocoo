@@ -1,14 +1,123 @@
+
+// Floating Header
+.floating-header {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top) + 10px);
+  left: 20px;
+  right: 20px;
+  height: 50px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+
+  .back-btn {
+    pointer-events: auto;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    color: #333;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin-right: 15px;
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .header-title {
+    pointer-events: auto;
+    background: #ffffff;
+    padding: 8px 20px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+}
+
+.content-with-floating-header {
+  --padding-top: max(80px, env(safe-area-inset-top) + 70px);
+  --background: var(--ion-background-color);
+}
+
 .preview-container {
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 24px;
+  padding: 20px;
   margin-bottom: 24px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 
   h3 {
     margin-top: 0;
-    color: var(--ion-color-dark);
+    font-size: 14px;
     font-weight: 700;
+    color: var(--ion-color-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
   }
+
+  .map-preview {
+    width: 100%;
+    height: 150px;
+    background: #eef2f5;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease;
+
+    &.night-mode {
+      background: #1e252b;
+      
+      .road {
+        background: #2c3e50;
+      }
+    }
+
+    .road {
+      width: 60px;
+      height: 100%;
+      background: #bdc3c7;
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      
+      .lane-marker {
+        width: 4px;
+        height: 100%;
+        background: repeating-linear-gradient(to bottom, #fff 0, #fff 20px, transparent 20px, transparent 40px);
+      }
+    }
+
+    .car-marker {
+      position: relative;
+      z-index: 2;
+      font-size: 32px;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+    }
+  }
+}
+
+ion-list-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ion-color-medium);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 5px;
 }
 
 ion-list {
@@ -16,65 +125,30 @@ ion-list {
   padding: 0;
 }
 
-ion-list-header {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ion-color-medium);
-  margin-top: 20px;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding-left: 5px;
-}
-
-ion-item {
+.setting-item {
   --background: #ffffff;
   margin-bottom: 12px;
-  border-radius: 16px;
+  border-radius: 24px; // Updated to 24px
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   --border-width: 0;
-  --inner-padding-end: 10px;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
 }
 
-.map-preview {
-  width: 100%;
-  height: 150px;
-  background: #e0e0e0; /* Default Day Mode map color */
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
-  transition: background 0.3s ease;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
-
-  &.night-mode {
-    background: #2c2c2c; /* Night Mode map color */
-    
-    .road {
-      background: #4a4a4a;
+// Dark Mode Overrides
+@media (prefers-color-scheme: dark) {
+  body.dark {
+    .floating-header {
+      .back-btn, .header-title {
+        background: #1e1e1e;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      }
     }
-  }
-
-  .road {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 40px;
-    background: #ffffff;
-    transform: translateY(-50%);
-    border-top: 2px solid #ccc;
-    border-bottom: 2px solid #ccc;
-  }
-
-  .car-marker {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     
-    ion-icon {
-      font-size: 48px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    .preview-container, .setting-item {
+      background: #1e1e1e;
+      --background: #1e1e1e;
     }
   }
 }

@@ -2,11 +2,38 @@
   --background: var(--ion-background-color);
 }
 
+.floating-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+
+  .back-btn {
+    pointer-events: auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-size: 20px;
+    color: var(--ion-color-dark);
+  }
+}
+
 .auth-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 100%;
+  min-height: 100%;
   padding: 24px;
   max-width: 500px;
   margin: 0 auto;
@@ -33,15 +60,18 @@
 .form-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .input-group {
   background: #ffffff;
-  border: 1px solid #eeeeee;
-  border-radius: 12px;
-  padding: 6px 14px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: none;
+  border-radius: 24px; // 24px
+  padding: 8px 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  height: 56px;
+  display: flex;
+  align-items: center;
 }
 
 .auth-input {
@@ -55,19 +85,19 @@
 }
 
 .action-section {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .auth-button-primary {
   --background: var(--ion-color-primary);
   --color: #ffffff;
-  --border-radius: 14px;
+  --border-radius: 24px; // 24px
   font-weight: 600;
-  height: 52px;
+  height: 56px;
   font-size: 16px;
   text-transform: none;
   --box-shadow: 0 8px 20px rgba(var(--ion-color-primary-rgb), 0.35);
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .divider {
@@ -81,4 +111,41 @@
   --color: var(--ion-text-color);
   text-transform: none;
   font-weight: 500;
+  --border-radius: 24px;
+  height: 48px;
+}
+
+// Dark mode overrides
+@media (prefers-color-scheme: dark) {
+  .floating-header .back-btn {
+    background: rgba(30, 30, 30, 0.8);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .input-group {
+    background: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .auth-button-clear {
+    --color: #ffffff;
+  }
+}
+
+body.dark {
+  .floating-header .back-btn {
+    background: rgba(30, 30, 30, 0.8);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .input-group {
+    background: #1e1e1e;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .auth-button-clear {
+    --color: #ffffff;
+  }
 }

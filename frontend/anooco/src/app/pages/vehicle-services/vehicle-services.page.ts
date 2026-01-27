@@ -28,6 +28,10 @@ export class VehicleServicesPage implements OnInit {
     this.getCurrentLocation();
   }
 
+  goBack() {
+    this.navCtrl.back();
+  }
+
   async getCurrentLocation() {
     const loading = await this.loadingCtrl.create({ message: 'Locating...' });
     await loading.present();

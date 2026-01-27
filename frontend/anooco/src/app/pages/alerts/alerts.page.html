@@ -1,13 +1,11 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Recent Alerts</ion-title>
-  </ion-toolbar>
-</ion-header>
+<div class="floating-header">
+  <div class="back-btn" (click)="goBack()">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+  </div>
+  <div class="header-title">Recent Alerts</div>
+</div>
 
-<ion-content>
+<ion-content class="content-with-floating-header">
   <ion-refresher slot="fixed" (ionRefresh)="loadAlerts($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -48,32 +46,25 @@
     </div>
 
     <ion-list *ngIf="alerts.length > 0">
-      <ion-list-header>
-        <ion-label>Last {{ timeWindowHours }} hours ({{ alerts.length }})</ion-label>
-      </ion-list-header>
-
-      <ion-item *ngFor="let evt of alerts" button (click)="openOnMap(evt)">
-        <ion-icon
-          [name]="getIcon(evt.eventType)"
-          slot="start"
-          [style.color]="getColor(evt.eventType)">
-        </ion-icon>
+      <ion-item *ngFor="let evt of alerts" lines="none" class="alert-item">
+        <div slot="start" class="alert-icon-wrapper" [class]="evt.eventType.toLowerCase()">
+          <ion-icon [name]="getIcon(evt.eventType)"></ion-icon>
+        </div>
         <ion-label>
-          <h2>{{ evt.eventType }}</h2>
-          <p *ngIf="evt.address">{{ evt.address }}</p>
-          <p class="meta">
-            Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'short' }}
-          </p>
+          <h2>{{ evt.description }}</h2>
+          <p>{{ evt.address }}</p>
+          <div class="alert-meta">
+            <span class="time">{{ evt.updatedAt | date:'shortTime' }}</span>
+            <span class="status" *ngIf="evt.status === 'verified'">Verified</span>
+          </div>
         </ion-label>
       </ion-item>
     </ion-list>
 
-    <div class="empty" *ngIf="!isLoading && alerts.length === 0">
-      <p>No alerts in the last {{ timeWindowHours }} hours.</p>
-    </div>
-
-    <div class="loading" *ngIf="isLoading">
-      <ion-spinner name="crescent"></ion-spinner>
+    <div *ngIf="!isLoading && alerts.length === 0" class="empty-state">
+      <ion-icon name="checkmark-circle-outline"></ion-icon>
+      <h3>No alerts found</h3>
+      <p>The roads are clear based on your filters.</p>
     </div>
   </div>
 </ion-content>

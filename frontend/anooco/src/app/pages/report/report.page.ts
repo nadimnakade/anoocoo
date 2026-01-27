@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { LocationService } from '../../services/location.service';
 import { ApiService } from '../../services/api.service';
-import { AlertController, LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController, NavController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
@@ -31,8 +31,13 @@ export class ReportPage {
     private api: ApiService,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
-    private router: Router
+    private router: Router,
+    private navCtrl: NavController
   ) {}
+
+  goBack() {
+    this.navCtrl.back();
+  }
 
   selectType(type: any) {
     this.selectedType = type;

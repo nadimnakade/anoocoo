@@ -2,38 +2,92 @@
   <!-- Map Background -->
   <div id="map" class="full-screen-map" [class.hidden]="viewMode === 'list'"></div>
 
-  <!-- Top Overlay Buttons (Restored) -->
-  <div class="top-overlay">
-    <div
-      class="menu-button"
-      role="button"
-      tabindex="0"
-      aria-label="Open menu"
-      (click)="openMenu()"
-      (keyup.enter)="openMenu()">
-      <ion-icon name="menu-outline"></ion-icon>
-    </div>
-    <div
-      class="menu-button"
-      role="button"
-      tabindex="0"
-      aria-label="Open settings and tools"
-      (click)="openSettingsMenu()"
-      (keyup.enter)="openSettingsMenu()"
-      style="margin-left: 10px;">
-      <ion-icon name="settings-outline"></ion-icon>
-    </div>
-    <div class="top-right">
-      <div
-        class="menu-button alerts-button"
-        role="button"
-        tabindex="0"
-        aria-label="Open alerts list"
-        (click)="openAlerts()"
-        (keyup.enter)="openAlerts()">
-        <ion-icon name="notifications-outline"></ion-icon>
-        <span class="badge" *ngIf="getAlertCount() > 0">{{ getAlertCount() }}</span>
+  <!-- Top Floating Search Bar -->
+  <div class="top-search-container">
+    <div class="search-card">
+      <div class="menu-btn-wrapper" (click)="openMenu()">
+        <ion-icon name="menu-outline" class="menu-icon"></ion-icon>
       </div>
+      <input type="text" placeholder="Where to?" class="search-input" (click)="openSearch()" readonly>
+      <div class="right-icons">
+        <div class="icon-btn alerts-btn" (click)="openAlerts()">
+          <ion-icon name="notifications-outline"></ion-icon>
+          <span class="badge" *ngIf="getAlertCount() > 0"></span>
+        </div>
+        <ion-icon name="mic" class="mic-icon" (click)="startListening()"></ion-icon>
+        <div class="profile-icon" (click)="openSettingsMenu()">
+           <ion-icon name="person-circle-outline"></ion-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Glassmorphism Report Overlay -->
+  <div class="glass-overlay" *ngIf="showReportModal" (click)="closeReportModal()">
+    <div class="report-grid" (click)="$event.stopPropagation()">
+      <div class="report-header">
+        <h3>One Tap Reporting</h3>
+        <p>Voice command: "Report police ahead..."</p>
+      </div>
+      <div class="grid-container">
+        <div class="report-btn police" (click)="reportIncident('POLICE')">
+          <div class="icon-box">
+            <ion-icon name="shield-checkmark"></ion-icon>
+          </div>
+          <span>Police</span>
+        </div>
+        <div class="report-btn hazard" (click)="reportIncident('HAZARD')">
+          <div class="icon-box">
+             <ion-icon name="warning"></ion-icon>
+          </div>
+          <span>Hazard</span>
+        </div>
+        <div class="report-btn accident" (click)="reportIncident('ACCIDENT')">
+          <div class="icon-box">
+             <ion-icon name="car-sport"></ion-icon>
+          </div>
+          <span>Accident</span>
+        </div>
+        <div class="report-btn traffic" (click)="reportIncident('TRAFFIC')">
+          <div class="icon-box">
+             <ion-icon name="speedometer"></ion-icon>
+          </div>
+          <span>Traffic</span>
+        </div>
+      </div>
+      <div class="close-btn" (click)="closeReportModal()">
+        <ion-icon name="close"></ion-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Bottom Action Panel -->
+  <div class="bottom-action-panel">
+    <!-- Quick Actions Row -->
+    <div class="quick-actions">
+      <div class="action-chip" (click)="navigateTo('HOME')">
+        <ion-icon name="home"></ion-icon> Home
+      </div>
+      <div class="action-chip" (click)="navigateTo('WORK')">
+        <ion-icon name="briefcase"></ion-icon> Work
+      </div>
+      <div class="action-chip" (click)="toggleReportModal()">
+        <ion-icon name="add-circle"></ion-icon> Report
+      </div>
+    </div>
+
+    <!-- Start Route Card -->
+    <div class="start-route-card">
+       <div class="route-info">
+          <div class="time-est">
+            <span class="big-time">-- min</span>
+            <span class="distance">-- km</span>
+          </div>
+          <div class="dest-preview">
+            Select a destination to start
+          </div>
+       </div>
+       <button class="start-btn" (click)="openSearch()">Start Route</button>
     </div>
   </div>
 
@@ -50,154 +104,39 @@
     </div>
   </div>
 
-  <!-- Bottom Sheet / Card -->
-  <!-- Swipeable Bottom Sheet -->
-  <ion-modal
-    [isOpen]="isBottomSheetOpen"
-    [breakpoints]="[0.1, 0.3, 1]"
-    [initialBreakpoint]="0.3"
-    [backdropDismiss]="false"
-    [showBackdrop]="false"
-    class="dashboard-modal"
-    handle="true">
+  <!-- Legacy Components (Commented Out) -->
+  <!--
+  <ion-modal [isOpen]="isBottomSheetOpen" [breakpoints]="[0.1, 0.4, 0.9]" [initialBreakpoint]="0.4" [backdropBreakpoint]="0.1" (didDismiss)="isBottomSheetOpen = false">
     <ng-template>
-      <ion-content>
-        <div class="greeting ion-padding-horizontal ion-padding-top">
-          <h2>Report Incident</h2>
-        </div>
+      <ion-content class="ion-padding">
+        <div class="sheet-content">
+          <div class="drag-handle"></div>
 
-        <div class="action-grid">
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="Start voice command"
-            (click)="startListening()"
-            (keyup.enter)="startListening()">
-            <div class="icon-circle black" [class.listening]="isListening">
-              <ion-icon name="mic" *ngIf="!isListening"></ion-icon>
-              <ion-spinner name="dots" *ngIf="isListening" color="light"></ion-spinner>
-            </div>
-            <span>{{ isListening ? 'Listening...' : 'Voice' }}</span>
-            <div *ngIf="isListening" style="position: absolute; top: -40px; background: rgba(0,0,0,0.8); color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap;">
-              Say "Accident", "Pothole"...
-            </div>
+          <div class="search-bar-container">
+            <ion-searchbar placeholder="Where to?" (click)="openSearch()"></ion-searchbar>
           </div>
 
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="Open manual report options"
-            (click)="onManualReport()"
-            (keyup.enter)="onManualReport()">
-            <div class="icon-circle gray">
-              <ion-icon name="warning"></ion-icon>
-            </div>
-            <span>Manual</span>
+          <div class="action-grid">
+             <div class="action-item" (click)="navigateTo('HOME')">
+               <div class="icon-circle home"><ion-icon name="home"></ion-icon></div>
+               <span>Home</span>
+             </div>
+             <div class="action-item" (click)="navigateTo('WORK')">
+               <div class="icon-circle work"><ion-icon name="briefcase"></ion-icon></div>
+               <span>Work</span>
+             </div>
+             <div class="action-item" (click)="openShareLocation()">
+               <div class="icon-circle share"><ion-icon name="share-social"></ion-icon></div>
+               <span>Share</span>
+             </div>
+             <div class="action-item" (click)="openSettings()">
+               <div class="icon-circle settings"><ion-icon name="settings"></ion-icon></div>
+               <span>Settings</span>
+             </div>
           </div>
 
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="Scan road sign"
-            (click)="quickScanSign()"
-            (keyup.enter)="quickScanSign()">
-            <div class="icon-circle gray">
-              <ion-icon name="scan-outline"></ion-icon>
-            </div>
-            <span>Scan Sign</span>
-          </div>
-
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="AI pothole scan"
-            (click)="quickScanPotholeAi()"
-            (keyup.enter)="quickScanPotholeAi()">
-            <div class="icon-circle gray">
-              <ion-icon name="analytics-outline"></ion-icon>
-            </div>
-            <span>AI Pothole</span>
-          </div>
-
-          <div
-            class="action-card"
-            *ngIf="isListening"
-            role="button"
-            tabindex="0"
-            aria-label="Stop listening"
-            (click)="stopListening(true)"
-            (keyup.enter)="stopListening(true)">
-            <div class="icon-circle gray">
-              <ion-icon name="stop-circle"></ion-icon>
-            </div>
-            <span>Stop</span>
-          </div>
-
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="Toggle hands-free auto mode"
-            (click)="toggleHandsFree()"
-            (keyup.enter)="toggleHandsFree()">
-            <div class="icon-circle gray" [class.listening]="handsFreeEnabled">
-              <ion-icon [name]="handsFreeEnabled ? 'radio' : 'ellipse-outline'"></ion-icon>
-            </div>
-            <span>{{ handsFreeEnabled ? 'Auto On' : 'Auto Off' }}</span>
-          </div>
-
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="Change view mode"
-            (click)="toggleViewMode()"
-            (keyup.enter)="toggleViewMode()">
-            <div class="icon-circle gray">
-              <ion-icon [name]="viewMode === 'split' ? 'map' : (viewMode === 'map' ? 'list' : 'contract')"></ion-icon>
-            </div>
-            <span>{{ viewMode === 'split' ? 'Map' : (viewMode === 'map' ? 'List' : 'Split') }}</span>
-          </div>
-
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="Navigate home"
-            (click)="navigateTo('HOME')"
-            (keyup.enter)="navigateTo('HOME')">
-            <div class="icon-circle gray">
-              <ion-icon name="home"></ion-icon>
-            </div>
-            <span>Home</span>
-          </div>
-
-          <div
-            class="action-card"
-            role="button"
-            tabindex="0"
-            aria-label="Navigate to work"
-            (click)="navigateTo('WORK')"
-            (keyup.enter)="navigateTo('WORK')">
-            <div class="icon-circle gray">
-              <ion-icon name="briefcase"></ion-icon>
-            </div>
-            <span>Work</span>
-          </div>
-        </div>
-
-        <!-- Recent Activity / List -->
-        <div class="recent-list ion-padding-horizontal">
-          <div class="list-header">
-            {{ getFilteredEvents().length > 0 ? 'Nearby Alerts' : (isEventsLoading ? 'Loading Alerts' : 'Recent Alerts') }}
-            ({{ getFilteredEvents().length > 0 ? getFilteredEvents().length : (isEventsLoading ? 3 : recentEvents.length) }})
-          </div>
-
-          <div class="filter-row">
+          <div class="recent-events-header">
+            <h3>Nearby Alerts</h3>
             <button type="button" class="filter-chip" [class.active]="eventFilter === 'all'" (click)="setEventFilter('all')">
               All
             </button>
@@ -225,42 +164,8 @@
               </p>
             </div>
           </div>
-
-          <ng-container *ngIf="isEventsLoading && events.length === 0">
-            <div class="list-item" *ngFor="let item of [1,2,3]">
-              <ion-skeleton-text animated style="width: 40px; height: 40px; border-radius: 50%;"></ion-skeleton-text>
-              <div class="item-details" style="width: 100%;">
-                <h3><ion-skeleton-text animated style="width: 50%"></ion-skeleton-text></h3>
-                <p><ion-skeleton-text animated style="width: 80%"></ion-skeleton-text></p>
-              </div>
-            </div>
-          </ng-container>
-
-          <ng-container *ngIf="!isEventsLoading && events.length === 0">
-            <div class="list-item" *ngFor="let evt of recentEvents" (click)="openEventActions(evt)">
-              <div class="item-icon" [style.background-color]="getMarkerConfig(evt.eventType).color">
-                <ion-icon [name]="getMarkerConfig(evt.eventType).icon"></ion-icon>
-              </div>
-              <div class="item-details">
-                <h3>{{ evt.eventType }}</h3>
-                <p *ngIf="evt.address || evt.Address" style="font-size: 0.85em; color: #444; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
-                  <ion-icon name="location-outline" style="vertical-align: middle; font-size: 1.1em; margin-right: 2px;"></ion-icon>
-                  {{ evt.address || evt.Address }}
-                </p>
-                <p>
-                  <ion-icon [name]="evt.reportType === 'voice' ? 'mic' : (evt.reportType === 'ai' ? 'eye' : 'hand-left')"
-                            style="font-size: 0.9em; margin-right: 4px; vertical-align: middle; color: #666;"
-                            [title]="evt.reportType || 'manual'">
-                  </ion-icon>
-                  Confirmed: {{ evt.confirmationsCount }} • {{ evt.updatedAt | date:'shortTime' }}
-                </p>
-              </div>
-            </div>
-          </ng-container>
         </div>
-
-
-</ion-content>
+      </ion-content>
     </ng-template>
   </ion-modal>
 
@@ -274,56 +179,33 @@
         <div class="report-grid">
           <div class="report-item" (click)="submitReport('ACCIDENT')">
             <div class="report-icon" style="background-color: #D32F2F;">
-               <!-- Inline SVG for Accident -->
                <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M256 32L32 464h448L256 32zm0 80l160 320H96L256 112zm0 88c-13.3 0-24 10.7-24 24v80c0 13.3 10.7 24 24 24s24-10.7 24-24v-80c0-13.3-10.7-24-24-24zm0 160c-13.3 0-24 10.7-24 24s10.7 24 24 24 24-10.7 24-24-10.7-24-24-24z"/></svg>
             </div>
             <span>Accident</span>
           </div>
-
           <div class="report-item" (click)="submitReport('POTHOLE')">
             <div class="report-icon" style="background-color: #D32F2F;">
-              <!-- Inline SVG for Pothole -->
               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M469.6 153.9c-15.8-3.4-36.2-7-59.6-10.6l-19.2-85.3c-4.9-21.7-26.6-35.1-48.3-30.2L91.6 83.9C69.9 88.8 56.5 110.5 61.4 132.2l19.2 85.3c-27.1 26.6-43.9 63.8-43.9 104.9 0 81.1 66.2 146.9 148.2 146.9h142.3c81.9 0 148.2-65.8 148.2-146.9 0-59.5-35-110.4-85.8-135.5zM294.5 98.4l19.2 85.3c-48.4-6.4-98.8-6.4-147.2 0l-19.2-85.3 147.2-33.1z"/></svg>
             </div>
             <span>Pothole</span>
           </div>
-
           <div class="report-item" (click)="submitReport('POLICE')">
             <div class="report-icon" style="background-color: #1976D2;">
-               <!-- Inline SVG for Police -->
                <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M256 32C174 69.1 96 85.2 32 96c0 128 16 256 224 384 208-128 224-256 224-384-64-10.8-142-26.9-224-64z"/></svg>
             </div>
             <span>Police</span>
           </div>
-
           <div class="report-item" (click)="submitReport('TRAFFIC')">
             <div class="report-icon" style="background-color: #FBC02D;">
-               <!-- Inline SVG for Traffic -->
                <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M112 48h288L448 464H64L112 48zm64 48H128l-16 128h64V96zm128 0h-48v128h64l-16-128zM128 352l-16 64h288l-16-64H128z"/></svg>
             </div>
             <span>Traffic</span>
           </div>
-
-          <div class="report-item" (click)="submitReport('PARK')">
-            <div class="report-icon" style="background-color: #388E3C;">
-               <!-- Inline SVG for Park -->
-               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M416 160c0-70.7-57.3-128-128-128H208C120 32 32 104 32 208c0 78.4 49.3 146.1 118.8 168.4L128 480h48l24-96h88c70.7 0 128-57.3 128-128zM208 288h-48v-96h48c26.5 0 48 21.5 48 48s-21.5 48-48 48z"/></svg>
-            </div>
-            <span>Park</span>
-          </div>
-
-          <div class="report-item" (click)="submitReport('LIFT')">
-            <div class="report-icon" style="background-color: #212121;">
-               <!-- Inline SVG for Lift -->
-               <svg viewBox="0 0 512 512" style="width: 24px; height: 24px; fill: white;"><path d="M128 416H64V128h64v288zm32-288v288h224c17.7 0 32-14.3 32-32 0-3.6-.6-7.1-1.7-10.4l-32-96c-5-15.1-19.2-25.6-35.1-25.6H208c-17.7 0-32 14.3-32 32zm0-64h128c17.7 0 32 14.3 32 32v32h-32V96H160v32zm256 96h32c17.7 0 32 14.3 32 32v160c0 17.7-14.3 32-32 32h-32V160z"/></svg>
-            </div>
-            <span>Lift</span>
-          </div>
-
         </div>
       </div>
     </ng-template>
   </ion-modal>
+  -->
 
   <div
     class="assistant-fab"

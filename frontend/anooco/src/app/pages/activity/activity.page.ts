@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from 'src/app/services/api.service';
-import { LoadingController } from '@ionic/angular';
+import { LoadingController, NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-activity',
@@ -14,7 +14,8 @@ export class ActivityPage implements OnInit {
 
   constructor(
     private api: ApiService,
-    private loadingCtrl: LoadingController
+    private loadingCtrl: LoadingController,
+    private navCtrl: NavController
   ) { }
 
   ngOnInit() {
@@ -24,6 +25,10 @@ export class ActivityPage implements OnInit {
       this.userId = user.userId || user.UserId;
       this.loadActivity();
     }
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   async loadActivity() {

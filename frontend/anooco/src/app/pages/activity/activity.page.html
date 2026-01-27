@@ -1,20 +1,20 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-menu-button color="dark"></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Your Activity</ion-title>
-  </ion-toolbar>
-</ion-header>
+<div class="floating-header">
+  <div class="back-btn" (click)="goBack()">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+  </div>
+  <div class="header-title">Your Activity</div>
+</div>
 
-<ion-content class="ion-padding">
+<ion-content class="content-with-floating-header">
   <div *ngIf="activities.length === 0" class="empty-state">
-    <ion-icon name="receipt-outline"></ion-icon>
+    <div class="empty-icon-wrapper">
+      <ion-icon name="receipt-outline"></ion-icon>
+    </div>
     <h3>No reports yet</h3>
     <p>Your submitted reports will appear here.</p>
   </div>
 
-  <ion-list lines="none">
+  <ion-list lines="none" class="activity-list">
     <div *ngFor="let item of activities" class="activity-card">
       <div class="icon-column">
         <div class="icon-circle">
@@ -25,7 +25,7 @@
       <div class="info-column">
         <h3>{{ item.description || 'Incident Report' }}</h3>
         <p>
-          <ion-badge [color]="item.reportType === 'voice' ? 'secondary' : (item.reportType === 'ai' ? 'tertiary' : 'light')" style="margin-right: 6px; font-weight: normal;">
+          <ion-badge [color]="item.reportType === 'voice' ? 'secondary' : (item.reportType === 'ai' ? 'tertiary' : 'light')" style="margin-right: 6px; font-weight: normal; border-radius: 8px;">
             <ion-icon [name]="item.reportType === 'voice' ? 'mic' : (item.reportType === 'ai' ? 'eye' : 'hand-left')" style="vertical-align: text-bottom; font-size: 0.9em; margin-right: 2px;"></ion-icon>
             {{ (item.reportType || 'manual') | titlecase }}
           </ion-badge>

@@ -1,51 +1,51 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Extended Reports</ion-title>
-  </ion-toolbar>
-</ion-header>
+<div class="floating-header">
+  <div class="back-btn" (click)="goBack()">
+    <ion-icon name="chevron-back-outline"></ion-icon>
+  </div>
+  <div class="header-title">Extended Reports</div>
+</div>
 
-<ion-content class="ion-padding">
+<ion-content class="content-with-floating-header ion-padding">
   
-  <div class="ion-text-center ion-margin-bottom">
+  <div class="ion-text-center ion-margin-bottom intro-text">
     <p>Help us improve the map by reporting issues.</p>
   </div>
 
-  <ion-grid>
+  <ion-grid class="report-grid">
     <ion-row>
       <ion-col size="6" *ngFor="let type of reportTypes">
-        <ion-card button (click)="submitReport(type.name)" class="report-card">
-          <ion-card-content class="ion-text-center">
-            <ion-icon [name]="type.icon" [color]="type.color" size="large"></ion-icon>
-            <h3>{{ type.name }}</h3>
-          </ion-card-content>
-        </ion-card>
+        <div class="report-card" (click)="submitReport(type.name)">
+          <div class="icon-circle" [style.color]="'var(--ion-color-' + type.color + ')'" [style.background]="'rgba(var(--ion-color-' + type.color + '-rgb), 0.1)'">
+            <ion-icon [name]="type.icon"></ion-icon>
+          </div>
+          <h3>{{ type.name }}</h3>
+        </div>
       </ion-col>
     </ion-row>
   </ion-grid>
 
-  <ion-list>
+  <ion-list lines="none">
     <ion-list-header>
       <ion-label>Recent Reports</ion-label>
     </ion-list-header>
     
-    <ion-item *ngIf="recentReports.length === 0">
-      <ion-label class="ion-text-center">
-        <p>No reports found.</p>
-      </ion-label>
-    </ion-item>
+    <div *ngIf="recentReports.length === 0" class="empty-state">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <p>No reports found.</p>
+    </div>
 
-    <ion-card *ngFor="let report of recentReports" class="ion-margin-bottom">
+    <ion-card *ngFor="let report of recentReports" class="history-card">
       <ion-card-header>
-        <ion-card-subtitle>{{ report.createdAt | date:'medium' }}</ion-card-subtitle>
+        <div class="card-meta">
+          <span class="date">{{ report.createdAt | date:'mediumDate' }}</span>
+          <span class="time">{{ report.createdAt | date:'shortTime' }}</span>
+        </div>
         <ion-card-title>{{ report.reportType }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <p *ngIf="report.rawText">{{ report.rawText }}</p>
-        <div *ngIf="report.hasImage" class="ion-margin-top">
-          <img [src]="getImageUrl(report)" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px;" />
+        <div *ngIf="report.hasImage" class="report-image">
+          <img [src]="getImageUrl(report)" />
         </div>
       </ion-card-content>
     </ion-card>

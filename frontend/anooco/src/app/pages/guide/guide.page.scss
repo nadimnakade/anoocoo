@@ -1,3 +1,53 @@
+
+// Floating Header
+.floating-header {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top) + 10px);
+  left: 20px;
+  right: 20px;
+  height: 50px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  pointer-events: none; // Allow clicks to pass through around buttons
+
+  .back-btn {
+    pointer-events: auto;
+    width: 44px;
+    height: 44px;
+    background: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    color: #333;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    margin-right: 15px;
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .header-title {
+    pointer-events: auto;
+    background: #ffffff;
+    padding: 8px 20px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+}
+
+.content-with-floating-header {
+  --padding-top: max(80px, env(safe-area-inset-top) + 70px);
+}
+
 .guide-intro {
   text-align: center;
   margin-bottom: 20px;
@@ -6,7 +56,8 @@
     width: 80px;
     height: 80px;
     margin-bottom: 10px;
-    border-radius: 16px;
+    border-radius: 20px; // Updated to match theme
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1); // Added shadow
   }
 
   h1 {
@@ -26,7 +77,7 @@
 ion-accordion {
   margin-bottom: 10px;
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 24px; // Updated to 24px
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
@@ -49,6 +100,24 @@ p {
 .footer-note {
   text-align: center;
   margin-top: 30px;
+  margin-bottom: 30px;
   color: var(--ion-color-medium);
   font-size: 12px;
+}
+
+// Dark Mode Overrides
+@media (prefers-color-scheme: dark) {
+  body.dark {
+    .floating-header {
+      .back-btn, .header-title {
+        background: #1e1e1e;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      }
+    }
+    
+    ion-accordion {
+      background: #1e1e1e;
+    }
+  }
 }

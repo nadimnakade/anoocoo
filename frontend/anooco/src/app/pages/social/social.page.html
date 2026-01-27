@@ -1,59 +1,67 @@
-<ion-header>
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Community & Social</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="addFriend()">
-        <ion-icon slot="icon-only" name="person-add-outline"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true">
+  <div class="floating-header">
+    <div class="header-left">
+      <div class="back-btn" (click)="goBack()">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+      </div>
+      <div class="header-title">Community & Social</div>
+    </div>
+    <div class="header-right">
+      <div class="action-btn" (click)="addFriend()">
+        <ion-icon name="person-add-outline"></ion-icon>
+      </div>
+    </div>
+  </div>
 
-<ion-content class="ion-padding">
-  
-  <ion-item lines="full">
-    <ion-icon slot="start" name="eye-outline"></ion-icon>
-    <ion-label>
-      <h2>Visible on Map</h2>
-      <p>Allow friends to see you</p>
-    </ion-label>
-    <ion-toggle slot="end" [(ngModel)]="isVisible"></ion-toggle>
-  </ion-item>
+  <div class="content-container">
+    <div class="card-section">
+      <ion-item lines="none" class="setting-item">
+        <div class="icon-box" slot="start">
+          <ion-icon name="eye-outline"></ion-icon>
+        </div>
+        <ion-label>
+          <h2>Visible on Map</h2>
+          <p>Allow friends to see you</p>
+        </ion-label>
+        <ion-toggle slot="end" [(ngModel)]="isVisible"></ion-toggle>
+      </ion-item>
+    </div>
 
-  <ion-list-header>
-    <ion-label>Friends ({{ friends.length }})</ion-label>
-  </ion-list-header>
+    <div class="section-title">Friends ({{ friends.length }})</div>
 
-  <ion-list>
-    <ion-item *ngFor="let friend of friends">
-      <ion-avatar slot="start">
-        <img [src]="friend.avatar" />
-      </ion-avatar>
-      <ion-label>
-        <h2>{{ friend.name }}</h2>
-        <p>{{ friend.status }}</p>
-      </ion-label>
-      <ion-button slot="end" fill="outline" size="small" (click)="sendBeep(friend.name)">
-        Beep 👋
-      </ion-button>
-    </ion-item>
-  </ion-list>
+    <div class="friends-list">
+      <div class="friend-card" *ngFor="let friend of friends">
+        <div class="friend-info">
+          <div class="avatar-wrapper">
+            <img [src]="friend.avatar" />
+          </div>
+          <div class="friend-details">
+            <h2>{{ friend.name }}</h2>
+            <p>{{ friend.status }}</p>
+          </div>
+        </div>
+        <ion-button fill="outline" class="beep-btn" (click)="sendBeep(friend.name)">
+          Beep 👋
+        </ion-button>
+      </div>
+    </div>
 
-  <ion-list-header>
-    <ion-label>Groups & Chats</ion-label>
-  </ion-list-header>
-  
-  <ion-item button detail>
-    <ion-icon slot="start" name="people-outline" color="tertiary"></ion-icon>
-    <ion-label>Map Chat</ion-label>
-  </ion-item>
-  
-  <ion-item button detail>
-    <ion-icon slot="start" name="car-sport-outline" color="secondary"></ion-icon>
-    <ion-label>Carpool Groups</ion-label>
-  </ion-item>
-
+    <div class="section-title">Groups & Chats</div>
+    
+    <div class="card-section">
+      <ion-item lines="none" button detail class="group-item">
+        <div class="icon-box tertiary" slot="start">
+          <ion-icon name="people-outline"></ion-icon>
+        </div>
+        <ion-label>Map Chat</ion-label>
+      </ion-item>
+      
+      <ion-item lines="none" button detail class="group-item">
+        <div class="icon-box secondary" slot="start">
+          <ion-icon name="car-sport-outline"></ion-icon>
+        </div>
+        <ion-label>Carpool Groups</ion-label>
+      </ion-item>
+    </div>
+  </div>
 </ion-content>

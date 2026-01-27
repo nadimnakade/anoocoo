@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ApiService } from 'src/app/services/api.service';
+import { NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-alerts',
@@ -17,11 +18,16 @@ export class AlertsPage implements OnInit {
 
   constructor(
     private api: ApiService,
-    private router: Router
+    private router: Router,
+    private navCtrl: NavController
   ) {}
 
   ngOnInit() {
     this.loadAlerts();
+  }
+
+  goBack() {
+    this.navCtrl.back();
   }
 
   loadAlerts(event?: any) {

@@ -9,6 +9,9 @@
  * https://ionicframework.com/docs/layout/global-stylesheets
  */
 
+/* Import Poppins Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
 
@@ -46,3 +49,88 @@ body.dark ion-content {
   --background: var(--ion-background-color);
   --color: var(--ion-text-color);
 }
+
+/* -------------------------------------------------------------------------- */
+/*  "Business" Template Global Overrides                                      */
+/* -------------------------------------------------------------------------- */
+
+/* Typography */
+* {
+  font-family: 'Poppins', var(--ion-font-family) !important;
+}
+
+/* Cards: Heavily rounded, soft shadow, clean white background */
+ion-card {
+  border-radius: 24px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06) !important;
+  background: #ffffff;
+  margin: 20px;
+  border: none;
+}
+
+ion-card-header {
+  padding: 20px 20px 10px 20px;
+}
+
+ion-card-content {
+  padding: 0 20px 20px 20px;
+}
+
+ion-card-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #1A1D26; /* Darker, cleaner text */
+}
+
+/* Buttons: Modern rounded rectangle */
+ion-button {
+  --border-radius: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: none;
+  min-height: 52px; /* Taller touch targets */
+}
+
+/* Primary buttons get a nice shadow */
+ion-button[color="primary"]:not([fill="outline"]):not([fill="clear"]) {
+  --box-shadow: 0 8px 20px rgba(var(--ion-color-primary-rgb), 0.35);
+}
+
+/* Remove shadow for clear/outline */
+ion-button[fill="clear"], ion-button[fill="outline"] {
+  --box-shadow: none;
+}
+
+/* Inputs/Items */
+ion-item {
+  --background: transparent;
+  --border-color: transparent;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+}
+
+/* Custom Input Field Style (to be used with a class if needed, or global override) */
+ion-input, ion-textarea, ion-select {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  background: #F4F7FE; /* Light blue-grey background */
+  border-radius: 14px;
+  color: var(--ion-text-color);
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+/* Fix for floating labels overlapping the custom background */
+ion-item.item-has-focus ion-label,
+ion-item.item-has-value ion-label {
+  font-weight: 600;
+  color: var(--ion-color-primary) !important;
+}
+
+/* Modals (Sheet Style Default) */
+ion-modal {
+  --backdrop-opacity: 0.4;
+}
+

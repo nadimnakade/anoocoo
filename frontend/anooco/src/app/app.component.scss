@@ -25,11 +25,12 @@ ion-menu {
       width: 60px;
       height: 60px;
       background: rgba(255, 255, 255, 0.2);
-      border-radius: 50%;
+      border-radius: 14px; /* Rounded square */
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 15px;
+      backdrop-filter: blur(10px);
 
       ion-icon {
         font-size: 30px;
@@ -40,54 +41,53 @@ ion-menu {
     h2 {
       margin: 0;
       font-size: 24px;
-      font-weight: 500;
+      font-weight: 600;
       color: white;
+      letter-spacing: -0.5px;
     }
 
     p {
       margin: 5px 0 0;
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
     }
   }
 }
 
 ion-list {
-  padding-top: 10px; /* Reduced padding since header is separate */
+  padding-top: 20px;
   background: transparent;
 
   ion-item {
     --background: transparent;
     --color: var(--ion-text-color);
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
-    --min-height: 52px; /* Slightly taller for better touch targets */
+    --min-height: 56px;
+    margin-bottom: 4px;
+    border-radius: 0 14px 14px 0; /* Rounded right side */
+    margin-right: 16px; /* Space from right edge */
 
     ion-icon {
-      margin-right: 15px;
-      color: var(--ion-color-medium); /* Default icon color */
+      margin-right: 16px;
+      color: var(--ion-color-medium);
+      font-size: 22px;
+      transition: color 0.2s;
     }
 
     /* Active State Styling */
     &.selected {
       --color: var(--ion-color-primary);
-      --background: rgba(var(--ion-color-primary-rgb), 0.08);
+      --background: rgba(var(--ion-color-primary-rgb), 0.1);
       font-weight: 600;
 
       ion-icon {
         color: var(--ion-color-primary);
       }
-      
-      /* Add a visual indicator */
-      position: relative;
+
+      /* Remove the sharp left border, use background instead */
       &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: var(--ion-color-primary);
-        z-index: 10;
+        display: none;
       }
     }
   }
@@ -95,15 +95,26 @@ ion-list {
   ion-item-divider {
     --background: transparent;
     --color: var(--ion-color-medium);
-    margin-top: 10px;
-    margin-bottom: 5px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+}
 
-    ion-label {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+ion-item-divider {
+  --background: transparent;
+  --color: var(--ion-color-medium);
+  margin-top: 10px;
+  margin-bottom: 5px;
+
+  ion-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 }
 

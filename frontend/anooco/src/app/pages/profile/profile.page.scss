@@ -7,11 +7,11 @@
   .avatar-large {
     width: 100px;
     height: 100px;
-    border-radius: 50%;
+    border-radius: 24px; /* Rounded square */
     overflow: hidden;
     margin-bottom: 15px;
     background: var(--ion-card-background, #ffffff);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
     
     img {
       width: 100%;
@@ -22,23 +22,25 @@
 
   h1 {
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0 0 10px;
     color: var(--ion-text-color);
+    letter-spacing: -0.5px;
   }
 
   .trust-badge {
     display: flex;
     align-items: center;
-    background: var(--ion-color-secondary-tint);
-    color: var(--ion-color-secondary-contrast);
-    padding: 6px 12px;
-    border-radius: 20px;
+    background: rgba(var(--ion-color-success-rgb), 0.1);
+    color: var(--ion-color-success-shade);
+    padding: 8px 16px;
+    border-radius: 14px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
 
     ion-icon {
-      margin-right: 5px;
+      margin-right: 6px;
+      font-size: 18px;
     }
   }
 }
@@ -46,37 +48,61 @@
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 16px;
   margin-bottom: 30px;
 
   .stat-card {
     background: var(--ion-card-background, #ffffff);
-    padding: 20px;
-    border-radius: 16px;
+    padding: 24px 20px;
+    border-radius: 20px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
 
     h3 {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 700;
-      margin: 0 0 5px;
-      color: var(--ion-text-color);
+      margin: 0 0 4px;
+      color: var(--ion-color-primary);
     }
 
     p {
       color: var(--ion-color-medium);
       margin: 0;
       font-size: 14px;
+      font-weight: 500;
     }
   }
 }
 
 .settings-list {
+  background: transparent;
+  padding: 0;
+
   ion-list-header {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: var(--ion-color-medium);
     padding-left: 0;
     margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  ion-item {
+    --background: #ffffff;
+    --border-radius: 16px;
+    margin-bottom: 12px;
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    --min-height: 56px;
+    
+    ion-label {
+      font-weight: 500;
+    }
+
+    ion-icon {
+      color: var(--ion-color-medium);
+    }
   }
 }

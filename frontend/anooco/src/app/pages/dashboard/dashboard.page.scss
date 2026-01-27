@@ -29,22 +29,23 @@
 
 .menu-button {
   background: var(--ion-card-background, #ffffff);
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px; /* Soft rounded square instead of circle */
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: background-color 0.2s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transition: background-color 0.2s, transform 0.1s;
 
   ion-icon {
     font-size: 24px;
-    color: var(--ion-text-color);
+    color: var(--ion-color-primary); /* Use primary color for icons */
   }
 
   &:active {
     background: var(--ion-color-light);
+    transform: scale(0.95);
   }
 }
 
@@ -132,28 +133,34 @@ ion-modal.report-modal {
   cursor: pointer;
 
   .icon-circle {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    background: var(--ion-color-light);
+    width: 60px;
+    height: 60px;
+    border-radius: 20px; /* Modern rounded square */
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 8px;
-    transition: transform 0.2s, background-color 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(0,0,0,0.05);
 
     ion-icon {
-      font-size: 26px;
-      color: var(--ion-color-dark);
+      font-size: 28px;
+      color: var(--ion-color-primary);
     }
 
     &.black {
-      background: #000;
+      background: var(--ion-color-primary);
+      box-shadow: 0 8px 20px rgba(var(--ion-color-primary-rgb), 0.4);
+      border: none;
       ion-icon { color: #fff; }
     }
 
     &.listening {
       background: var(--ion-color-danger);
+      box-shadow: 0 8px 20px rgba(var(--ion-color-danger-rgb), 0.4);
+      border: none;
     }
   }
 

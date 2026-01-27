@@ -1,8 +1,8 @@
-.signup-content {
+.auth-content {
   --background: var(--ion-background-color);
 }
 
-.uber-signup-container {
+.auth-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -14,7 +14,7 @@
 
 .header-section {
   margin-bottom: 40px;
-
+  
   h1 {
     font-size: 36px;
     font-weight: 700;
@@ -44,7 +44,7 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.uber-input {
+.auth-input {
   --padding-start: 0;
   --placeholder-color: var(--ion-color-medium);
   --placeholder-opacity: 0.7;
@@ -58,15 +58,16 @@
   margin-top: 24px;
 }
 
-.uber-button-black {
-  --background: var(--ion-text-color);
-  --color: var(--ion-background-color);
-  --border-radius: 8px;
+.auth-button-primary {
+  --background: var(--ion-color-primary);
+  --color: #ffffff;
+  --border-radius: 14px;
   font-weight: 600;
-  height: 50px;
+  height: 52px;
   font-size: 16px;
   text-transform: none;
-  --box-shadow: none;
+  --box-shadow: 0 8px 20px rgba(var(--ion-color-primary-rgb), 0.35);
+  margin-bottom: 12px;
 }
 
 .divider {
@@ -76,7 +77,7 @@
   font-size: 14px;
 }
 
-.uber-button-clear {
+.auth-button-clear {
   --color: var(--ion-text-color);
   text-transform: none;
   font-weight: 500;

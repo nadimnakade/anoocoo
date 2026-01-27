@@ -1,0 +1,113 @@
+ion-content {
+  --background: var(--ion-background-color);
+}
+
+ion-toolbar {
+  --background: transparent;
+  --border-width: 0;
+  
+  ion-title {
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+}
+
+ion-segment {
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+  border-radius: 12px;
+  padding: 4px;
+  margin: 0 16px 10px;
+  width: auto;
+
+  ion-segment-button {
+    --indicator-color: #ffffff;
+    --indicator-box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    --border-radius: 8px;
+    --color: var(--ion-color-medium);
+    --color-checked: var(--ion-color-primary);
+    font-weight: 600;
+    min-height: 40px;
+  }
+}
+
+.service-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 0;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  overflow: hidden;
+
+  ion-item {
+    --background: transparent;
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+    --min-height: 70px;
+    
+    ion-label {
+      margin-top: 12px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 4px;
+      color: var(--ion-text-color);
+    }
+    
+    p {
+      font-size: 13px;
+      color: var(--ion-color-medium);
+      font-weight: 500;
+    }
+  }
+
+  .icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    
+    ion-icon {
+      font-size: 24px;
+    }
+
+    &.gas {
+      background: rgba(var(--ion-color-warning-rgb), 0.1);
+      color: var(--ion-color-warning);
+    }
+    &.parking {
+      background: rgba(var(--ion-color-medium-rgb), 0.1);
+      color: var(--ion-color-medium);
+    }
+    &.ev {
+      background: rgba(var(--ion-color-success-rgb), 0.1);
+      color: var(--ion-color-success);
+    }
+  }
+}
+
+.results-header {
+  padding: 0 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ion-color-medium);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  
+  p {
+    color: var(--ion-color-medium);
+    font-size: 15px;
+  }
+}

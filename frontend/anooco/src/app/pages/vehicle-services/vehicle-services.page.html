@@ -1,12 +1,12 @@
-<ion-header>
-  <ion-toolbar color="primary">
+<ion-header class="ion-no-border">
+  <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
+      <ion-menu-button color="primary"></ion-menu-button>
     </ion-buttons>
-    <ion-title>Vehicle Services</ion-title>
+    <ion-title color="dark">Vehicle Services</ion-title>
   </ion-toolbar>
-  <ion-toolbar color="primary">
-    <ion-segment [value]="segmentValue" (ionChange)="segmentChanged($event)">
+  <ion-toolbar>
+    <ion-segment [value]="segmentValue" (ionChange)="segmentChanged($event)" mode="ios">
       <ion-segment-button value="gas">
         <ion-label>Gas</ion-label>
       </ion-segment-button>
@@ -14,7 +14,7 @@
         <ion-label>Parking</ion-label>
       </ion-segment-button>
       <ion-segment-button value="ev">
-        <ion-label>EV</ion-label>
+        <ion-label>EV Charging</ion-label>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
@@ -23,38 +23,46 @@
 <ion-content class="ion-padding">
   
   <div *ngIf="isLoading" class="ion-text-center ion-padding">
-    <ion-spinner></ion-spinner>
-    <p>Finding nearby {{ segmentValue }}...</p>
+    <ion-spinner color="primary"></ion-spinner>
+    <p style="color: var(--ion-color-medium); margin-top: 10px;">Finding nearby {{ segmentValue }}...</p>
   </div>
 
-  <ion-list *ngIf="!isLoading">
-    <ion-item>
-      <ion-label class="ion-text-wrap">
-        <h2>Find Nearby Services</h2>
-        <p>Locating services around you (5km radius).</p>
-      </ion-label>
-    </ion-item>
+  <div *ngIf="!isLoading">
+    <div class="service-card">
+      <ion-item lines="none">
+        <div class="icon-box" [ngClass]="segmentValue">
+           <ion-icon [name]="segmentValue === 'gas' ? 'color-fill' : (segmentValue === 'parking' ? 'car' : 'battery-charging')"></ion-icon>
+        </div>
+        <ion-label class="ion-text-wrap">
+          <h2>Find Nearby Services</h2>
+          <p>Locating services around you (5km radius).</p>
+        </ion-label>
+      </ion-item>
+    </div>
     
-    <ion-item-divider>
-      <ion-label>Nearby Results ({{ services.length }})</ion-label>
-    </ion-item-divider>
+    <div class="results-header" *ngIf="services.length > 0">
+      Nearby Results ({{ services.length }})
+    </div>
 
-    <ion-item *ngFor="let service of services" button detail (click)="navigateToService(service)">
-      <ion-icon slot="start" 
-        [name]="segmentValue === 'gas' ? 'color-fill-outline' : (segmentValue === 'parking' ? 'car-outline' : 'battery-charging-outline')" 
-        [color]="segmentValue === 'gas' ? 'warning' : (segmentValue === 'parking' ? 'medium' : 'success')">
-      </ion-icon>
-      
-      <ion-label>
-        <h2>{{ service.name }}</h2>
-        <p *ngIf="service.details">{{ service.details }}</p>
-      </ion-label>
-      
-      <ion-badge slot="end" color="light">Go</ion-badge>
-    </ion-item>
+    <div class="service-card" *ngFor="let service of services">
+      <ion-item button lines="none" detail="false" (click)="navigateToService(service)">
+        <div class="icon-box" [ngClass]="segmentValue">
+          <ion-icon [name]="segmentValue === 'gas' ? 'location' : (segmentValue === 'parking' ? 'navigate' : 'flash')"></ion-icon>
+        </div>
+        
+        <ion-label>
+          <h2>{{ service.name }}</h2>
+          <p *ngIf="service.details">{{ service.details }}</p>
+        </ion-label>
+        
+        <ion-button fill="solid" size="small" slot="end" color="primary" style="--border-radius: 8px; font-weight: 600;">
+          Go
+        </ion-button>
+      </ion-item>
+    </div>
 
-    <div *ngIf="services.length === 0" class="ion-text-center ion-padding">
+    <div *ngIf="services.length === 0" class="empty-state">
       <p>No services found in this area.</p>
     </div>
-  </ion-list>
+  </div>
 </ion-content>

@@ -1,0 +1,41 @@
+ion-list-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ion-color-medium);
+  margin-top: 20px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 5px;
+}
+
+ion-list {
+  background: transparent;
+  padding: 0;
+}
+
+ion-item {
+  --background: #ffffff;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  --border-width: 0;
+  --inner-padding-end: 10px;
+
+  ion-avatar {
+    margin-right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px; /* Rounded square avatar */
+  }
+
+  ion-icon {
+    margin-right: 16px;
+  }
+}
+
+/* Specific styling for the toggle item */
+ion-item[lines="full"] {
+  --border-width: 0; 
+  /* Or if we want to keep it different, but card style is preferred */
+}

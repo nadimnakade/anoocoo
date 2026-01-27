@@ -71,11 +71,22 @@ ion-list {
     margin-left: 6px;
     border-bottom: 1px solid #ddd;
 
+    /* Animation */
+    opacity: 0;
+    animation: slideInRight 0.4s ease-out forwards;
+
     ion-icon {
       margin-right: 16px;
       color: var(--ion-color-medium);
       font-size: 22px;
       transition: color 0.2s;
+    }
+
+    /* Staggered Animation for first 15 items */
+    @for $i from 1 through 15 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.05}s;
+      }
     }
 
     /* Active State Styling */
